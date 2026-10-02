@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { GLSlot } from "@/lib/gl";
 import { bitgig, media } from "@/content/profile";
 import { useThemeColors } from "@/lib/useThemeColors";
-import { useFinePointer } from "@/lib/device";
+import { isLowPower, useFinePointer } from "@/lib/device";
 import RefineFrame, { type RefineFrameStatus } from "@/components/bits/RefineFrame";
 
 const DitherVeil = dynamic(() => import("@/components/bits/DitherVeil"), { ssr: false });
@@ -22,6 +22,8 @@ export function BitgigMedia() {
   const colors = useThemeColors();
   const fine = useFinePointer();
   const [stage, setStage] = useState(0);
+  const [live, setLive] = useState(false);
+  useEffect(() => setLive(!isLowPower()), []);
 
   useEffect(() => {
     const t = setInterval(() => setStage((s) => (s + 1) % (ORDER.length + 1)), 1600);
@@ -37,9 +39,7 @@ export function BitgigMedia() {
       labels={{ queued: "Raw footage", generating: "Gemini draft", refining: "Expert review", complete: "Verified" }}
       className="w-full"
     >
-      <div className="relative aspect-[16/10] w-full">
-        <Image src={media.bitgig.src} alt={media.bitgig.alt} fill sizes="(min-width: 1024px) 900px, 100vw" className="object-cover" />
-      </div>
+      <Image src={media.bitgig.src} alt="" width={media.bitgig.width} height={media.bitgig.height} sizes="(min-width: 1024px) 900px, 100vw" />
     </RefineFrame>
   );
 
@@ -67,7 +67,7 @@ export function BitgigMedia() {
         )}
       </GLSlot>
       <figcaption className="text-label mt-3 flex justify-between gap-4 font-mono text-muted">
-        <span>{fine ? "Move across the frame to resolve it" : "The draft resolves on its own"}</span>
+        <span>{!live ? "From raw footage to verified labels" : fine ? "Move across the frame to resolve it" : "The draft resolves on its own"}</span>
         <a href={bitgig.live} className="link" target="_blank" rel="noopener noreferrer">
           Live demo ↗
         </a>

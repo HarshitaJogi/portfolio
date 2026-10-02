@@ -10,17 +10,8 @@ import React, {
   type PointerEvent,
   type ReactNode
 } from 'react';
-import {
-  animate,
-  motion,
-  useMotionTemplate,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-  useTransform,
-  type AnimationPlaybackControls,
-  type MotionStyle
-} from 'motion/react';
+import { animate, motion, useMotionTemplate, useMotionValue, useSpring, useTransform, type AnimationPlaybackControls, type MotionStyle } from 'motion/react';
+import { useReducedMotion } from '@/lib/device';
 
 export type FlipCardAxis = 'x' | 'y';
 

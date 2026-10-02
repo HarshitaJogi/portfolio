@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { motion, useInView, useReducedMotion } from 'motion/react';
+import { motion, useInView } from 'motion/react';
+import { useReducedMotion } from '@/lib/device';
 
 interface TrueFocusProps {
   sentence?: string;

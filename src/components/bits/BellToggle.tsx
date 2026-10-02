@@ -1,15 +1,8 @@
 'use client';
 
 import React, { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import {
-  animate,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-  type AnimationPlaybackControls,
-  type MotionStyle
-} from 'motion/react';
+import { animate, motion, useMotionValue, useTransform, type AnimationPlaybackControls, type MotionStyle } from 'motion/react';
+import { useReducedMotion } from '@/lib/device';
 import { GhungrooIcon } from './icons';
 export type BellToggleSize = 'sm' | 'md' | 'lg';
 

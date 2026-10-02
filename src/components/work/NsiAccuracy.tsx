@@ -1,6 +1,7 @@
 "use client";
 
-import { animate, useInView, useReducedMotion } from "motion/react";
+import { animate, useInView } from "motion/react";
+import { useReducedMotion } from "@/lib/device";
 import { useEffect, useRef, useState } from "react";
 import RubberSegment from "@/components/bits/RubberSegment";
 import { DraftText } from "@/components/ui/DraftText";

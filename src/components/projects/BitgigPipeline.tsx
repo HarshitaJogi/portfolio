@@ -1,6 +1,7 @@
 "use client";
 
-import { useInView, useReducedMotion } from "motion/react";
+import { useInView } from "motion/react";
+import { useReducedMotion } from "@/lib/device";
 import { useEffect, useRef, useState } from "react";
 import StatusMark from "@/components/bits/StatusMark";
 import { bitgig } from "@/content/profile";

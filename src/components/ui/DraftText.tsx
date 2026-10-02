@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { motion, useInView } from "motion/react";
+import { useReducedMotion } from "@/lib/device";
 import { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 

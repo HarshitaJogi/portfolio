@@ -17,18 +17,8 @@ import React, {
   type ReactNode
 } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  AnimatePresence,
-  animate,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-  useTransform,
-  useVelocity,
-  type MotionStyle,
-  type Variants
-} from 'motion/react';
+import { AnimatePresence, animate, motion, useMotionValue, useSpring, useTransform, useVelocity, type MotionStyle, type Variants } from 'motion/react';
+import { useReducedMotion } from '@/lib/device';
 
 export type WarmTooltipSide = 'top' | 'bottom' | 'left' | 'right';
 export type WarmTooltipSize = 'sm' | 'md' | 'lg';

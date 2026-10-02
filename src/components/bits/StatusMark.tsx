@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react';
-import { animate, useMotionValue, useReducedMotion } from 'motion/react';
+import { animate, useMotionValue } from 'motion/react';
+import { useReducedMotion } from '@/lib/device';
 
 export type StatusMarkStatus = 'pending' | 'running' | 'done' | 'failed' | 'cancelled';
 

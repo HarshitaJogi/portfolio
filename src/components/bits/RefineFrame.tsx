@@ -257,9 +257,11 @@ const RefineFrame: React.FC<RefineFrameProps> = ({
       return undefined;
     }
     let gone = false;
+    // Adapted: the canvas mosaic mode is disabled (it rendered blank here); the frame
+    // uses its blur, saturate and scale stages instead.
     const start = () => {
       if (gone) return;
-      setMosaic(true);
+      setMosaic(false);
       wake();
     };
     if (img.complete && img.naturalWidth) start();

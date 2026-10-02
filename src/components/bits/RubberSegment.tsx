@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { animate, motion, useMotionValue, useReducedMotion, useTransform, type MotionValue } from 'motion/react';
+import { animate, motion, useMotionValue, useTransform, type MotionValue } from 'motion/react';
+import { useReducedMotion } from '@/lib/device';
 
 export type RubberSegmentSize = 'sm' | 'md' | 'lg';
 export type RubberSegmentItem = string | { value: string; label: ReactNode; icon?: ReactNode };
