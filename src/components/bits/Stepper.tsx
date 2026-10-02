@@ -71,87 +71,68 @@ export default function Stepper({
     }
   };
 
-  const handleComplete = () => {
-    setDirection(1);
-    updateStep(totalSteps + 1);
-  };
-
+  // Adapted for the site: no card shell, no "complete" state (the walkthrough ends on
+  // its last step), editorial text buttons, and a polite live region for the content.
   return (
-    <div
-      className="flex min-h-full flex-1 flex-col items-center justify-center p-4 sm:aspect-[4/3] md:aspect-[2/1]"
-      {...rest}
-    >
-      <div
-        className={`mx-auto w-full max-w-md rounded-4xl shadow-xl ${stepCircleContainerClassName}`}
-        style={{ border: '1px solid var(--border-primary, #222)' }}
-      >
-        <div className={`${stepContainerClassName} flex w-full items-center p-8`}>
-          {stepsArray.map((_, index) => {
-            const stepNumber = index + 1;
-            const isNotLastStep = index < totalSteps - 1;
-            return (
-              <React.Fragment key={stepNumber}>
-                {renderStepIndicator ? (
-                  renderStepIndicator({
-                    step: stepNumber,
-                    currentStep,
-                    onStepClick: clicked => {
-                      setDirection(clicked > currentStep ? 1 : -1);
-                      updateStep(clicked);
-                    }
-                  })
-                ) : (
-                  <StepIndicator
-                    step={stepNumber}
-                    disableStepIndicators={disableStepIndicators}
-                    currentStep={currentStep}
-                    onClickStep={clicked => {
-                      setDirection(clicked > currentStep ? 1 : -1);
-                      updateStep(clicked);
-                    }}
-                  />
-                )}
-                {isNotLastStep && <StepConnector isComplete={currentStep > stepNumber} />}
-              </React.Fragment>
-            );
-          })}
-        </div>
+    <div className={`w-full ${stepCircleContainerClassName}`} {...rest}>
+      <div className={`flex w-full items-center ${stepContainerClassName}`} role="group" aria-label="Steps">
+        {stepsArray.map((_, index) => {
+          const stepNumber = index + 1;
+          const isNotLastStep = index < totalSteps - 1;
+          const onStepClick = (clicked: number) => {
+            setDirection(clicked > currentStep ? 1 : -1);
+            updateStep(clicked);
+          };
+          return (
+            <React.Fragment key={stepNumber}>
+              {renderStepIndicator ? (
+                renderStepIndicator({ step: stepNumber, currentStep, onStepClick })
+              ) : (
+                <StepIndicator
+                  step={stepNumber}
+                  disableStepIndicators={disableStepIndicators}
+                  currentStep={currentStep}
+                  onClickStep={onStepClick}
+                />
+              )}
+              {isNotLastStep && <StepConnector isComplete={currentStep > stepNumber} />}
+            </React.Fragment>
+          );
+        })}
+      </div>
 
+      <div aria-live="polite">
         <StepContentWrapper
           isCompleted={isCompleted}
           currentStep={currentStep}
           direction={direction}
-          className={`space-y-2 px-8 ${contentClassName}`}
+          className={contentClassName}
         >
           {stepsArray[currentStep - 1]}
         </StepContentWrapper>
+      </div>
 
-        {!isCompleted && (
-          <div className={`px-8 pb-8 ${footerClassName}`}>
-            <div className={`mt-10 flex ${currentStep !== 1 ? 'justify-between' : 'justify-end'}`}>
-              {currentStep !== 1 && (
-                <button
-                  onClick={handleBack}
-                  className={`duration-350 rounded px-2 py-1 transition ${
-                    currentStep === 1
-                      ? 'pointer-events-none opacity-50 text-neutral-400'
-                      : 'text-neutral-400 hover:text-neutral-700'
-                  }`}
-                  {...backButtonProps}
-                >
-                  {backButtonText}
-                </button>
-              )}
-              <button
-                onClick={isLastStep ? handleComplete : handleNext}
-                className="duration-350 flex items-center justify-center rounded-full bg-green-500 py-1.5 px-3.5 font-medium tracking-tight text-white transition hover:bg-green-600 active:bg-green-700"
-                {...nextButtonProps}
-              >
-                {isLastStep ? 'Complete' : nextButtonText}
-              </button>
-            </div>
-          </div>
-        )}
+      <div className={`mt-8 flex items-center gap-6 ${footerClassName}`}>
+        <button
+          type="button"
+          onClick={handleBack}
+          disabled={currentStep === 1}
+          className="font-mono text-[0.8125rem] tracking-[0.08em] uppercase text-muted transition-colors hover:text-ink disabled:pointer-events-none disabled:opacity-40"
+          {...backButtonProps}
+        >
+          {backButtonText}
+        </button>
+        <button
+          type="button"
+          onClick={isLastStep ? () => { setDirection(-1); updateStep(1); } : handleNext}
+          className="font-mono text-[0.8125rem] tracking-[0.08em] uppercase text-ink underline decoration-rule underline-offset-[6px] transition-colors hover:text-accent hover:decoration-accent"
+          {...nextButtonProps}
+        >
+          {isLastStep ? 'Start over' : nextButtonText}
+        </button>
+        <span className="ml-auto font-mono text-[0.8125rem] text-muted tabular-nums" aria-hidden="true">
+          {String(Math.min(currentStep, totalSteps)).padStart(2, '0')} / {String(totalSteps).padStart(2, '0')}
+        </span>
       </div>
     </div>
   );
@@ -243,7 +224,7 @@ interface StepProps {
 }
 
 export function Step({ children }: StepProps) {
-  return <div className="px-8">{children}</div>;
+  return <div>{children}</div>;
 }
 
 interface StepIndicatorProps {
@@ -296,14 +277,14 @@ interface StepConnectorProps {
 
 function StepConnector({ isComplete }: StepConnectorProps) {
   const lineVariants: Variants = {
-    incomplete: { width: 0, backgroundColor: 'transparent' },
-    complete: { width: '100%', backgroundColor: '#5227FF' }
+    incomplete: { width: 0 },
+    complete: { width: '100%' }
   };
 
   return (
-    <div className="relative mx-2 h-0.5 flex-1 overflow-hidden rounded bg-neutral-600">
+    <div className="rule-dashed relative mx-2 flex-1 overflow-hidden" aria-hidden="true">
       <motion.div
-        className="absolute left-0 top-0 h-full"
+        className="absolute left-0 top-0 h-full bg-ink"
         variants={lineVariants}
         initial={false}
         animate={isComplete ? 'complete' : 'incomplete'}

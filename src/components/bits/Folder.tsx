@@ -7,6 +7,11 @@ interface FolderProps {
   size?: number;
   items?: React.ReactNode[];
   className?: string;
+  /** Controlled open state. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Accessible name, e.g. "Research folder". */
+  label?: string;
 }
 
 const darkenColor = (hex: string, percent: number): string => {
@@ -27,14 +32,15 @@ const darkenColor = (hex: string, percent: number): string => {
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
 };
 
-const Folder: React.FC<FolderProps> = ({ color = '#5227FF', size = 1, items = [], className = '' }) => {
+const Folder: React.FC<FolderProps> = ({ color = '#5227FF', size = 1, items = [], className = '', open: openProp, onOpenChange, label = 'folder' }) => {
   const maxItems = 3;
   const papers = items.slice(0, maxItems);
   while (papers.length < maxItems) {
     papers.push(null);
   }
 
-  const [open, setOpen] = useState(false);
+  const [innerOpen, setInnerOpen] = useState(false);
+  const open = openProp ?? innerOpen;
   const [paperOffsets, setPaperOffsets] = useState<{ x: number; y: number }[]>(
     Array.from({ length: maxItems }, () => ({ x: 0, y: 0 }))
   );
@@ -45,7 +51,8 @@ const Folder: React.FC<FolderProps> = ({ color = '#5227FF', size = 1, items = []
   const paper3 = '#ffffff';
 
   const handleClick = () => {
-    setOpen(prev => !prev);
+    setInnerOpen(!open);
+    onOpenChange?.(!open);
     if (open) {
       setPaperOffsets(Array.from({ length: maxItems }, () => ({ x: 0, y: 0 })));
     }
@@ -93,7 +100,7 @@ const Folder: React.FC<FolderProps> = ({ color = '#5227FF', size = 1, items = []
   return (
     <div style={scaleStyle} className={className}>
       <div
-        className={`group relative transition-all duration-200 ease-in cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 ${
+        className={`group relative transition-all duration-200 ease-in cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)] ${
           !open ? 'hover:-translate-y-2' : ''
         }`}
         style={{
@@ -110,7 +117,7 @@ const Folder: React.FC<FolderProps> = ({ color = '#5227FF', size = 1, items = []
         tabIndex={0}
         role="button"
         aria-expanded={open}
-        aria-label={open ? 'Close folder' : 'Open folder'}
+        aria-label={open ? `Close ${label}` : `Open ${label}`}
       >
         <div
           className="relative w-[100px] h-[80px] rounded-tl-0 rounded-tr-[10px] rounded-br-[10px] rounded-bl-[10px]"

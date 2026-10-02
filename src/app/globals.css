@@ -290,3 +290,17 @@ html:not([data-view="skim"]) [data-skim-only] {
     display: none;
   }
 }
+
+/* MSCI migration dots: dashed while in flight, solid once they land. */
+.msci-dot {
+  fill: var(--paper);
+  stroke: var(--muted);
+  stroke-width: 1;
+  stroke-dasharray: 1.6 1.4;
+  transition: fill 250ms var(--ease-settle), stroke 250ms var(--ease-settle);
+}
+.msci-dot[data-landed="1"] {
+  fill: var(--ink);
+  stroke: var(--ink);
+  stroke-dasharray: none;
+}
