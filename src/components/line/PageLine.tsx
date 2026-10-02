@@ -106,7 +106,7 @@ export function PageLine() {
   // Measure marks.
   useEffect(() => {
     const el = root.current;
-    const host = el?.parentElement;
+    const host = el?.parentElement?.parentElement;
     if (!el || !host) return;
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
@@ -114,7 +114,7 @@ export function PageLine() {
     const measure = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        if (host.offsetParent === null && getComputedStyle(host).display === "none") return;
+        if (el.offsetParent === null) return; // hidden (skim view)
         const hostRect = host.getBoundingClientRect();
         const marks = Array.from(host.querySelectorAll<HTMLElement>(".line-mark")).filter(
           (m) => m.offsetParent !== null || getComputedStyle(m).position === "fixed",
@@ -149,7 +149,7 @@ export function PageLine() {
   // Draw progress on scroll.
   useEffect(() => {
     if (!geo || !base.current || !solid.current) return;
-    const host = root.current?.parentElement;
+    const host = root.current?.parentElement?.parentElement;
     if (!host) return;
     const real = base.current.getTotalLength();
     const scale = geo.total > 0 ? real / geo.total : 1;

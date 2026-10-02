@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // A stray lockfile in the home folder confuses root detection.
+  turbopack: { root: __dirname },
+  images: { formats: ["image/avif", "image/webp"] },
+  poweredByHeader: false,
 };
 
 export default nextConfig;

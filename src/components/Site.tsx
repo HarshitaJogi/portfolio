@@ -11,6 +11,9 @@ import { OffStage } from "@/components/sections/OffStage";
 import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/sections/Footer";
 import { PageLine } from "@/components/line/PageLine";
+import { SkimView } from "@/components/skim/SkimView";
+import { SectionIndex } from "@/components/ui/SectionIndex";
+import { MobileBar } from "@/components/ui/MobileBar";
 
 /** The whole page. `track` reorders highlights for ?track= links. */
 const updated = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
@@ -19,21 +22,31 @@ export function Site({ track }: { track: TrackOrDefault }) {
   return (
     <>
       <Nav />
-      <main id="main" className="relative z-10">
-        <div data-story-only className="relative">
+      <SectionIndex />
+      <MobileBar />
+      {/* The line host spans main and the footer so the line can close in the footer. */}
+      <div className="relative z-10">
+        <div data-story-only>
           <PageLine />
-          <Hero />
-          <Proof track={track} />
-          <Story />
-          <Work />
-          <Education />
-          <Projects track={track} />
-          <Toolkit />
-          <OffStage />
-          <Contact />
-          <Footer updated={updated} />
         </div>
-      </main>
+        <main id="main" className="relative">
+          <div data-skim-only>
+            <SkimView />
+          </div>
+          <div data-story-only>
+            <Hero />
+            <Proof track={track} />
+            <Story />
+            <Work />
+            <Education />
+            <Projects track={track} />
+            <Toolkit />
+            <OffStage />
+            <Contact />
+          </div>
+        </main>
+        <Footer updated={updated} />
+      </div>
     </>
   );
 }

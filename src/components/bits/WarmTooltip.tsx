@@ -161,11 +161,14 @@ const anchorOf = (rect: DOMRect, side: WarmTooltipSide, gap: number): [number, n
 };
 
 const layoutOf = (x: number, y: number, width: number, height: number, side: WarmTooltipSide) => {
+  // SSR guard: transforms compute once during server render.
+  const vw = typeof window === 'undefined' ? 1440 : window.innerWidth;
+  const vh = typeof window === 'undefined' ? 900 : window.innerHeight;
   if (horizontal(side)) {
-    const X = clamp(x - width / 2, MARGIN, Math.max(MARGIN, window.innerWidth - MARGIN - width));
+    const X = clamp(x - width / 2, MARGIN, Math.max(MARGIN, vw - MARGIN - width));
     return { X, Y: side === 'top' ? y - height : y };
   }
-  const Y = clamp(y - height / 2, MARGIN, Math.max(MARGIN, window.innerHeight - MARGIN - height));
+  const Y = clamp(y - height / 2, MARGIN, Math.max(MARGIN, vh - MARGIN - height));
   return { X: side === 'left' ? x - width : x, Y };
 };
 

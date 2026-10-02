@@ -50,7 +50,10 @@ const problems = [];
 
 function checkText(text, where) {
   for (const re of banned) if (re.test(text)) problems.push(`${where}: banned term ${re} in "${text.slice(0, 90)}"`);
-  if (/nokia/i.test(text) && /autonomous/i.test(text)) problems.push(`${where}: "autonomous" near Nokia in "${text.slice(0, 90)}"`);
+  // Truth Rule 3: the Nokia agent is never "autonomous". Checked by proximity, because the
+  // drone project's official title legitimately contains the word.
+  const near = /(nokia|llm agent|the agent)[^]{0,160}?autonomous|autonomous[^]{0,160}?(nokia|llm agent|the agent)/i.exec(text);
+  if (near) problems.push(`${where}: "autonomous" near the Nokia agent in "${near[0].slice(0, 120)}"`);
 }
 
 function checkProse(text, where) {

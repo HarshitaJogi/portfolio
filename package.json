@@ -1,12 +1,14 @@
 {
-  "name": "newer_portfolio",
+  "name": "harshita-jogi-portfolio",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/truth-lint.mjs && next build && node scripts/truth-lint.mjs --html",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "truth": "node scripts/truth-lint.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "cmdk": "^1.1.1",
