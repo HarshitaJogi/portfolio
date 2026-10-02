@@ -33,12 +33,12 @@ export function Proof({ track }: { track: TrackOrDefault }) {
       <SectionHeading id="proof" index="01" kicker="In numbers" title={proof.title} margam="Jatiswaram" intro={proof.intro} />
       <ol className="border-t border-hairline">
         {stats.map((s, i) => (
-          <Reveal as="li" key={s.id} delay={i * 0.04} className="grid gap-x-10 gap-y-3 border-b border-hairline py-8 md:grid-cols-12 md:items-baseline md:py-10">
-            <div className="md:col-span-5 lg:col-span-5">
+          <Reveal as="li" key={s.id} delay={i * 0.04} className="grid gap-x-10 gap-y-3 border-b border-hairline py-8 md:py-10 lg:grid-cols-12 lg:items-baseline">
+            <div className="lg:col-span-5">
               <StatValue s={s} />
             </div>
-            <p className="text-body measure md:col-span-5 lg:col-span-5">{s.caption}</p>
-            <a href={s.href} className="text-label font-mono text-muted no-underline transition-colors hover:text-accent md:col-span-2 md:text-right">
+            <p className="text-body measure lg:col-span-5">{s.caption}</p>
+            <a href={s.href} className="text-label font-mono text-muted no-underline transition-colors hover:text-accent lg:col-span-2 lg:text-right">
               {s.source}
             </a>
           </Reveal>

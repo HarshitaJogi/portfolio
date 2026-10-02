@@ -97,9 +97,10 @@ export function MargamMap() {
 
   const sel = margam[active];
   const d = 2 * r;
+  const compact = r < 185;
 
   return (
-    <div ref={box} className="relative shrink-0" style={{ width: d, height: d, marginLeft: "calc(var(--rail-x) - var(--rail-pad))" }}>
+    <div ref={box} className="relative shrink-0" style={{ width: d, height: d, marginLeft: "calc(var(--rail-x) - var(--rail-pad))", marginBottom: compact ? "9.5rem" : undefined }}>
       <span className="line-mark !top-1/2 !left-0" data-loop={r} aria-hidden="true" />
 
       <ol aria-label="The margam, in order" className="absolute inset-0">
@@ -148,8 +149,13 @@ export function MargamMap() {
         })}
       </ol>
 
-      <div className="pointer-events-none absolute inset-0 grid place-items-center">
-        <div className="max-w-[62%] text-center" aria-live="polite">
+      <div
+        className={cn(
+          "pointer-events-none grid place-items-center",
+          compact ? "absolute top-full right-0 left-[calc(var(--rail-pad)-var(--rail-x))] mt-8 place-items-start" : "absolute inset-0",
+        )}
+      >
+        <div className={cn(compact ? "text-left" : "max-w-[62%] text-center")} aria-live="polite">
           <p className="font-mono text-[0.6875rem] tracking-[0.08em] text-muted uppercase">
             {active + 1} of {N}
             {!lit(active) && " · still ahead"}

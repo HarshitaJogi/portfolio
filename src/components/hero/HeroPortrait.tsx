@@ -24,7 +24,7 @@ export function HeroPortrait({ className, lineStart = false }: { className?: str
   return (
     <figure className={cn("relative", className)}>
       <div className="relative aspect-square w-full">
-        {lineStart && <span className="line-mark !top-1/2 !-left-[7%]" aria-hidden="true" />}
+        {lineStart && <span className="line-mark !top-1/2 !-left-[7%] hidden lg:block" aria-hidden="true" />}
         <svg className="pointer-events-none absolute -inset-[7%] h-[114%] w-[114%] overflow-visible" viewBox="0 0 100 100" aria-hidden="true">
           <circle
             cx="50"

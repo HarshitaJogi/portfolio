@@ -10,7 +10,7 @@ import ShinyText from "@/components/bits/ShinyText";
 /** Alarippu: the invocation. Everything a recruiter needs before the first scroll. */
 export function Hero() {
   return (
-    <section id="top" aria-labelledby="hero-name" className="px-gutter relative mx-auto max-w-[90rem] pt-24 pb-16 md:pt-32 md:pb-24">
+    <section id="top" aria-labelledby="hero-name" className="px-gutter relative mx-auto max-w-[90rem] overflow-x-clip pt-24 pb-16 md:pt-32 md:pb-24">
       <div className="absolute top-[4.75rem] md:top-[5.5rem]">
         <Greeting />
       </div>
@@ -68,8 +68,8 @@ export function Hero() {
           </dl>
         </div>
       </div>
-      {/* On phones the line starts at the foot of the hero, on the rail. */}
-      <span className="line-mark !top-auto bottom-4 !left-[calc(var(--gutter)+var(--rail-x))] md:hidden" aria-hidden="true" />
+      {/* Below lg the line starts at the foot of the hero, on the rail. */}
+      <span className="line-mark !top-auto bottom-4 !left-[calc(var(--gutter)+var(--rail-x))] lg:hidden" aria-hidden="true" />
     </section>
   );
 }

@@ -15,10 +15,10 @@ const moments: Record<string, React.ReactNode> = {
 
 function RoleEntry({ role }: { role: Role }) {
   return (
-    <article id={`role-${role.id}`} aria-labelledby={`role-${role.id}-name`} className="relative grid gap-x-12 gap-y-6 border-t border-hairline pt-10 md:grid-cols-12 md:pt-14">
-      <header className="relative md:col-span-4">
+    <article id={`role-${role.id}`} aria-labelledby={`role-${role.id}-name`} className="relative grid gap-x-12 gap-y-6 border-t border-hairline pt-10 md:pt-14 lg:grid-cols-12">
+      <header className="relative lg:col-span-4">
         <LineMark node className="top-[1.4rem] md:top-[2rem]" />
-        <div className="md:sticky md:top-24">
+        <div className="lg:sticky lg:top-24">
           <h3 id={`role-${role.id}-name`} className="font-display text-company">
             {role.company}
           </h3>
@@ -34,7 +34,7 @@ function RoleEntry({ role }: { role: Role }) {
           )}
         </div>
       </header>
-      <div className="md:col-span-8">
+      <div className="lg:col-span-8">
         <Reveal>
           <p className="font-display text-[clamp(1.625rem,1.2rem+1.3vw,2.375rem)] leading-[1.2]">{role.framing}</p>
         </Reveal>

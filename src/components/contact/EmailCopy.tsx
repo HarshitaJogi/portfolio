@@ -20,7 +20,7 @@ export function EmailCopy() {
     <div>
       <a
         href={`mailto:${person.email}`}
-        className="font-display block text-[clamp(2.125rem,0.9rem+5.4vw,6.25rem)] leading-[1.02] tracking-[-0.015em] break-all no-underline decoration-accent decoration-2 underline-offset-[0.12em] hover:text-accent hover:underline sm:break-normal"
+        className="font-display block text-[clamp(1.5rem,7.6vw-0.4rem,6.25rem)] leading-[1.02] tracking-[-0.015em] break-words no-underline decoration-accent decoration-2 underline-offset-[0.12em] hover:text-accent hover:underline"
       >
         {person.email}
       </a>
