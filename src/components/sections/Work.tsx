@@ -1,10 +1,11 @@
+import dynamic from "next/dynamic";
 import { work, type Role } from "@/content/profile";
 import { Section, LineMark } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
-import { NokiaAgent } from "@/components/work/NokiaAgent";
-import { NsiAccuracy } from "@/components/work/NsiAccuracy";
-import { MsciMigration } from "@/components/work/MsciMigration";
+const NokiaAgent = dynamic(() => import("@/components/work/NokiaAgent").then((m) => m.NokiaAgent));
+const NsiAccuracy = dynamic(() => import("@/components/work/NsiAccuracy").then((m) => m.NsiAccuracy));
+const MsciMigration = dynamic(() => import("@/components/work/MsciMigration").then((m) => m.MsciMigration));
 
 const moments: Record<string, React.ReactNode> = {
   nokia: <NokiaAgent />,

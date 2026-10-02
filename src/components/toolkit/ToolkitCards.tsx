@@ -97,7 +97,6 @@ export function ToolkitCards() {
                 tiltMax={6}
                 glareOpacity={0.12}
                 shadowOpacity={0.12}
-                ariaLabel={`${c.title}. Flip to see where it was used.`}
                 front={<Front card={c} i={i} />}
                 back={<Back card={c} />}
               />

@@ -5,6 +5,17 @@ import Folder from "@/components/bits/Folder";
 import { patent, publications } from "@/content/profile";
 import { cn } from "@/lib/utils";
 
+/** A sheet of paper with a few ruled lines. Decoration only, the citations carry the text. */
+function Paper() {
+  return (
+    <span aria-hidden="true" className="block space-y-1.5 p-2.5 pt-3">
+      <span className="block h-px w-[80%] bg-[#16130F]/40" />
+      <span className="block h-px w-[60%] bg-[#16130F]/30" />
+      <span className="block h-px w-[70%] bg-[#16130F]/30" />
+    </span>
+  );
+}
+
 /** Two IEEE papers and a patent. The folder is the object, the citations are the record. */
 export function Research() {
   const [open, setOpen] = useState(false);
@@ -20,9 +31,9 @@ export function Research() {
             onOpenChange={setOpen}
             label="research folder"
             items={[
-              <span key="a" className="block p-2 font-mono text-[8px] leading-tight text-[#16130F]">IEEE SPACE 2024</span>,
-              <span key="b" className="block p-2 font-mono text-[8px] leading-tight text-[#16130F]">IEEE SPACE 2024</span>,
-              <span key="c" className="block p-2 font-mono text-[8px] leading-tight text-[#16130F]">Patent filed</span>,
+              <Paper key="a" />,
+              <Paper key="b" />,
+              <Paper key="c" />,
             ]}
           />
         </div>

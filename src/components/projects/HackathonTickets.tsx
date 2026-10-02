@@ -41,19 +41,19 @@ export function HackathonTickets() {
             stubBackground={colors?.paper ?? "#f6f1e7"}
             color={colors?.ink ?? "#16130f"}
             borderColor={colors?.rule ?? "#c9bba3"}
-            ariaLabel={`Tear the stub off the ${t.event} ticket`}
+            ariaLabel={`${t.stub} ${t.date}: tear the stub off the ${t.event} ticket`}
             stub={
               <div className="flex h-full flex-col justify-between p-4">
-                <span className="font-mono text-[0.6875rem] tracking-[0.08em] uppercase opacity-70">{t.stub}</span>
+                <span className="font-mono text-[0.6875rem] tracking-[0.08em] uppercase">{t.stub}</span>
                 <span className="font-display text-[1.375rem] leading-none">{t.date}</span>
               </div>
             }
           >
             <div className="flex h-full flex-col justify-between p-5">
-              <span className="font-mono text-[0.6875rem] tracking-[0.08em] uppercase opacity-70">{t.event}</span>
+              <span className="font-mono text-[0.6875rem] tracking-[0.08em] uppercase">{t.event}</span>
               <span>
                 <span className="font-display block text-[clamp(1.75rem,1.3rem+1.5vw,2.5rem)] leading-none">{t.project}</span>
-                <span className="mt-2 block text-[0.9375rem] leading-snug opacity-80">{t.line}</span>
+                <span className="mt-2 block text-[0.9375rem] leading-snug">{t.line}</span>
               </span>
               <span className="font-mono text-[0.75rem] tracking-[0.06em] uppercase" style={{ color: colors?.accent }}>
                 {t.stamp}

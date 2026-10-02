@@ -4,12 +4,12 @@ import { Command } from "cmdk";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { media, person, sections } from "@/content/profile";
-import { setView, useView } from "@/lib/view";
+import { useView } from "@/lib/view";
 
 /** ⌘K: jump anywhere, copy the email, grab the resume. */
 export default function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { resolvedTheme, setTheme } = useTheme();
-  const view = useView();
+  const { view, setView } = useView();
   const [copied, setCopied] = useState(false);
 
   const run = (fn: () => void) => {
@@ -18,8 +18,8 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
   };
 
   const jump = (id: string) => {
-    if (view === "skim") setView("story");
-    requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    if (view === "skim") window.location.href = `/#${id}`;
+    else document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const item =

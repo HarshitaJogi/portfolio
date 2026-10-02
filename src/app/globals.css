@@ -72,6 +72,13 @@
   --breakpoint-3xl: 1600px;
 }
 
+/* The italic serif is a separate, non-preloaded face. */
+.font-display.italic,
+.font-display .italic,
+.font-display i {
+  font-family: var(--font-instrument-serif-italic), var(--font-instrument-serif), serif;
+}
+
 /* Fluid type scale */
 @utility text-name {
   font-size: clamp(4rem, 11.5vw, 11.25rem);
@@ -252,6 +259,34 @@ section:hover .kicker[data-margam]:first-child::after,
 .kicker[data-margam]:hover::after {
   opacity: 1;
   transform: none;
+}
+
+/* Entrances. html.js is set before paint, so without JS nothing is ever hidden. */
+html.js [data-reveal]:not([data-reveal="rise"]) {
+  opacity: 0.6;
+  transform: translateY(16px);
+  transition:
+    opacity var(--dur-enter) var(--ease-settle) var(--reveal-delay, 0ms),
+    transform var(--dur-enter) var(--ease-settle) var(--reveal-delay, 0ms);
+}
+html.js [data-reveal="rise"] > span {
+  transform: translateY(45%);
+  opacity: 0.4;
+  transition:
+    transform var(--dur-draw) var(--ease-settle),
+    opacity var(--dur-draw) var(--ease-settle);
+}
+html.js [data-reveal][data-in]:not([data-reveal="rise"]),
+html.js [data-reveal="rise"][data-in] > span {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js [data-reveal]:not([data-reveal="rise"]),
+  html.js [data-reveal="rise"] > span {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Skim / Story views. The inline script in layout sets data-view before paint. */

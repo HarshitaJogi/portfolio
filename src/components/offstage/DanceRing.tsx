@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { media } from "@/content/profile";
 import { useThemeColors } from "@/lib/useThemeColors";
 import { useReducedMotion } from "@/lib/device";
+import { useEffect, useRef, useState } from "react";
 
 const CircularCarousel = dynamic(() => import("@/components/bits/CircularCarousel"), {
   ssr: false,
@@ -14,10 +15,19 @@ const CircularCarousel = dynamic(() => import("@/components/bits/CircularCarouse
 export function DanceRing() {
   const colors = useThemeColors();
   const reduced = useReducedMotion();
+  const box = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && setNear(true), { rootMargin: "400px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   return (
     <figure aria-label="Bharatanatyam performance photos">
-      <div className="h-[22rem] w-full md:h-[26rem]">
-        {colors && (
+      <div ref={box} className="h-[22rem] w-full md:h-[26rem]">
+        {colors && near && (
           <CircularCarousel
             items={media.dance.map((d) => ({ src: d.src, alt: d.alt }))}
             preset="cylinder"

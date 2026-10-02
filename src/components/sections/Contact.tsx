@@ -1,9 +1,10 @@
+import dynamic from "next/dynamic";
 import { contact, media, person } from "@/content/profile";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { CircleButton } from "@/components/ui/CircleButton";
-import { EmailCopy } from "@/components/contact/EmailCopy";
-import { ContactMark } from "@/components/contact/ContactMark";
+const EmailCopy = dynamic(() => import("@/components/contact/EmailCopy").then((m) => m.EmailCopy));
+const ContactMark = dynamic(() => import("@/components/contact/ContactMark").then((m) => m.ContactMark));
 
 /** Tillana: brisk and joyful. Every way to reach her, one tap each. */
 export function Contact() {
@@ -15,14 +16,14 @@ export function Contact() {
         <div className="md:col-span-7">
           <p className="text-lead measure">{contact.line}</p>
           <div className="mt-10 flex flex-wrap items-center gap-5">
-            <CircleButton href={media.resumePdf} external sub="PDF" size={104} ariaLabel="Resume, PDF, opens in a new tab">
+            <CircleButton href={media.resumePdf} external sub="PDF" size={104}>
               Resume
             </CircleButton>
-            <CircleButton href={person.links.linkedin} external variant="outline" size={104} ariaLabel="LinkedIn, opens in a new tab">
-              LinkedIn ↗
+            <CircleButton href={person.links.linkedin} external variant="outline" size={104} arrow>
+              LinkedIn
             </CircleButton>
-            <CircleButton href={person.links.github} external variant="outline" size={104} ariaLabel="GitHub, opens in a new tab">
-              GitHub ↗
+            <CircleButton href={person.links.github} external variant="outline" size={104} arrow>
+              GitHub
             </CircleButton>
           </div>
         </div>

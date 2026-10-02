@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import BranchedMenu from "@/components/bits/BranchedMenu";
+import dynamic from "next/dynamic";
+
+const BranchedMenu = dynamic(() => import("@/components/bits/BranchedMenu"), { ssr: false });
 import { media, person, work } from "@/content/profile";
-import { setView, useView } from "@/lib/view";
 
 /** Thumb-reachable bar on phones: Resume, Email, Index. Appears once the hero is gone. */
 export function MobileBar() {
   const [shown, setShown] = useState(false);
   const [open, setOpen] = useState(false);
-  const view = useView();
   const sheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,8 +29,7 @@ export function MobileBar() {
 
   const go = (hash: string) => {
     setOpen(false);
-    if (view === "skim") setView("story");
-    requestAnimationFrame(() => document.querySelector(hash)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    document.querySelector(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const items = [
@@ -87,7 +86,7 @@ export function MobileBar() {
         hidden={!open}
         className="fixed inset-x-3 bottom-20 z-50 max-h-[70vh] overflow-y-auto rounded-2xl border border-hairline bg-paper p-6 md:hidden"
       >
-        <BranchedMenu
+        {open && <BranchedMenu
           items={items}
           defaultOpen={-1}
           onSelect={(value) => go(value)}
@@ -97,7 +96,7 @@ export function MobileBar() {
           fontSize={17}
           rowHeight={40}
           width={320}
-        />
+        />}
       </div>
     </>
   );

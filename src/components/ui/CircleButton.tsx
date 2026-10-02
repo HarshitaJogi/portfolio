@@ -1,34 +1,36 @@
 import Magnet from "@/components/bits/Magnet";
 import { cn } from "@/lib/utils";
 
-/** The site's primary action shape: a circle, not a pill. Leans toward the cursor. */
+/**
+ * The site's primary action shape: a circle, not a pill. Leans toward the cursor.
+ * The accessible name is the visible text, plus "opens in a new tab" for external links.
+ */
 export function CircleButton({
   href,
   children,
   sub,
+  arrow = false,
   variant = "ink",
   size = 104,
   download,
   external,
   className,
-  ariaLabel,
 }: {
   href: string;
   children: React.ReactNode;
   sub?: string;
+  arrow?: boolean;
   variant?: "ink" | "outline";
   size?: number;
   download?: boolean | string;
   external?: boolean;
   className?: string;
-  ariaLabel?: string;
 }) {
   return (
     <Magnet padding={40} magnetStrength={5}>
       <a
         href={href}
         download={download}
-        aria-label={ariaLabel}
         {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         style={{ width: size, height: size }}
         className={cn(
@@ -40,8 +42,12 @@ export function CircleButton({
         )}
       >
         <span className="flex flex-col items-center gap-1">
-          <span className="text-[0.95rem] font-medium">{children}</span>
-          {sub && <span className="font-mono text-[0.6875rem] tracking-[0.08em] uppercase opacity-75">{sub}</span>}
+          <span className="text-[0.95rem] font-medium">
+            {children}
+            {arrow && <span aria-hidden="true"> ↗</span>}
+          </span>
+          {sub && <span className="font-mono text-[0.6875rem] tracking-[0.08em] uppercase opacity-80">{sub}</span>}
+          {external && <span className="sr-only">, opens in a new tab</span>}
         </span>
       </a>
     </Magnet>

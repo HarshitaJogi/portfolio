@@ -1,11 +1,11 @@
 "use client";
 
 import RubberSegment from "@/components/bits/RubberSegment";
-import { setView, useView } from "@/lib/view";
+import { useView } from "@/lib/view";
 
 /** Story = the full page. Skim = a single-screen summary for people short on time. */
 export function ViewToggle() {
-  const view = useView();
+  const { view, setView } = useView();
   return (
     <RubberSegment
       aria-label="Page view"

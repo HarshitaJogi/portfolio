@@ -1,7 +1,8 @@
+import dynamic from "next/dynamic";
 import { toolkit } from "@/content/profile";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { ToolkitCards } from "@/components/toolkit/ToolkitCards";
+const ToolkitCards = dynamic(() => import("@/components/toolkit/ToolkitCards").then((m) => m.ToolkitCards));
 
 export function Toolkit() {
   return (

@@ -102,7 +102,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
   shadowColor = '#000000',
   shadowOpacity = 0.45,
   disabled = false,
-  ariaLabel = 'Flip card',
+  ariaLabel,
   className = ''
 }) => {
   const reduce = useReducedMotion();

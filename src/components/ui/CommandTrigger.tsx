@@ -41,7 +41,7 @@ export function CommandTrigger() {
           setOpen(true);
         }}
         className="hidden md:inline-flex h-8 items-center gap-1.5 rounded-full px-3 font-mono text-[0.75rem] text-muted transition-colors hover:text-ink"
-        aria-label="Open command menu"
+        aria-label={mac ? "⌘ K, command menu" : "Ctrl K, command menu"}
         aria-keyshortcuts={mac ? "Meta+K" : "Control+K"}
       >
         <kbd className="font-mono">{mac ? "⌘" : "Ctrl"}</kbd>

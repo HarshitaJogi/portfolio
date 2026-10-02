@@ -39,7 +39,7 @@ export function Hero() {
           </p>
 
           <div className="mt-6 flex items-center gap-5 md:mt-8 md:gap-7">
-            <CircleButton href={media.resumePdf} sub="PDF" size={96} external ariaLabel="Resume, PDF, opens in a new tab">
+            <CircleButton href={media.resumePdf} sub="PDF" size={96} external>
               Resume
             </CircleButton>
             <div className="w-24 md:hidden">

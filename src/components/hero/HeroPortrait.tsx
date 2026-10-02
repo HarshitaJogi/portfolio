@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PixelSwap from "@/components/bits/PixelSwap";
 import { hero, media } from "@/content/profile";
 import { useFinePointer } from "@/lib/device";
@@ -14,6 +14,12 @@ import { cn } from "@/lib/utils";
 export function HeroPortrait({ className, lineStart = false }: { className?: string; lineStart?: boolean }) {
   const fine = useFinePointer();
   const [dance, setDance] = useState(false);
+  const [second, setSecond] = useState(false);
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(() => setSecond(true), { timeout: 4000 });
+    else setTimeout(() => setSecond(true), 2500);
+  }, []);
 
   return (
     <figure className={cn("relative", className)}>
@@ -55,7 +61,7 @@ export function HeroPortrait({ className, lineStart = false }: { className?: str
               />
             }
             secondContent={
-              <Image
+              second && <Image
                 src={media.dance[0].src}
                 alt=""
                 fill

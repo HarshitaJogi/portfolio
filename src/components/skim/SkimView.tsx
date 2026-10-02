@@ -2,7 +2,7 @@ import { bitgig, drone, education, hackathons, media, patent, person, publicatio
 
 /**
  * Skim: everything a recruiter needs on one screen. Roles, dates, numbers, links,
- * resume. Rendered on the server alongside the story and shown by html[data-view].
+ * resume. Served at /skim.
  */
 export function SkimView() {
   const label = "text-label font-mono text-muted";

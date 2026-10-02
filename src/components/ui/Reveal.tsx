@@ -1,34 +1,23 @@
-"use client";
-
-import { motion, useReducedMotion } from "motion/react";
-import { dur, ease, travel } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 /**
- * The quiet default entrance. Never starts invisible: content is readable at
- * opacity 0.6 even if the animation never runs.
+ * The quiet default entrance, as a server component. RevealController flips
+ * [data-reveal] to [data-in] when it enters the viewport and CSS does the rest.
+ * Never starts invisible (opacity 0.6), and without JS everything is simply shown.
  */
 export function Reveal({
   children,
   delay = 0,
   className,
-  as = "div",
+  as: Tag = "div",
 }: {
   children: React.ReactNode;
   delay?: number;
   className?: string;
   as?: "div" | "li" | "section" | "article" | "p";
 }) {
-  const reduced = useReducedMotion();
-  const Tag = motion[as];
-  if (reduced) return <Tag className={className}>{children}</Tag>;
   return (
-    <Tag
-      className={className}
-      initial={{ opacity: 0.6, y: travel }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "0px 0px -10% 0px" }}
-      transition={{ duration: dur.enter, ease: ease.settle, delay }}
-    >
+    <Tag data-reveal="" className={cn(className)} style={delay ? ({ "--reveal-delay": `${Math.round(delay * 1000)}ms` } as React.CSSProperties) : undefined}>
       {children}
     </Tag>
   );

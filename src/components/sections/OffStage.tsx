@@ -1,10 +1,11 @@
+import dynamic from "next/dynamic";
 import { offstage } from "@/content/profile";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { DanceRing } from "@/components/offstage/DanceRing";
-import { QuoteWave } from "@/components/offstage/QuoteWave";
-import { MargamMap } from "@/components/offstage/MargamMap";
-import StrokeText from "@/components/bits/StrokeText";
+const DanceRing = dynamic(() => import("@/components/offstage/DanceRing").then((m) => m.DanceRing));
+const QuoteWave = dynamic(() => import("@/components/offstage/QuoteWave").then((m) => m.QuoteWave));
+const MargamMap = dynamic(() => import("@/components/offstage/MargamMap").then((m) => m.MargamMap));
+const StrokeText = dynamic(() => import("@/components/bits/StrokeText"));
 
 /** Padam: slow, expressive, personal. Then the reveal. */
 export function OffStage() {

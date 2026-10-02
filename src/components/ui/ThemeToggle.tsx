@@ -18,7 +18,7 @@ export function ThemeToggle() {
       size="sm"
       offLabel="Light"
       onLabel="Dark"
-      label="Dark theme"
+      label="Light dark theme"
       pressed={dark}
       onChange={(on) => setTheme(on ? "dark" : "light")}
       color="var(--ink)"

@@ -9,8 +9,18 @@ const display = Instrument_Serif({
   variable: "--font-instrument-serif",
   subsets: ["latin"],
   weight: "400",
-  style: ["normal", "italic"],
+  style: "normal",
   display: "swap",
+});
+
+// Italic is only used for a few accent words, so it is not preloaded.
+const displayItalic = Instrument_Serif({
+  variable: "--font-instrument-serif-italic",
+  subsets: ["latin"],
+  weight: "400",
+  style: "italic",
+  display: "swap",
+  preload: false,
 });
 
 const sans = Geist({
@@ -72,12 +82,12 @@ const personLd = {
   knowsAbout: ["LLM agents", "LLM evaluation", "Data pipelines", "ETL", "Test automation", "Cloud migration", "Edge ML"],
 };
 
-// Runs before paint: restores Skim view from the URL and the margam unlock from the session.
-const bootScript = `(function(){try{var d=document.documentElement,p=new URLSearchParams(location.search);if(p.get('view')==='skim')d.dataset.view='skim';if(sessionStorage.getItem('margam')==='seen')d.dataset.margam='seen';}catch(e){}})();`;
+// Runs before paint: restores the margam unlock from the session.
+const bootScript = `(function(){try{var d=document.documentElement;d.classList.add('js');if(sessionStorage.getItem('margam')==='seen')d.dataset.margam='seen';}catch(e){}})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${display.variable} ${displayItalic.variable} ${sans.variable} ${mono.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }} />

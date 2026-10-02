@@ -1,13 +1,14 @@
+import dynamic from "next/dynamic";
 import { bitgig, drone, hackathons, projectOrder, scheduler, type ProjectId, type TrackOrDefault } from "@/content/profile";
 import { Section, LineMark } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { CircleButton } from "@/components/ui/CircleButton";
-import { BitgigMedia } from "@/components/projects/BitgigMedia";
-import { BitgigPipeline } from "@/components/projects/BitgigPipeline";
-import { DroneMedia } from "@/components/projects/DroneMedia";
-import { Research } from "@/components/projects/Research";
-import { HackathonTickets } from "@/components/projects/HackathonTickets";
+const BitgigMedia = dynamic(() => import("@/components/projects/BitgigMedia").then((m) => m.BitgigMedia));
+const BitgigPipeline = dynamic(() => import("@/components/projects/BitgigPipeline").then((m) => m.BitgigPipeline));
+const DroneMedia = dynamic(() => import("@/components/projects/DroneMedia").then((m) => m.DroneMedia));
+const Research = dynamic(() => import("@/components/projects/Research").then((m) => m.Research));
+const HackathonTickets = dynamic(() => import("@/components/projects/HackathonTickets").then((m) => m.HackathonTickets));
 
 function Bullets({ items }: { items: string[] }) {
   return (
@@ -32,8 +33,8 @@ function Bitgig() {
         <h3 id="project-bitgig-name" className="font-display text-title">
           {bitgig.name}
         </h3>
-        <CircleButton href={bitgig.live} external variant="outline" size={92} sub="Live" ariaLabel="Bitgig live demo, opens in a new tab">
-          Demo ↗
+        <CircleButton href={bitgig.live} external variant="outline" size={92} sub="Live" arrow>
+          Demo
         </CircleButton>
       </div>
       <p className="text-lead mt-4 max-w-[40ch]">{bitgig.tagline}</p>
