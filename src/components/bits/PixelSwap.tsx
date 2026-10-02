@@ -35,6 +35,8 @@ export interface PixelSwapProps {
   onActiveChange?: (active: boolean) => void;
   onComplete?: (active: boolean) => void;
   aspectRatio?: string;
+  /** Accessible name for the interactive container. */
+  label?: string;
   className?: string;
   style?: CSSProperties;
 }
@@ -241,6 +243,7 @@ function PixelSwap({
   onActiveChange,
   onComplete,
   aspectRatio = '16 / 10',
+  label,
   className = '',
   style
 }: PixelSwapProps) {
@@ -399,6 +402,7 @@ function PixelSwap({
         onMouseLeave: () => requestActive(false),
         onFocus: () => requestActive(true),
         onBlur: () => requestActive(false),
+        role: 'img',
         tabIndex: 0
       };
     }
@@ -445,6 +449,8 @@ function PixelSwap({
       style={{ aspectRatio, ...style }}
       data-active={shownActive}
       data-transitioning={!!transition}
+      aria-label={label}
+      aria-pressed={trigger === 'click' ? desiredActive : undefined}
       {...interactionProps}
     >
       {renderLayer(firstContent, 0)}

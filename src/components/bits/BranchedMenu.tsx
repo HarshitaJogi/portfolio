@@ -1,21 +1,10 @@
 'use client';
 
-import React, { isValidElement, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
-import {
-  CursorPointer01Icon,
-  Download04Icon,
-  Layers01Icon,
-  Notification03Icon,
-  PaintBoardIcon,
-  Rocket01Icon,
-  Settings02Icon,
-  TextFontIcon
-} from '@hugeicons/core-free-icons';
+import React, { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 export interface BranchedMenuChild {
   value: string;
   label: string;
-  icon?: ReactNode | IconSvgElement;
+  icon?: ReactNode;
 }
 
 export interface BranchedMenuItem {
@@ -45,31 +34,11 @@ export interface BranchedMenuProps {
   className?: string;
 }
 
-const DEFAULT_ITEMS: BranchedMenuItem[] = [
-  {
-    label: 'Getting started',
-    children: [
-      { value: 'install', label: 'Installation', icon: Download04Icon },
-      { value: 'quick', label: 'Quick start', icon: Rocket01Icon },
-      { value: 'config', label: 'Configuration', icon: Settings02Icon },
-      { value: 'theming', label: 'Theming', icon: PaintBoardIcon }
-    ]
-  },
-  {
-    label: 'Components',
-    children: [
-      { value: 'buttons', label: 'Buttons', icon: CursorPointer01Icon },
-      { value: 'typography', label: 'Typography', icon: TextFontIcon },
-      { value: 'overlays', label: 'Overlays', icon: Layers01Icon },
-      { value: 'toasts', label: 'Toasts', icon: Notification03Icon }
-    ]
-  }
-];
+const DEFAULT_ITEMS: BranchedMenuItem[] = [];
 const PAD = 6;
 const MARK = 16;
 
-const renderIcon = (icon: ReactNode | IconSvgElement) =>
-  isValidElement(icon) ? icon : <HugeiconsIcon icon={icon as IconSvgElement} size={16} strokeWidth={1.8} />;
+const renderIcon = (icon: ReactNode) => icon;
 const toSet = (open: number | number[]) => new Set(Array.isArray(open) ? open : open >= 0 ? [open] : []);
 
 const BranchedMenu: React.FC<BranchedMenuProps> = ({

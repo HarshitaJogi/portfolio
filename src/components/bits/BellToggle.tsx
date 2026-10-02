@@ -10,8 +10,7 @@ import {
   type AnimationPlaybackControls,
   type MotionStyle
 } from 'motion/react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Notification03Icon } from '@hugeicons/core-free-icons';
+import { GhungrooIcon } from './icons';
 export type BellToggleSize = 'sm' | 'md' | 'lg';
 
 export interface BellToggleProps {
@@ -264,7 +263,7 @@ const BellToggle: React.FC<BellToggleProps> = ({
                 <path d="M12 2.5V4" />
               </svg>
             ) : (
-              (icon ?? <HugeiconsIcon icon={Notification03Icon} size={iconSize} strokeWidth={2} />)
+              (icon ?? <GhungrooIcon size={iconSize} strokeWidth={1.7} />)
             )}
           </span>
           {clapper ? (
@@ -314,13 +313,13 @@ const BellToggle: React.FC<BellToggleProps> = ({
         <span className="inline-grid h-[18px] grid-cols-[max-content] leading-[18px]" aria-hidden="true">
           <span
             ref={offRef}
-            className="justify-self-start opacity-0 blur-[2px] [grid-area:1/1] [transition:opacity_var(--bt-fade)_ease,filter_var(--bt-fade)_ease] group-data-[on=false]:opacity-100 group-data-[on=false]:blur-0 motion-reduce:blur-none! motion-reduce:[transition:opacity_var(--bt-fade)_ease]"
+            className="justify-self-start opacity-0 blur-[2px] [grid-area:1/1] [transition:opacity_var(--bt-fade)_ease,filter_var(--bt-fade)_ease] group-data-[on=false]:opacity-100 group-data-[on=false]:blur-none motion-reduce:blur-none! motion-reduce:[transition:opacity_var(--bt-fade)_ease]"
           >
             {offLabel}
           </span>
           <span
             ref={onRef}
-            className="justify-self-start opacity-0 blur-[2px] [grid-area:1/1] [transition:opacity_var(--bt-fade)_ease,filter_var(--bt-fade)_ease] group-data-[on=true]:opacity-100 group-data-[on=true]:blur-0 motion-reduce:blur-none! motion-reduce:[transition:opacity_var(--bt-fade)_ease]"
+            className="justify-self-start opacity-0 blur-[2px] [grid-area:1/1] [transition:opacity_var(--bt-fade)_ease,filter_var(--bt-fade)_ease] group-data-[on=true]:opacity-100 group-data-[on=true]:blur-none motion-reduce:blur-none! motion-reduce:[transition:opacity_var(--bt-fade)_ease]"
           >
             {onLabel}
           </span>

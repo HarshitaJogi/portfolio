@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useCallback, useEffect, type CSSProperties } from 'react';
+import { useRef, useState, useCallback, useEffect, type CSSProperties, type ReactNode } from 'react';
 
 type Falloff = 'linear' | 'smooth' | 'sharp';
 
@@ -22,6 +22,13 @@ export interface LineSidebarProps {
   fontSize?: number;
   smoothing?: number;
   defaultActive?: number | null;
+  /** Controlled active item (e.g. driven by scroll position). */
+  active?: number | null;
+  /** When set, each item renders as a real link (keyboard accessible). */
+  hrefs?: string[];
+  /** Wrap each item's link, e.g. in a tooltip. */
+  wrapItem?: (node: ReactNode, index: number, label: string) => ReactNode;
+  ariaLabel?: string;
   onItemClick?: (index: number, label: string) => void;
   className?: string;
 }
@@ -65,6 +72,10 @@ const LineSidebar = ({
   fontSize = 1.1,
   smoothing = 100,
   defaultActive = null,
+  active,
+  hrefs,
+  wrapItem,
+  ariaLabel,
   onItemClick,
   className = ''
 }: LineSidebarProps) => {
@@ -76,7 +87,8 @@ const LineSidebar = ({
   const lastRef = useRef(0);
   const activeRef = useRef<number | null>(defaultActive);
   const smoothingRef = useRef(smoothing);
-  const [activeIndex, setActiveIndex] = useState<number | null>(defaultActive);
+  const [innerActive, setActiveIndex] = useState<number | null>(defaultActive);
+  const activeIndex = active !== undefined ? active : innerActive;
 
   activeRef.current = activeIndex;
   smoothingRef.current = smoothing;
@@ -171,6 +183,7 @@ const LineSidebar = ({
 
   return (
     <nav
+      aria-label={ariaLabel}
       className={`relative flex justify-start${showMarker ? ' [padding-left:calc(var(--marker-length)+var(--marker-gap))]' : ''}${className ? ` ${className}` : ''}`}
       style={
         {
@@ -199,8 +212,6 @@ const LineSidebar = ({
             ref={el => {
               itemRefs.current[index] = el;
             }}
-            aria-current={activeIndex === index ? 'true' : undefined}
-            onClick={() => handleClick(index, label)}
             className={`relative cursor-pointer before:absolute before:-inset-x-12 before:-inset-y-[6px] before:content-[''] ${tickClass}`}
           >
             {showMarker && (
@@ -209,6 +220,8 @@ const LineSidebar = ({
                 className="absolute left-[calc(-1*var(--marker-length)-var(--marker-gap))] top-1/2 h-px w-[length:var(--marker-length)] origin-left [background-color:color-mix(in_srgb,var(--accent-color)_calc(var(--effect,0)*100%),var(--marker-color))] [transform:translateY(-50%)_scaleX(calc(0.7+var(--effect,0)*0.5))]"
               />
             )}
+            {(() => {
+              const inner = (
             <span className="relative inline-flex items-baseline leading-[1.2] [color:color-mix(in_srgb,var(--accent-color)_calc(var(--effect,0)*100%),var(--text-color))] [font-size:var(--font-size)] [transform:translateX(calc(var(--effect,0)*var(--max-shift)))]">
               {showIndex && (
                 <span className="mr-[0.6rem] font-mono text-[0.85em] [opacity:calc(0.55+var(--effect,0)*0.45)]">
@@ -217,6 +230,23 @@ const LineSidebar = ({
               )}
               <span>{label}</span>
             </span>
+              );
+              const link = hrefs?.[index] ? (
+                <a
+                  href={hrefs[index]}
+                  onClick={() => handleClick(index, label)}
+                  aria-current={activeIndex === index ? 'location' : undefined}
+                  className="relative block rounded-sm no-underline outline-offset-4"
+                >
+                  {inner}
+                </a>
+              ) : (
+                <button type="button" onClick={() => handleClick(index, label)} className="relative block text-left">
+                  {inner}
+                </button>
+              );
+              return wrapItem ? wrapItem(link, index, label) : link;
+            })()}
           </li>
         ))}
       </ul>

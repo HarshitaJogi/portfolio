@@ -5,12 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  '@hugeicons/core-free-icons':
-    specifier: ^4.3.5
-    version: 4.3.5
-  '@hugeicons/react':
-    specifier: ^1.1.10
-    version: 1.1.10(react@19.2.8)
   cmdk:
     specifier: ^1.1.1
     version: 1.1.1(@types/react-dom@19.3.0)(@types/react@19.3.0)(react-dom@19.2.8)(react@19.2.8)
@@ -321,18 +315,6 @@ packages:
       '@eslint/core': 0.17.0
       levn: 0.4.1
     dev: true
-
-  /@hugeicons/core-free-icons@4.3.5:
-    resolution: {integrity: sha512-Sv+NjHRPnQk+yZsGCMcGznCHdTfJR9PMMOEKcJYAQU4gy90dmlc9PwdtvYOImBZIjiheMsTLL5eMn2DmHxUiUg==}
-    dev: false
-
-  /@hugeicons/react@1.1.10(react@19.2.8):
-    resolution: {integrity: sha512-9tAsd92yMVVGP+E+d8cM+wc0VnXuYZHNbWQi7TOe8k2neawmhiaFmVFbzyruejhOMa197/LbgvSED32ayUo3ZA==}
-    peerDependencies:
-      react: '>=16.0.0'
-    dependencies:
-      react: 19.2.8
-    dev: false
 
   /@humanfs/core@0.19.2:
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}

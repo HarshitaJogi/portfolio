@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, type ReactNode, type HTMLAttributes } from 'react';
+import React, { useEffect, useRef, type ReactNode, type HTMLAttributes } from 'react';
 
 interface MagnetProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
@@ -13,6 +13,11 @@ interface MagnetProps extends HTMLAttributes<HTMLDivElement> {
   innerClassName?: string;
 }
 
+/**
+ * React Bits Magnet, adapted: writes the transform straight to the DOM inside a
+ * rAF instead of calling setState on every mousemove, and only listens on
+ * fine-pointer devices.
+ */
 const Magnet: React.FC<MagnetProps> = ({
   children,
   padding = 100,
@@ -24,60 +29,51 @@ const Magnet: React.FC<MagnetProps> = ({
   innerClassName = '',
   ...props
 }) => {
-  const [isActive, setIsActive] = useState<boolean>(false);
-  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const magnetRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (disabled) {
-      setPosition({ x: 0, y: 0 });
+    const inner = innerRef.current;
+    if (!inner) return;
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (disabled || !fine || reduced) {
+      inner.style.transform = '';
       return;
     }
-
+    let raf = 0;
+    let active = false;
     const handleMouseMove = (e: MouseEvent) => {
-      if (!magnetRef.current) return;
-
-      const { left, top, width, height } = magnetRef.current.getBoundingClientRect();
-      const centerX = left + width / 2;
-      const centerY = top + height / 2;
-
-      const distX = Math.abs(centerX - e.clientX);
-      const distY = Math.abs(centerY - e.clientY);
-
-      if (distX < width / 2 + padding && distY < height / 2 + padding) {
-        setIsActive(true);
-        const offsetX = (e.clientX - centerX) / magnetStrength;
-        const offsetY = (e.clientY - centerY) / magnetStrength;
-        setPosition({ x: offsetX, y: offsetY });
-      } else {
-        setIsActive(false);
-        setPosition({ x: 0, y: 0 });
-      }
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const el = magnetRef.current;
+        if (!el) return;
+        const { left, top, width, height } = el.getBoundingClientRect();
+        const centerX = left + width / 2;
+        const centerY = top + height / 2;
+        const near = Math.abs(centerX - e.clientX) < width / 2 + padding && Math.abs(centerY - e.clientY) < height / 2 + padding;
+        if (near) {
+          if (!active) inner.style.transition = activeTransition;
+          active = true;
+          inner.style.transform = `translate3d(${(e.clientX - centerX) / magnetStrength}px, ${(e.clientY - centerY) / magnetStrength}px, 0)`;
+        } else if (active) {
+          active = false;
+          inner.style.transition = inactiveTransition;
+          inner.style.transform = 'translate3d(0, 0, 0)';
+        }
+      });
     };
-
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => {
+      cancelAnimationFrame(raf);
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [padding, disabled, magnetStrength]);
-
-  const transitionStyle = isActive ? activeTransition : inactiveTransition;
+  }, [padding, disabled, magnetStrength, activeTransition, inactiveTransition]);
 
   return (
-    <div
-      ref={magnetRef}
-      className={wrapperClassName}
-      style={{ position: 'relative', display: 'inline-block' }}
-      {...props}
-    >
-      <div
-        className={innerClassName}
-        style={{
-          transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
-          transition: transitionStyle,
-          willChange: 'transform'
-        }}
-      >
+    <div ref={magnetRef} className={wrapperClassName} style={{ position: 'relative', display: 'inline-block' }} {...props}>
+      <div ref={innerRef} className={innerClassName} style={{ willChange: 'transform' }}>
         {children}
       </div>
     </div>

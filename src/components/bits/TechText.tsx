@@ -37,11 +37,21 @@ export interface TechTextProps {
   draggable?: boolean;
   sweep?: boolean;
   speed?: number;
+  /**
+   * Fixed placement instead of auto-fit and centring, in container pixels.
+   * Lets the canvas sit exactly on top of a real HTML heading.
+   */
+  layout?: { x: number; baseline: number } | null;
+  /** Called once the glyphs are laid out with the requested font. */
+  onReady?: () => void;
   className?: string;
   style?: CSSProperties;
 }
 
-type Settings = Required<Omit<TechTextProps, 'className' | 'style'>>;
+type Settings = Required<Omit<TechTextProps, 'className' | 'style' | 'layout' | 'onReady'>> & {
+  layout: TechTextProps['layout'];
+  onReady: TechTextProps['onReady'];
+};
 
 const LABEL_FONT = '10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const FALLOFF_STEPS = 8;
@@ -97,6 +107,8 @@ const TechText = ({
   draggable = true,
   sweep = true,
   speed = 1,
+  layout = null,
+  onReady,
   className = '',
   style
 }: TechTextProps) => {
@@ -126,7 +138,9 @@ const TechText = ({
       labels,
       draggable,
       sweep,
-      speed
+      speed,
+      layout,
+      onReady
     };
     wakeRef.current();
   });
@@ -220,6 +234,7 @@ const TechText = ({
         s.dashGap,
         s.strokeWidth,
         s.lineStyle,
+        s.layout ? `${s.layout.x},${s.layout.baseline}` : 'auto',
         width,
         height,
         dpr
@@ -235,18 +250,20 @@ const TechText = ({
       const probe = scratchCtx;
       setFont(probe, s, s.fontSize);
       let m = probe.measureText(s.text);
-      const fit = Math.min(
-        1,
-        (width * 0.9) / Math.max(m.actualBoundingBoxLeft + m.actualBoundingBoxRight, 1),
-        (height * 0.66) / Math.max(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent, 1)
-      );
+      const fit = s.layout
+        ? 1
+        : Math.min(
+            1,
+            (width * 0.9) / Math.max(m.actualBoundingBoxLeft + m.actualBoundingBoxRight, 1),
+            (height * 0.66) / Math.max(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent, 1)
+          );
       const size = s.fontSize * fit;
       setFont(probe, s, size);
       m = probe.measureText(s.text);
       const inkWidth = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
       const inkHeight = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
-      const x = (width - inkWidth) / 2 + m.actualBoundingBoxLeft;
-      const baseline = (height - inkHeight) / 2 + m.actualBoundingBoxAscent;
+      const x = s.layout ? s.layout.x : (width - inkWidth) / 2 + m.actualBoundingBoxLeft;
+      const baseline = s.layout ? s.layout.baseline : (height - inkHeight) / 2 + m.actualBoundingBoxAscent;
       const next = {
         size,
         baseline,
@@ -289,6 +306,7 @@ const TechText = ({
       });
       dragging = -1;
       frame.index = -1;
+      if (!document.fonts || document.fonts.check(wanted, s.text)) s.onReady?.();
       return next;
     };
 

@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Alert02Icon, Loading03Icon, RefreshIcon, Tick02Icon } from '@hugeicons/core-free-icons';
+import { AlertIcon, CheckIcon, LoadingIcon, RefreshIcon } from './icons';
 export type RefineFrameStatus = 'queued' | 'generating' | 'refining' | 'complete' | 'error';
 
 export interface RefineFrameProps {
@@ -338,11 +337,11 @@ const RefineFrame: React.FC<RefineFrameProps> = ({
             data-kind={active ? 'spin' : status}
           >
             {status === 'complete' ? (
-              <HugeiconsIcon icon={Tick02Icon} size={13} strokeWidth={2.5} />
+              <CheckIcon size={13} strokeWidth={2.5} />
             ) : status === 'error' ? (
-              <HugeiconsIcon icon={Alert02Icon} size={13} strokeWidth={2.2} />
+              <AlertIcon size={13} strokeWidth={2.2} />
             ) : (
-              <HugeiconsIcon icon={Loading03Icon} size={13} strokeWidth={2.2} />
+              <LoadingIcon size={13} strokeWidth={2.2} />
             )}
           </span>
           <span key={status} className="[animation:refine-frame-label_200ms_ease_both]">
@@ -356,7 +355,7 @@ const RefineFrame: React.FC<RefineFrameProps> = ({
           className="absolute top-1/2 left-1/2 inline-flex h-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center gap-1.5 rounded-2xl border-0 pr-3.5 pl-3 text-[13px] font-medium opacity-100 outline-none [background:color-mix(in_srgb,var(--rf-ink)_14%,var(--rf-bg))] [color:var(--rf-ink)] [font-family:inherit] [-webkit-tap-highlight-color:transparent] [transition:opacity_200ms_ease,transform_160ms_cubic-bezier(0.23,1,0.32,1),background-color_150ms_ease] starting:scale-[0.96] starting:opacity-0 active:scale-[0.96] [@media(hover:hover)_and_(pointer:fine)]:hover:[background:color-mix(in_srgb,var(--rf-ink)_20%,var(--rf-bg))] motion-reduce:[transition:opacity_200ms_ease] motion-reduce:active:scale-100"
           onClick={onRetry}
         >
-          <HugeiconsIcon icon={RefreshIcon} size={14} strokeWidth={2.2} />
+          <RefreshIcon size={14} strokeWidth={2.2} />
           <span>{retryLabel}</span>
         </button>
       ) : null}
