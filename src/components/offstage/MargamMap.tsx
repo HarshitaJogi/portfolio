@@ -106,13 +106,15 @@ export function MargamMap() {
       <ol aria-label="The margam, in order" className="absolute inset-0">
         {margam.map((m, i) => {
           const a = Math.PI + (i / N) * Math.PI * 2;
-          const x = r + r * Math.cos(a);
-          const y = r - r * Math.sin(a);
-          const lx = r + (r - 26) * Math.cos(a);
-          const ly = r - (r - 26) * Math.sin(a);
+          // Rounded so server and browser serialise identical inline styles (WebKit trims precision).
+          const q = (n: number) => Math.round(n * 10) / 10;
+          const x = q(r + r * Math.cos(a));
+          const y = q(r - r * Math.sin(a));
+          const lx = q(r + (r - 26) * Math.cos(a));
+          const ly = q(r - (r - 26) * Math.sin(a));
           // anchor each label on the side facing the centre, so it never sits on its point
-          const tx = -50 - 50 * Math.cos(a);
-          const ty = -50 + 50 * Math.sin(a);
+          const tx = q(-50 - 50 * Math.cos(a));
+          const ty = q(-50 + 50 * Math.sin(a));
           const on = lit(i);
           return (
             <li key={m.id}>

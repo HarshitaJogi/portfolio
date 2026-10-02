@@ -121,6 +121,14 @@ const FlipCard: React.FC<FlipCardProps> = ({
   const turnY = useMotionTemplate`perspective(${perspective}px) scale(${lift}) rotateX(${tiltX}deg) rotateY(${sumY}deg)`;
   const turnX = useMotionTemplate`perspective(${perspective}px) scale(${lift}) rotateY(${tiltY}deg) rotateX(${sumX}deg)`;
   const facing = useTransform(turn, t => Math.abs(Math.cos((t * Math.PI) / 180)));
+  // Adapted: visibility follows the angle, so the hidden face never shows through even
+  // where backface-visibility is ignored (seen in WebKit).
+  const facingFront = (t: number) => {
+    const a = ((t % 360) + 360) % 360;
+    return a < 90 || a > 270;
+  };
+  const frontVisibility = useTransform(turn, t => (facingFront(t) ? 'visible' : 'hidden'));
+  const backVisibility = useTransform(turn, t => (facingFront(t) ? 'hidden' : 'visible'));
   const spread = useTransform(facing, f => 0.08 + 0.92 * f);
   const shade = useTransform(facing, f => 0.1 + 0.9 * f * f);
   const gxPct = useMotionTemplate`${gx}%`;
@@ -297,11 +305,14 @@ const FlipCard: React.FC<FlipCardProps> = ({
           style={axis === 'x' ? { scaleY: spread, opacity: shade } : { scaleX: spread, opacity: shade }}
         />
       ) : null}
+      {/* Adapted: the front face carries rotateY(0deg) too. Safari only honours
+          backface-visibility on elements with a 3D transform. */}
       <motion.div className="absolute inset-0 [transform-style:preserve-3d]" style={reduce ? undefined : rotorStyle}>
-        <div
-          className="absolute inset-0 overflow-hidden [border-radius:var(--fc-radius)] [background:var(--fc-bg)] [color:var(--fc-ink)] [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [&_img]:[-webkit-user-drag:none] group-data-[fade]:opacity-0 group-data-[fade]:[backface-visibility:visible] group-data-[fade]:[-webkit-backface-visibility:visible] group-data-[fade]:[transition:opacity_200ms_ease] group-data-[fade=front]:opacity-100!"
+        <motion.div
+          className="absolute inset-0 overflow-hidden [border-radius:var(--fc-radius)] [background:var(--fc-bg)] [color:var(--fc-ink)] [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [&_img]:[-webkit-user-drag:none] group-data-[fade]:opacity-0 group-data-[fade]:[backface-visibility:visible] group-data-[fade]:[-webkit-backface-visibility:visible] group-data-[fade]:[transition:opacity_200ms_ease] [transform:rotateY(0deg)] group-data-[fade]:[transform:none]! group-data-[fade=front]:opacity-100!"
           aria-hidden={shown}
           inert={shown}
+          style={reduce ? undefined : { visibility: frontVisibility }}
         >
           {front}
           {glare ? (
@@ -310,11 +321,12 @@ const FlipCard: React.FC<FlipCardProps> = ({
               aria-hidden="true"
             />
           ) : null}
-        </div>
-        <div
+        </motion.div>
+        <motion.div
           className="absolute inset-0 overflow-hidden [border-radius:var(--fc-radius)] [background:var(--fc-bg)] [color:var(--fc-ink)] [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [&_img]:[-webkit-user-drag:none] group-data-[fade]:opacity-0 group-data-[fade]:[backface-visibility:visible] group-data-[fade]:[-webkit-backface-visibility:visible] group-data-[fade]:[transition:opacity_200ms_ease] [transform:rotateY(180deg)] group-data-[axis=x]:[transform:rotateX(180deg)] group-data-[fade]:[transform:none]! group-data-[fade=back]:opacity-100!"
           aria-hidden={!shown}
           inert={!shown}
+          style={reduce ? undefined : { visibility: backVisibility }}
         >
           {back}
           {glare ? (
@@ -323,7 +335,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
               aria-hidden="true"
             />
           ) : null}
-        </div>
+        </motion.div>
       </motion.div>
     </div>
   );

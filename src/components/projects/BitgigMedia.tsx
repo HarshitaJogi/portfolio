@@ -55,10 +55,10 @@ export function BitgigMedia() {
               pixelSize={2}
               inkColor={colors.ink}
               paperColor={colors.paperDeep}
-              revealRadius={170}
+              revealRadius={fine ? 170 : 90}
               softness={0.65}
               linger={1.4}
-              rim={0.6}
+              rim={fine ? 0.6 : 0.2}
               rimColor={colors.accent}
               wander={!fine}
               clickBurst={false}
