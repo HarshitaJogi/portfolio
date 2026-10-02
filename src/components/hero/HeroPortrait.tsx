@@ -11,13 +11,14 @@ import { cn } from "@/lib/utils";
  * Headshot in a tala circle. Hover, focus or tap and it dissolves into a performance
  * photo. Two sides of the same person. The ring is dashed until you look closer.
  */
-export function HeroPortrait({ className }: { className?: string }) {
+export function HeroPortrait({ className, lineStart = false }: { className?: string; lineStart?: boolean }) {
   const fine = useFinePointer();
   const [dance, setDance] = useState(false);
 
   return (
     <figure className={cn("relative", className)}>
-      <div className="relative aspect-square w-full" data-line-anchor="hero">
+      <div className="relative aspect-square w-full">
+        {lineStart && <span className="line-mark !top-1/2 !-left-[7%]" aria-hidden="true" />}
         <svg className="pointer-events-none absolute -inset-[7%] h-[114%] w-[114%] overflow-visible" viewBox="0 0 100 100" aria-hidden="true">
           <circle
             cx="50"

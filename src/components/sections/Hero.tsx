@@ -56,7 +56,7 @@ export function Hero() {
 
         <div className="hidden md:col-span-4 md:col-start-9 md:block lg:col-span-4 lg:col-start-9">
           <div className="ml-auto w-full max-w-[18.5rem]">
-            <HeroPortrait />
+            <HeroPortrait lineStart />
           </div>
           <dl className="mt-8 space-y-3 border-t border-hairline pt-5">
             {hero.now.map((n) => (
@@ -68,6 +68,8 @@ export function Hero() {
           </dl>
         </div>
       </div>
+      {/* On phones the line starts at the foot of the hero, on the rail. */}
+      <span className="line-mark !top-auto bottom-4 !left-[calc(var(--gutter)+var(--rail-x))] md:hidden" aria-hidden="true" />
     </section>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useInView, useMotionValue, useSpring } from 'motion/react';
+import { animate, useInView } from 'motion/react';
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 interface CountUpProps {
@@ -36,12 +36,7 @@ export default function CountUp({
   onEnd
 }: CountUpProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const motionValue = useMotionValue(direction === 'down' ? to : from);
   const armed = useRef(false);
-
-  const damping = 20 + 40 * (1 / duration);
-  const stiffness = 100 * (1 / duration);
-  const springValue = useSpring(motionValue, { damping, stiffness });
   const isInView = useInView(ref, { once: true, margin: '0px 0px -15% 0px' });
 
   const decimals = (num: number) => {
@@ -80,20 +75,18 @@ export default function CountUp({
   useEffect(() => {
     if (!armed.current || !isInView || !startWhen) return;
     onStart?.();
-    const t1 = setTimeout(() => motionValue.set(direction === 'down' ? from : to), delay * 1000);
-    const t2 = setTimeout(() => onEnd?.(), delay * 1000 + duration * 1000);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [isInView, startWhen, motionValue, direction, from, to, delay, onStart, onEnd, duration]);
-
-  useEffect(() => {
-    const unsubscribe = springValue.on('change', (latest: number) => {
-      if (ref.current && armed.current) ref.current.textContent = formatValue(latest);
+    // A timed tween on the site's settle curve, so the number lands exactly on time.
+    const controls = animate(direction === 'down' ? to : from, direction === 'down' ? from : to, {
+      duration,
+      delay,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: latest => {
+        if (ref.current) ref.current.textContent = formatValue(latest);
+      },
+      onComplete: () => onEnd?.()
     });
-    return () => unsubscribe();
-  }, [springValue, formatValue]);
+    return () => controls.stop();
+  }, [isInView, startWhen, direction, from, to, delay, onStart, onEnd, duration, formatValue]);
 
   return (
     <>

@@ -190,6 +190,70 @@ a {
   height: 1px;
 }
 
+/* The rail: the column the page line runs down. Content sits to its right. */
+:root {
+  --rail-pad: 1.75rem;
+  --rail-x: 0.5rem;
+}
+@media (min-width: 768px) {
+  :root {
+    --rail-pad: 6.5rem;
+    --rail-x: 1.25rem;
+  }
+}
+.rail {
+  padding-left: var(--rail-pad);
+}
+.line-mark {
+  position: absolute;
+  /* nested inside content: step back over the rail padding */
+  left: calc(var(--rail-x) - var(--rail-pad));
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+.rail > .line-mark {
+  left: var(--rail-x);
+}
+.line-node circle:first-child {
+  transition: stroke 300ms var(--ease-settle);
+}
+.line-node .line-node-dot {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.4);
+  transition: opacity 300ms var(--ease-settle), transform 400ms var(--ease-settle);
+}
+.line-node[data-passed] circle:first-child {
+  stroke: var(--ink);
+  stroke-dasharray: none;
+}
+.line-node[data-passed] .line-node-dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* After the margam reveal, section kickers whisper their part of the recital on hover. */
+.kicker[data-margam]::after {
+  content: attr(data-margam);
+  margin-left: 0.75rem;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--dur-micro) var(--ease-settle), transform var(--dur-micro) var(--ease-settle);
+  pointer-events: none;
+}
+html:not([data-margam="seen"]) .kicker[data-margam]::after {
+  display: none;
+}
+section:hover > * .kicker[data-margam]::after,
+section:hover .kicker[data-margam]:first-child::after,
+.kicker[data-margam]:hover::after {
+  opacity: 1;
+  transform: none;
+}
+
 /* Skim / Story views. The inline script in layout sets data-view before paint. */
 html[data-view="skim"] [data-story-only] {
   display: none !important;

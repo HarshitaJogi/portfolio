@@ -1,7 +1,6 @@
 'use client';
 
 import { CSSProperties, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { gsap } from 'gsap';
 
 export type TextLoopShape = 'wave' | 'circle' | 'infinity' | 'arch' | 'line';
 export type TextLoopDirection = 'forward' | 'reverse';
@@ -168,18 +167,44 @@ const TextLoop = ({
       typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced || speed <= 0) return undefined;
 
-    const state = { offset: 0 };
-    const tween = gsap.to(state, {
-      offset: direction === 'reverse' ? -length : length,
-      duration: length / speed,
-      ease: 'none',
-      repeat: -1,
-      onUpdate: () => apply(state.offset)
-    });
+    // A plain rAF loop instead of a GSAP tween: one linear offset, paused off-screen.
+    const sign = direction === 'reverse' ? -1 : 1;
+    let offset = 0;
+    let last = 0;
+    let raf = 0;
+    let paused = false;
+    let visible = true;
+    const tick = (now: number) => {
+      raf = 0;
+      if (paused || !visible) return;
+      const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
+      last = now;
+      offset = (offset + sign * speed * dt) % length;
+      apply(offset);
+      raf = requestAnimationFrame(tick);
+    };
+    const start = () => {
+      if (raf) return;
+      last = 0;
+      raf = requestAnimationFrame(tick);
+    };
+    start();
 
     const root = rootRef.current;
-    const pause = () => tween.pause();
-    const resume = () => tween.resume();
+    const io = root
+      ? new IntersectionObserver(([entry]) => {
+          visible = entry.isIntersecting;
+          if (visible) start();
+        })
+      : null;
+    if (root && io) io.observe(root);
+    const pause = () => {
+      paused = true;
+    };
+    const resume = () => {
+      paused = false;
+      start();
+    };
 
     if (pauseOnHover && root) {
       root.addEventListener('pointerenter', pause);
@@ -187,7 +212,8 @@ const TextLoop = ({
     }
 
     return () => {
-      tween.kill();
+      cancelAnimationFrame(raf);
+      io?.disconnect();
       if (pauseOnHover && root) {
         root.removeEventListener('pointerenter', pause);
         root.removeEventListener('pointerleave', resume);
