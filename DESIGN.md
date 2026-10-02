@@ -312,7 +312,7 @@ Reveal: **"If you scrolled this far, you just watched a margam."**
 Sub: "A Bharatanatyam recital follows a fixed order, from invocation to blessing. This page does too."
 
 **Contact**
-- Title: "Say hello."
+- Title: "Let's make it right." (echoes the hero headline. Changed from "Say hello.", which failed the generic test)
 - Line: "I am looking for full-time roles starting in 2027. If your team builds AI or data systems that have to hold up, I would like to hear from you."
 
 **Footer:** "Designed and built by Harshita in Next.js and TypeScript. Source on GitHub. Last updated {date}."

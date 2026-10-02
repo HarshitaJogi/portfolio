@@ -586,7 +586,7 @@ export const margam = [
 /* ------------------------------------------------------------------ */
 
 export const contact = {
-  title: "Say hello.",
+  title: "Let's make it right.",
   line: "I am looking for full-time roles starting in 2027. If your team builds AI or data systems that have to hold up, I would like to hear from you.",
   copy: "Copy email",
   copied: "Copied",

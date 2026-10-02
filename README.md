@@ -30,7 +30,7 @@ Photos are swappable without touching code: drop your file into `public/placehol
 | `public/placeholders/dance-5.jpg` | Unsplash placeholder (gio shravan) | Your performance photo |
 | `public/placeholders/drone.jpg` | Unsplash placeholder (DRONE EFT) | Your drone, or its aerial imagery. Landscape, high contrast |
 | `public/placeholders/bitgig.jpg` | Screenshot of the live Bitgig demo | Keep, or a better product shot |
-| `public/Harshita_Jogi_Resume.pdf` | Generated from `/resume` as a stand-in | **Your real resume PDF**, same file name |
+| `public/Harshita_Jogi_Resume.pdf` | Stand-in generated from `/resume` (print stylesheet, Letter) | **Your real resume PDF**, same file name |
 
 Placeholder photo credits and links are in `public/placeholders/CREDITS.json`. All are Unsplash License.
 If any placeholder ships, credit is appreciated but not required by that license.
