@@ -77,10 +77,9 @@
   --color-hairline: var(--hairline);
   --color-rule: var(--rule-strong);
 
-  --font-sans: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-hand: var(--font-caveat), "Comic Sans MS", cursive;
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-dela), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
   --breakpoint-3xl: 1600px;
@@ -129,7 +128,7 @@
   line-height: 1.55;
 }
 @utility text-label {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 0.75rem;
   line-height: 1.4;
   letter-spacing: 0.08em;
@@ -146,8 +145,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   overflow-x: clip;
-  scroll-padding-top: 5rem;
   scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
 }
 body {
   background-color: var(--cream);
@@ -205,7 +204,7 @@ a {
   padding: 0 0.75rem;
   border-radius: 999px;
   border: 1.5px solid currentColor;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 0.75rem;
   white-space: nowrap;
 }

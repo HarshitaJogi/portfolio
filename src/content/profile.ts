@@ -485,13 +485,15 @@ export const consoleNote = [
 
 /** Section index (desktop rail, mobile menu, command palette). */
 export const sections = [
-  { id: "top", label: "Introduction", margam: "Alarippu" },
-  { id: "metrics", label: "Numbers", margam: "Jatiswaram" },
-  { id: "work", label: "Experience", margam: "Shabdam" },
-  { id: "projects", label: "Projects", margam: "Varnam" },
-  { id: "toolkit", label: "Stack", margam: "Varnam" },
-  { id: "offstage", label: "Off the clock", margam: "Padam" },
-  { id: "contact", label: "Contact", margam: "Tillana" },
+  { id: "welcome", label: "Welcome", margam: "Alarippu" },
+  { id: "toolkit", label: "Toolkit", margam: "Jatiswaram" },
+  { id: "drone", label: "Drone research, IIT Patna", margam: "Shabdam" },
+  { id: "msci", label: "MSCI, cloud migration", margam: "Shabdam" },
+  { id: "nsi", label: "Network Science Institute, LLM annotation", margam: "Shabdam" },
+  { id: "nokia", label: "Nokia, agents", margam: "Varnam" },
+  { id: "quests", label: "Hackathons", margam: "Varnam" },
+  { id: "stage", label: "Off-stage", margam: "Padam" },
+  { id: "you", label: "Contact", margam: "Tillana" },
 ] as const;
 
 export const seo = {
@@ -675,4 +677,114 @@ export const pipeline: PipelineStage[] = [
   { id: "nsi", year: "2025", name: "Network Science Institute", stat: "60% → 98% accuracy", color: "marigold", icon: "papers", href: "#ch-nsi" },
   { id: "nokia", year: "2026", name: "Nokia", stat: "LLM agents + guardrails", color: "red", icon: "agent", href: "#ch-nokia" },
   { id: "you", year: "2027", name: "Your team?", stat: "full-time from 2027", color: "ink", icon: "you", href: "#contact" },
+];
+
+/* ------------------------------------------------------------------ */
+/* v4: the island. Nine stops on a circular path, then the reveal.      */
+/* One huge headline and one stat line per stop. Nothing else.          */
+/* ------------------------------------------------------------------ */
+
+export type MargamId = "alarippu" | "jatiswaram" | "shabdam" | "varnam" | "padam" | "tillana" | "mangalam";
+
+export type Stop = {
+  id: string;
+  margam: MargamId;
+  hud: string;
+  headline: string;
+  stat?: string;
+  hint?: string;
+  links?: { label: string; href: string; primary?: boolean }[];
+};
+
+export const stops: Stop[] = [
+  {
+    id: "welcome",
+    margam: "alarippu",
+    hud: "Software engineer · Sunnyvale, CA",
+    headline: "Harshita Jogi",
+    stat: "AI writes the first draft. I make it right.",
+    hint: "Scroll to explore the island",
+  },
+  {
+    id: "toolkit",
+    margam: "jatiswaram",
+    hud: "01 · The workshop",
+    headline: "My toolkit.",
+    stat: "Python, Java, TypeScript, LLM agents, GCP, Databricks, Kubernetes, and more.",
+    hint: "Click the blocks",
+  },
+  {
+    id: "drone",
+    margam: "shabdam",
+    hud: "02 · 2023 · IIT Patna + IEEE AESS research",
+    headline: "Taught a drone to read crop leaves.",
+    stat: "Real time, 15m up · $25,000 grant · 2 IEEE papers · patent filed",
+  },
+  {
+    id: "msci",
+    margam: "shabdam",
+    hud: "03 · 2024 – 2025 · MSCI",
+    headline: "Moved 15+ APIs to a new cloud.",
+    stat: "40% lower infra cost · 23% lower latency · 5TB migrated",
+  },
+  {
+    id: "nsi",
+    margam: "shabdam",
+    hud: "04 · 2025 – 2026 · Network Science Institute",
+    headline: "Took LLM annotations from 60% to 98%.",
+    stat: "GPT-4.1 over 1M+ biomedical papers · 97% F1 with SciBERT",
+  },
+  {
+    id: "nokia",
+    margam: "shabdam",
+    hud: "05 · Now · Nokia",
+    headline: "Agents that do real engineering.",
+    stat: "And the guardrails that make them trustworthy.",
+    hint: "Press APPROVE. You are the human in the loop.",
+  },
+  {
+    id: "quests",
+    margam: "varnam",
+    hud: "06 · Side quests",
+    headline: "Hackathons, shipped.",
+    stat: "Bitgig at Berkeley × DeepMind · TryBud, 2nd at Harvard ($3,600)",
+    links: [{ label: "Try Bitgig ↗", href: "https://bitgig-smoky.vercel.app/" }],
+  },
+  {
+    id: "stage",
+    margam: "padam",
+    hud: "07 · Off-stage",
+    headline: "Also, a trained Bharatanatyam dancer.",
+    stat: "The hard work stays invisible. What reaches people feels effortless.",
+    hint: "Ring the bells",
+  },
+  {
+    id: "you",
+    margam: "tillana",
+    hud: "08 · 2027",
+    headline: "Your team, next?",
+    stat: "Open to full-time roles starting 2027.",
+    links: [
+      { label: "Email me", href: "mailto:harshitajogi2001@gmail.com", primary: true },
+      { label: "Resume ↓", href: "/Harshita_Jogi_Resume.pdf" },
+    ],
+  },
+  {
+    id: "outro",
+    margam: "mangalam",
+    hud: "One more thing",
+    headline: "You just watched a margam.",
+    stat: "A Bharatanatyam recital moves through seven parts, in a circle. So did this island.",
+  },
+];
+
+/** The seven parts of the recital, in order, with the colour each wears on the island. */
+export const margamParts: { id: MargamId; name: string; meaning: string; color: string }[] = [
+  { id: "alarippu", name: "Alarippu", meaning: "the invocation", color: "#ff6b4a" },
+  { id: "jatiswaram", name: "Jatiswaram", meaning: "pure technique", color: "#ffc93c" },
+  { id: "shabdam", name: "Shabdam", meaning: "the story", color: "#2f5dff" },
+  { id: "varnam", name: "Varnam", meaning: "the centerpiece", color: "#8e44ad" },
+  { id: "padam", name: "Padam", meaning: "the personal", color: "#ff4f8b" },
+  { id: "tillana", name: "Tillana", meaning: "the joyful finale", color: "#3bb273" },
+  { id: "mangalam", name: "Mangalam", meaning: "the blessing", color: "#16a3a3" },
 ];

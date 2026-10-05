@@ -1,14 +1,14 @@
 "use client";
 
 import { Command } from "cmdk";
-import { useTheme } from "next-themes";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { media, person, sections } from "@/content/profile";
 import { useView } from "@/lib/view";
 
 /** ⌘K: jump anywhere, copy the email, grab the resume. */
 export default function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { resolvedTheme, setTheme } = useTheme();
+  const router = useRouter();
   const { view, setView } = useView();
   const [copied, setCopied] = useState(false);
 
@@ -18,8 +18,9 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
   };
 
   const jump = (id: string) => {
-    if (view === "skim") window.location.href = `/#${id}`;
-    else document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    else router.push(`/#${id}`);
   };
 
   const item =
@@ -63,10 +64,7 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
             Open LinkedIn
           </Command.Item>
           <Command.Item className={item} onSelect={() => run(() => setView(view === "skim" ? "story" : "skim"))}>
-            {view === "skim" ? "Switch to the full story" : "Switch to skim view"}
-          </Command.Item>
-          <Command.Item className={item} onSelect={() => run(() => setTheme(resolvedTheme === "dark" ? "light" : "dark"))}>
-            {resolvedTheme === "dark" ? "Light theme" : "Dark theme"}
+            {view === "skim" ? "Back to the island" : "Text version"}
           </Command.Item>
         </Command.Group>
         <Command.Group heading="Sections" className={group}>
@@ -75,7 +73,7 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
               {s.label}
             </Command.Item>
           ))}
-          <Command.Item className={item} onSelect={() => run(() => (window.location.href = "/resume"))}>
+          <Command.Item className={item} onSelect={() => run(() => router.push("/resume"))}>
             Printable resume
           </Command.Item>
         </Command.Group>

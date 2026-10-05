@@ -1,6 +1,40 @@
 # Harshita Jogi: Portfolio Design Doc
 
-## v2 redesign (Oct 2026), current
+## v4 "Playable world" (Oct 2026), current
+
+**Why:** v1 to v3 were all text-led pages with effects on top. The feedback on each was the same: too much text, type too small next to the name, colours and fonts that looked generated, nothing to actually see. v4 drops the page metaphor.
+
+**Direction:** a toon-shaded island in three.js (react-three-fiber). Scrolling walks a camera around a circular path. Each of the nine stops is a small working model of one piece of her work, with one big card beside it.
+
+- **The path is a margam.** The ring is the tala circle. Each stop is lit in its recital part's colour as you pass it, and the last stop pulls up to a top-down view of the whole coloured ring: "You just watched a margam."
+- **Dashed = draft, solid = verified** survives in 3D. The Nokia robot's tests are wireframe until the visitor presses APPROVE, the "your team" ring is dashed, and the drone's scan boxes mark what has been checked.
+- **Text budget:** one headline and one stat line per stop, in Dela Gothic One at display size. Everything else is on /skim and /resume.
+- **Every model is the claim, as a toy.** Drone sweeps crop rows and flags sick leaves. 15 packets fly from Azure to GCP. Papers go through an LLM arch at 60% and come out at 98%. Hackathon booth with the real Bitgig screen and a 2nd-place trophy. Ghungroo bells you can ring.
+
+| Stop | Margam colour | Model | Interaction |
+|---|---|---|---|
+| Welcome | Alarippu | Gate with her name | none |
+| Toolkit | Jatiswaram | Nine stacked skill blocks | Click a block, it hops |
+| Drone | Shabdam | Crop rows, drone, scan cone | Ambient |
+| MSCI | Shabdam | Azure cloud to GCP cloud, packets, racks | Ambient |
+| NSI | Shabdam | Conveyor through an LLM arch, 60% and 98% boards | Ambient |
+| Nokia | Varnam | Robot, wireframe tests, APPROVE pedestal | APPROVE (3D or card button) |
+| Side quests | Varnam | Booth with the Bitgig screen, trophy | Click the screen, opens the demo |
+| Off-stage | Padam | Stage, dance photo, string of bells | Ring the bells (3D or card button) |
+| Your team | Tillana | Empty plinth, dashed ring, "?" | Click, opens email |
+| Outro | Mangalam | Top-down view of the lit ring | Legend in the card |
+
+**Look:** warm sky gradient, teal sea, sand, clay. Toon material with a 3-step ramp and ink outlines (drei Outlines). Cards are cream with a 3px ink border and a hard offset shadow, so the HTML layer matches the outlined 3D.
+
+**Performance:** the HTML (cards, nav) is server-rendered and is the LCP. A WebP poster of the opening shot sits behind it. The world loads on idle. Stations mount one per idle slice, shaders compile with `compileAsync`, and only then does the canvas draw and fade in over the poster. Trees, rocks and crops are instanced (about 440 draw calls down to about 225). Phones get a 1024 shadow map. Textures go through the Next image optimizer. Lighthouse, production build: desktop 97 to 100 performance, mobile 72 to 74 (Lighthouse renders WebGL in software on a 4x-throttled CPU), 100 on accessibility, best practices and SEO.
+
+**Reduced motion:** the canvas switches to render-on-demand. Nothing moves by itself, the camera jumps between stops, and cards do not spring. The world also stops drawing when the tab is hidden.
+
+**Dev view:** `/lab?p=N` frames stop N with no cards (404 in production).
+
+The sections below describe v2 and earlier and are kept for the record. The content rules, truth ledger and copy constraints in them still apply.
+
+## v2 redesign (Oct 2026), superseded
 
 **Why:** v1 read like a writer's portfolio: serif editorial type, long prose in every section, and effects laid over content (the Bitgig dither covered the demo it was meant to show). Feedback: too much text, not tech enough, React Bits used for decoration.
 

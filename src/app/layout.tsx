@@ -1,28 +1,31 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Caveat, Geist_Mono } from "next/font/google";
+import { Archivo, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { education, person, SITE_URL, seo, work } from "@/content/profile";
 import { Providers } from "@/components/ui/Providers";
 import { ConsoleNote } from "@/components/ui/ConsoleNote";
 
-const sans = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+// Dela Gothic One, cut down to Latin (11KB). Google serves it as 120+ CJK slices otherwise.
+// The same subset, as TTF, sets the type on the island.
+const display = localFont({
+  src: "../assets/fonts/DelaGothicOne-latin.woff2",
+  variable: "--font-dela",
+  weight: "400",
+  display: "swap",
+  fallback: ["Arial Black", "system-ui", "sans-serif"],
+});
+
+const sans = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
-  axes: ["opsz", "wdth"],
   display: "swap",
 });
 
-// Only the red-pen notes use it, so it is not preloaded.
-const hand = Caveat({
-  variable: "--font-caveat",
+const mono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
   subsets: ["latin"],
-  display: "swap",
-  preload: false,
-});
-
-const mono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
   preload: false,
 });
@@ -78,7 +81,7 @@ const bootScript = `(function(){try{var d=document.documentElement;d.classList.a
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${hand.variable} ${mono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${display.variable} ${sans.variable} ${mono.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }} />
