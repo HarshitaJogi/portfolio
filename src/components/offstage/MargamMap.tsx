@@ -6,6 +6,16 @@ import { markMargamSeen } from "@/lib/margam";
 import { cn } from "@/lib/utils";
 
 const N = margam.length;
+// Each part of the recital wears the colour of the band it was on this page.
+const COLOR: Record<string, string> = {
+  alarippu: "var(--ink)",
+  jatiswaram: "var(--green)",
+  shabdam: "var(--red)",
+  varnam: "var(--pink)",
+  padam: "var(--indigo)",
+  tillana: "var(--marigold)",
+  mangalam: "var(--teal)",
+};
 const TIP = 0.62;
 
 /**
@@ -137,17 +147,18 @@ export function MargamMap() {
               >
                 <span
                   className={cn(
-                    "block rounded-full transition-all duration-500",
-                    active === i ? "h-4 w-4" : "h-3 w-3",
-                    on ? "bg-ink" : "border border-dashed border-muted bg-paper",
+                    "block rounded-full border-2 transition-all duration-500",
+                    active === i ? "h-7 w-7" : "h-5 w-5",
+                    on ? "border-ink" : "border-dashed border-muted bg-paper",
                   )}
+                  style={on ? { background: COLOR[m.id] } : undefined}
                 />
               </button>
               <span
                 aria-hidden="true"
                 className={cn(
                   "pointer-events-none absolute font-mono text-[0.6875rem] tracking-[0.06em] uppercase transition-colors duration-500 whitespace-nowrap",
-                  active === i ? "text-accent" : on ? "text-ink" : "text-muted",
+                  active === i ? "text-ink font-bold" : on ? "text-ink" : "text-muted",
                 )}
                 style={{ left: lx, top: ly, transform: `translate(${tx}%, ${ty}%)` }}
               >

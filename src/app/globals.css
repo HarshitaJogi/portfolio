@@ -1,267 +1,300 @@
 @import "tailwindcss";
 
-/* Theme is driven by next-themes setting data-theme on <html>. Dark is the default. */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
 /* ------------------------------------------------------------------ */
-/* Tokens (v2, instrument panel). All text pairs pass WCAG AA.         */
-/*   dark:  ink 16.8, muted 7.1, accent 5.8 on bg                      */
-/*   light: ink 17.9, muted 6.2, accent 6.3 on bg                      */
+/* v3: Kanjeevaram silk on cream. One bright theme.                    */
+/* Text pairs (WCAG): ink on cream 15.6, muted on cream 6.4,           */
+/* red on cream 5.3. Bands: cream on red 5.3, teal 5.9, pink 5.5,      */
+/* indigo 12.8; ink on marigold 9.6, green 8.2.                        */
 /* ------------------------------------------------------------------ */
 :root {
-  --bg: #fafaf8;
-  --surface: #ffffff;
-  --surface-2: #f1f1ee;
-  --line: #e6e6e1;
-  --line-strong: #cfcfc8;
-  --ink: #121214;
-  --muted: #5e5e66;
-  --faint: #8a8a92;
-  --accent: #b3261e;
-  --accent-soft: rgb(179 38 30 / 0.09);
-  --grid: rgb(18 18 20 / 0.045);
+  --cream: #fff6e8;
+  --paper: #fffdf8;
+  --sand: #f6ead6;
+  --ink: #1a1a3a;
+  --muted: #5b5870;
+  --line: rgb(26 26 58 / 0.12);
+  --line-strong: rgb(26 26 58 / 0.3);
 
-  /* v1 names, still read by some adapted components */
-  --paper: var(--bg);
-  --paper-deep: var(--surface-2);
+  --red: #c81d35;
+  --marigold: #ffb627;
+  --teal: #086b66;
+  --green: #7bc950;
+  --pink: #c2185b;
+  --indigo: #25275f;
+
+  /* names older components still read */
+  --bg: var(--cream);
+  --surface: var(--paper);
+  --surface-2: var(--sand);
+  --faint: var(--muted);
+  --accent: var(--red);
+  --accent-soft: rgb(200 29 53 / 0.1);
+  --paper-deep: var(--sand);
   --hairline: var(--line);
   --rule-strong: var(--line-strong);
 
   --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-glide: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --dur-micro: 160ms;
-  --dur-enter: 520ms;
-  --dur-draw: 760ms;
-  --gutter: 1rem;
-
+  --dur-enter: 600ms;
+  --gutter: 1.25rem;
   color-scheme: light;
-}
-
-[data-theme="dark"] {
-  --bg: #0b0b0c;
-  --surface: #121214;
-  --surface-2: #18181b;
-  --line: #26262b;
-  --line-strong: #3a3a41;
-  --ink: #ededef;
-  --muted: #9a9aa3;
-  --faint: #6b6b73;
-  --accent: #f2554a;
-  --accent-soft: rgb(242 85 74 / 0.12);
-  --grid: rgb(237 237 239 / 0.04);
-  color-scheme: dark;
 }
 
 @media (min-width: 768px) {
   :root {
-    --gutter: 2.5rem;
+    --gutter: 3rem;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --gutter: 4.5rem;
   }
 }
 
 @theme inline {
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-sand: var(--sand);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-red: var(--red);
+  --color-marigold: var(--marigold);
+  --color-teal: var(--teal);
+  --color-green: var(--green);
+  --color-pink: var(--pink);
+  --color-indigo: var(--indigo);
+
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
-  --color-line: var(--line);
-  --color-line-strong: var(--line-strong);
-  --color-ink: var(--ink);
-  --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-paper-deep: var(--paper-deep);
+  --color-hairline: var(--hairline);
+  --color-rule: var(--rule-strong);
 
-  /* v1 aliases, kept so shared pieces (resume, skim, menus) follow the new theme */
-  --color-paper: var(--bg);
-  --color-paper-deep: var(--surface-2);
-  --color-hairline: var(--line);
-  --color-rule: var(--line-strong);
-
-  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-hand: var(--font-caveat), "Comic Sans MS", cursive;
 
   --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-glide: cubic-bezier(0.65, 0, 0.35, 1);
-
   --breakpoint-3xl: 1600px;
 }
 
-/* Fluid type scale */
-@utility text-name {
-  font-size: clamp(3.25rem, 1.6rem + 6.6vw, 7.5rem);
-  line-height: 0.92;
+@utility text-mega {
+  font-size: clamp(4.5rem, 1rem + 11vw, 12.5rem);
+  line-height: 0.86;
   letter-spacing: -0.045em;
-  font-weight: 600;
+  font-weight: 750;
+}
+@utility text-display {
+  font-size: clamp(2.75rem, 1rem + 6vw, 7.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-weight: 750;
+  font-variation-settings: "opsz" 96, "wdth" 88;
 }
 @utility text-headline {
-  font-size: clamp(1.625rem, 1.15rem + 1.9vw, 2.75rem);
-  line-height: 1.08;
+  font-size: clamp(1.75rem, 1rem + 2.6vw, 3.5rem);
+  line-height: 1.02;
   letter-spacing: -0.03em;
-  font-weight: 500;
+  font-weight: 650;
+  font-variation-settings: "opsz" 72;
 }
 @utility text-title {
-  font-size: clamp(2rem, 1.4rem + 2.4vw, 3.5rem);
-  line-height: 1;
+  font-size: clamp(2rem, 1.2rem + 3vw, 4rem);
+  line-height: 0.95;
   letter-spacing: -0.035em;
-  font-weight: 600;
+  font-weight: 700;
+  font-variation-settings: "opsz" 72;
 }
 @utility text-stat {
-  font-size: 2.25rem;
+  font-size: 2.5rem;
   line-height: 1;
   letter-spacing: -0.04em;
-  font-weight: 600;
+  font-weight: 750;
   font-variant-numeric: tabular-nums;
 }
 @utility text-lead {
-  font-size: clamp(1.0625rem, 0.98rem + 0.4vw, 1.25rem);
-  line-height: 1.5;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  line-height: 1.45;
 }
 @utility text-body {
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 1.0625rem;
+  line-height: 1.55;
 }
 @utility text-label {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.75rem;
   line-height: 1.4;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-@utility measure {
-  max-width: 62ch;
 }
 @utility px-gutter {
   padding-inline: var(--gutter);
 }
+@utility measure {
+  max-width: 60ch;
+}
 
-/* ------------------------------------------------------------------ */
-/* Base                                                                */
 /* ------------------------------------------------------------------ */
 html {
   -webkit-text-size-adjust: 100%;
   overflow-x: clip;
   scroll-padding-top: 5rem;
+  scroll-behavior: smooth;
 }
-
 body {
-  background-color: var(--bg);
+  background-color: var(--cream);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 1.0625rem;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: clip;
-  font-feature-settings: "ss01", "cv11";
 }
-
 ::selection {
-  background: var(--accent);
-  color: var(--bg);
+  background: var(--marigold);
+  color: var(--ink);
 }
-
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 3px solid var(--ink);
   outline-offset: 3px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
-
+.band-dark :focus-visible {
+  outline-color: var(--cream);
+}
 a {
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.22em;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
 }
-
 .link {
   text-decoration-line: underline;
-  text-decoration-color: var(--line-strong);
-  transition: text-decoration-color var(--dur-micro) var(--ease-settle), color var(--dur-micro) var(--ease-settle);
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1.5px;
+  transition: opacity var(--dur-micro);
 }
 .link:hover {
-  text-decoration-color: currentColor;
-  color: var(--accent);
+  opacity: 0.75;
 }
 
-/* The instrument grid behind the page, fading out at the edges. */
-.bg-grid {
-  background-image:
-    linear-gradient(to right, var(--grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 40%, transparent 100%);
+/* Pills and chips */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.25rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 1.875rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid currentColor;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
-/* Panels. Dashed = draft or in progress, solid = verified. The one visual rule. */
-.panel {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 14px;
+/* The poster card: crisp ink outline and an offset shadow. Sits on any band. */
+.card {
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 1.5rem;
+  box-shadow: 8px 8px 0 var(--ink);
 }
-.panel-draft {
-  border: 1px dashed var(--line-strong);
-  background: var(--surface);
-  border-radius: 14px;
-}
+
+/* Drafts are dashed, verified is solid. Still the one rule. */
 .rule-dashed {
-  background-image: linear-gradient(to right, var(--line-strong) 50%, transparent 50%);
-  background-size: 8px 1px;
+  background-image: linear-gradient(to right, currentColor 50%, transparent 50%);
+  background-size: 10px 2px;
   background-repeat: repeat-x;
-  height: 1px;
+  height: 2px;
 }
-.rule-solid {
-  background: var(--line);
-  height: 1px;
+
+/* Entrances: transform only, so contrast holds at every frame. */
+html.js [data-reveal] {
+  transform: translateY(24px);
+  transition: transform 800ms var(--ease-settle) var(--reveal-delay, 0ms);
+}
+html.js [data-reveal][data-in] {
+  transform: none;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
     transform: none;
   }
 }
-
-/* A small mono chip: metrics, stack, tags. */
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  height: 1.75rem;
-  padding: 0 0.625rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface-2);
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.75rem;
-  color: var(--ink);
-  white-space: nowrap;
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes packets {
+  to {
+    background-position: 28px 0;
+  }
+}
+@keyframes flow {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* Entrances. html.js is set before paint, so without JS nothing is ever hidden. */
-/* Transform only: text keeps full contrast at every frame. */
-html.js [data-reveal] {
-  transform: translateY(14px);
-  transition: transform var(--dur-enter) var(--ease-settle) var(--reveal-delay, 0ms);
-}
-html.js [data-reveal][data-in] {
-  transform: none;
-}
-
-/* After the margam reveal, section labels whisper their part of the recital on hover. */
 .kicker[data-margam]::after {
   content: attr(data-margam);
   margin-left: 0.75rem;
-  color: var(--accent);
   opacity: 0;
-  transition: opacity var(--dur-micro) var(--ease-settle);
+  transition: opacity var(--dur-micro);
 }
 html:not([data-margam="seen"]) .kicker[data-margam]::after {
   display: none;
 }
 section:hover .kicker[data-margam]::after {
-  opacity: 1;
+  opacity: 0.85;
+}
+
+/* Without JS the verified line is simply shown. */
+html:not(.js) .verified-line {
+  opacity: 1 !important;
 }
 
 .sr-only {
@@ -277,35 +310,26 @@ section:hover .kicker[data-margam]::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
   }
   html.js [data-reveal] {
-    opacity: 1;
     transform: none;
   }
 }
 
-/* Paper is white: printing always uses light tokens, whatever the screen theme. */
 @media print {
-  :root,
-  [data-theme="dark"] {
-    --bg: #ffffff;
-    --surface: #ffffff;
-    --surface-2: #f4f4f2;
-    --line: #dddddd;
-    --line-strong: #bbbbbb;
+  :root {
+    --cream: #ffffff;
+    --paper: #ffffff;
     --ink: #000000;
     --muted: #333333;
-    --accent: #9b1c15;
-    color-scheme: light;
-  }
-  .bg-grid {
-    display: none;
   }
 }

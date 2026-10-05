@@ -1,20 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Caveat, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { education, person, SITE_URL, seo, work } from "@/content/profile";
 import { Providers } from "@/components/ui/Providers";
 import { ConsoleNote } from "@/components/ui/ConsoleNote";
 
-const sans = Geist({
-  variable: "--font-geist",
+const sans = Bricolage_Grotesque({
+  variable: "--font-bricolage",
+  subsets: ["latin"],
+  axes: ["opsz", "wdth"],
+  display: "swap",
+});
+
+// Only the red-pen notes use it, so it is not preloaded.
+const hand = Caveat({
+  variable: "--font-caveat",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
 });
 
 const mono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -42,10 +52,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0b0b0c" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0b0c" },
+    { media: "(prefers-color-scheme: light)", color: "#fff6e8" },
+    { media: "(prefers-color-scheme: dark)", color: "#fff6e8" },
   ],
-  colorScheme: "dark light",
+  colorScheme: "light",
 };
 
 const personLd = {
@@ -68,7 +78,7 @@ const bootScript = `(function(){try{var d=document.documentElement;d.classList.a
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${hand.variable} ${mono.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }} />

@@ -2,45 +2,47 @@ import { Suspense } from "react";
 import type { TrackOrDefault } from "@/content/profile";
 import { RevealController } from "@/components/ui/RevealController";
 import { Nav } from "@/components/ui/Nav";
-import { Hero } from "@/components/sections/Hero";
-import { Experience } from "@/components/sections/Experience";
-import { Projects } from "@/components/sections/Projects";
-import { Stack } from "@/components/sections/Stack";
-import { About } from "@/components/sections/About";
-import { Contact } from "@/components/sections/Contact";
-import { Footer } from "@/components/sections/Footer";
-import { SectionIndexGate } from "@/components/ui/SectionIndexGate";
 import { MobileBar } from "@/components/ui/MobileBar";
+import { HeroV3 } from "@/components/v3/HeroV3";
+import { ToolkitBand } from "@/components/v3/ToolkitBand";
+import { ExperienceV3 } from "@/components/v3/ExperienceV3";
+import { ProjectsV3 } from "@/components/v3/ProjectsV3";
+import { OffStageV3 } from "@/components/v3/OffStageV3";
+import { ContactV3 } from "@/components/v3/ContactV3";
+import { FooterV3 } from "@/components/v3/FooterV3";
 
 const updated = new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" });
 
-/** The whole page. `track` reorders highlights for ?track= links. */
+/**
+ * The page follows a Bharatanatyam recital (a margam), in order:
+ * Alarippu (hero), Jatiswaram (toolkit), Shabdam (experience), Varnam (projects),
+ * Padam (off-stage), Tillana (contact), Mangalam (footer).
+ */
 export function Site({ track }: { track: TrackOrDefault }) {
+  void track;
   return (
     <>
       <Nav />
-      <SectionIndexGate />
       <MobileBar />
       <main id="main" className="relative z-10">
-        <Hero track={track} />
-        {/* Each boundary hydrates on its own, so React can yield between sections. */}
+        <HeroV3 />
         <Suspense fallback={null}>
-          <Experience />
+          <ToolkitBand />
         </Suspense>
         <Suspense fallback={null}>
-          <Projects track={track} />
+          <ExperienceV3 />
         </Suspense>
         <Suspense fallback={null}>
-          <Stack />
+          <ProjectsV3 />
         </Suspense>
         <Suspense fallback={null}>
-          <About />
+          <OffStageV3 />
         </Suspense>
         <Suspense fallback={null}>
-          <Contact />
+          <ContactV3 />
         </Suspense>
       </main>
-      <Footer updated={updated} />
+      <FooterV3 updated={updated} />
       <RevealController />
     </>
   );

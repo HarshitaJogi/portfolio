@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  * Headshot in a tala circle. Hover, focus or tap and it dissolves into a performance
  * photo. Two sides of the same person. The ring is dashed until you look closer.
  */
-export function HeroPortrait({ className, lineStart = false }: { className?: string; lineStart?: boolean }) {
+export function HeroPortrait({ className, lineStart = false, caption = true }: { className?: string; lineStart?: boolean; caption?: boolean }) {
   const fine = useFinePointer();
   const [dance, setDance] = useState(false);
   const [second, setSecond] = useState(false);
@@ -72,7 +72,7 @@ export function HeroPortrait({ className, lineStart = false }: { className?: str
           />
         </div>
       </div>
-      <figcaption className="text-label mt-6 hidden text-center font-mono text-muted md:block">
+      <figcaption className={caption ? "text-label mt-6 hidden text-center font-mono text-muted md:block" : "sr-only"}>
         {dance ? "Off-stage" : fine ? hero.photoHint.fine : hero.photoHint.coarse}
       </figcaption>
     </figure>

@@ -59,7 +59,8 @@ export function AgentConsole() {
       <div
         className={cn(
           "relative overflow-hidden transition-[border-color,box-shadow] duration-500",
-          verified ? "panel shadow-[0_0_0_1px_var(--accent),0_24px_80px_-32px_var(--accent)]" : "panel-draft",
+          "rounded-3xl border-2 bg-paper text-ink",
+          verified ? "border-ink shadow-[8px_8px_0_var(--ink)]" : "border-dashed border-ink/40 shadow-[8px_8px_0_rgb(26_26_58/0.15)]",
         )}
       >
         {/* header */}

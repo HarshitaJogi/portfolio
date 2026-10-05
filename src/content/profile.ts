@@ -626,11 +626,53 @@ export const stack: { group: string; items: StackItem[] }[] = [
 export const about = {
   title: "Off the clock",
   lines: [
-    "Trained Bharatanatyam dancer. Kovida degree, Nalanda Dance Research Center.",
-    "Communication Skills Grade 5 with Distinction, Trinity College London.",
+    "Kovida degree in Bharatanatyam, Nalanda Dance Research Center",
+    "Communication Skills Grade 5, Distinction, Trinity College London",
   ],
   quote: "The hard work stays invisible. What reaches people feels effortless.",
   quoteNote: "That is how I try to build software.",
   revealLead: "One more thing. This page follows a Bharatanatyam recital.",
   revealLine: "You just watched a margam.",
 };
+
+/* ------------------------------------------------------------------ */
+/* v3: the hero gag and the career pipeline                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The hero's AI draft. Deliberately absurd claims, visibly struck out by a human.
+ * None of these are claims about Harshita: they are the joke, and they are crossed out.
+ */
+export const aiDraft = {
+  label: "AI draft",
+  parts: [
+    { text: "Harshita is a " },
+    { text: "10x ninja", note: "nope" },
+    { text: "\nwith " },
+    { text: "47 years of experience", note: "hallucinated" },
+    { text: "." },
+  ] as { text: string; note?: string }[],
+  srSummary: "An AI-written draft bio full of made-up claims, crossed out by hand.",
+  pending: "awaiting review",
+  verified: "verified by a human",
+  headline: { first: "AI writes the first draft.", second: "I make it", last: "right." },
+};
+
+export type PipelineStage = {
+  id: string;
+  year: string;
+  name: string;
+  stat: string;
+  color: "green" | "teal" | "marigold" | "red" | "ink";
+  icon: "drone" | "cloud" | "papers" | "agent" | "you";
+  href: string;
+};
+
+/** Her career, left to right, as one pipeline. The last stage is the visitor's team. */
+export const pipeline: PipelineStage[] = [
+  { id: "research", year: "2023", name: "Edge ML research", stat: "$25,000 grant", color: "green", icon: "drone", href: "#ch-research" },
+  { id: "msci", year: "2024", name: "MSCI", stat: "15+ APIs to GCP", color: "teal", icon: "cloud", href: "#ch-msci" },
+  { id: "nsi", year: "2025", name: "Network Science Institute", stat: "60% → 98% accuracy", color: "marigold", icon: "papers", href: "#ch-nsi" },
+  { id: "nokia", year: "2026", name: "Nokia", stat: "LLM agents + guardrails", color: "red", icon: "agent", href: "#ch-nokia" },
+  { id: "you", year: "2027", name: "Your team?", stat: "full-time from 2027", color: "ink", icon: "you", href: "#contact" },
+];
