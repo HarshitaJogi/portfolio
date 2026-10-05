@@ -1,33 +1,66 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { worldNav } from "@/world/nav";
+import { cn } from "@/lib/utils";
 import { media, person } from "@/content/profile";
 import { Monogram } from "./Monogram";
 import { CommandTrigger } from "./CommandTrigger";
 
 const links = [
-  { href: "/#drone", label: "Work" },
-  { href: "/#quests", label: "Projects" },
-  { href: "/#you", label: "Contact" },
+  { href: "/education", label: "Education" },
+  { href: "/skills", label: "Skills" },
+  { href: "/experience", label: "Experience" },
+  { href: "/projects", label: "Projects" },
+  { href: "/offstage", label: "Off-stage" },
 ];
+
+/** Links fly through the clouds (worldNav) unless the visitor asked for a new tab. */
+const fly = (href: string) => (e: React.MouseEvent) => {
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+  e.preventDefault();
+  worldNav.go(href);
+};
 
 /** Floats over the island. Links sit in a cream pill so they read over any scene. Resume is always one tap away. */
 export function Nav() {
+  const pathname = usePathname();
+  const inWorld = pathname !== "/";
   return (
     <header className="fixed inset-x-0 top-0 z-50">
-      <div className="px-gutter mx-auto flex h-16 max-w-[100rem] items-center justify-between gap-4 md:h-[4.5rem]">
-        <Link href="/" className="flex items-center gap-3 rounded-full text-ink no-underline" aria-label={`${person.name}, home`}>
-          <Monogram size={38} />
-        </Link>
-        <nav aria-label="Primary" className="flex items-center gap-1 sm:gap-2">
-          <ul className="mr-2 hidden h-10 items-center gap-0.5 rounded-full border-[3px] border-ink bg-[#fff8ec] px-1.5 shadow-[3px_3px_0_var(--ink)] md:flex">
-            {links.map((l) => (
-              <li key={l.href}>
-                <a href={l.href} className="rounded-full px-3 py-1 text-[0.9375rem] font-semibold text-ink no-underline transition-colors hover:bg-ink/10">
-                  {l.label}
-                </a>
-              </li>
-            ))}
+      <div className="px-gutter mx-auto flex h-16 max-w-[100rem] items-center justify-between gap-3 md:h-[4.5rem]">
+        <div className="flex items-center gap-2">
+          <Link href="/" onClick={fly("/")} className="flex items-center rounded-full text-ink no-underline" aria-label={`${person.name}, the island`}>
+            <Monogram size={38} />
+          </Link>
+          {inWorld && (
+            <Link
+              href="/"
+              onClick={fly("/")}
+              className="inline-flex h-10 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3.5 font-display text-[0.875rem] text-ink no-underline shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5"
+            >
+              <span aria-hidden="true">←</span> Island
+            </Link>
+          )}
+        </div>
+        <nav aria-label="Primary" className="flex items-center gap-1.5 sm:gap-2">
+          <ul className="mr-1 hidden h-10 items-center gap-0.5 rounded-full border-[3px] border-ink bg-[#fff8ec] px-1.5 shadow-[3px_3px_0_var(--ink)] lg:flex">
+            {links.map((l) => {
+              const on = pathname === l.href;
+              return (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    onClick={fly(l.href)}
+                    aria-current={on ? "page" : undefined}
+                    className={cn("rounded-full px-3 py-1 text-[0.9375rem] font-semibold no-underline transition-colors", on ? "bg-ink text-[#fff8ec]" : "text-ink hover:bg-ink/10")}
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              );
+            })}
             <li>
               <Link href="/skim" className="rounded-full px-3 py-1 text-[0.9375rem] font-semibold text-ink no-underline transition-colors hover:bg-ink/10">
                 Text version

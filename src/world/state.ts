@@ -3,8 +3,8 @@
 import { useSyncExternalStore } from "react";
 
 /** Island interaction state shared by the 3D scene and the HTML overlay. */
-type State = { approved: boolean; bells: number };
-let state: State = { approved: false, bells: 0 };
+type State = { approved: boolean; bells: number; pumpkins: number };
+let state: State = { approved: false, bells: 0, pumpkins: 0 };
 const listeners = new Set<() => void>();
 
 export const island = {

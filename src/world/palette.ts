@@ -23,8 +23,28 @@ export const C = {
   steel: "#8d99ae",
   white: "#ffffff",
   red: "#e63946",
+  // cities
+  brick: "#b5523b",
+  brickDark: "#8f3d2c",
+  brownstone: "#8b5a44",
+  stone: "#d8cbb3",
+  concrete: "#c9c2b6",
+  asphalt: "#4a4a55",
+  maple: "#ff8a2a",
+  mapleDeep: "#d9541e",
+  palm: "#3f9a5a",
+  hills: "#e0b25c",
+  taxiYellow: "#ffd23f",
+  trolley: "#2f8f4e",
+  glass: "#9fd6e8",
+  night: "#1d2350",
+  gold: "#f4b63f",
+  silver: "#c9d1dc",
+  pumpkin: "#ff7a1a",
+  pcb: "#1f6b4a",
+  copper: "#e0a35a",
 };
 
 export const RING_R = 14; // the path everyone walks
-export const STOP_COUNT = 9; // stations on the ring (the outro is a camera move, not a station)
+export const STOP_COUNT = 7; // districts on the ring (the outro is a camera move, not a district)
 export const stopAngle = (i: number) => -Math.PI / 2 + (i / STOP_COUNT) * Math.PI * 2;

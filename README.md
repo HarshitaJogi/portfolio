@@ -1,12 +1,12 @@
 # harshitajogi.com
 
 Portfolio of Harshita Jogi. Next.js (App Router), TypeScript, Tailwind CSS v4, three.js via react-three-fiber and drei, Motion.
-The home page is a small island you scroll around. Each stop is a working model of one piece of work.
+The home page is an island: a map of the resume, one district per section. Each district opens into its own world (`/education`, `/skills`, `/experience`, `/projects`, `/offstage`), walked in time order.
 Design rationale lives in [DESIGN.md](DESIGN.md).
 
 ```bash
 pnpm install
-pnpm dev          # http://localhost:3000   (/lab?p=N frames island stop N, dev only)
+pnpm dev          # http://localhost:3000   (/lab?s=experience&p=N frames step N of a scene, dev only)
 pnpm build        # truth lint → next build → truth lint on the rendered HTML
 pnpm truth        # check copy in src/content/profile.ts against the brief's rules
 ```
@@ -50,25 +50,28 @@ If any placeholder ships, credit is appreciated but not required by that license
 - `/skim` is the one-screen text version (also linked as "Text version" in the nav). `?view=skim` redirects there.
 - `/resume` is the printable resume.
 - `⌘K` / `Ctrl+K` opens the command menu.
-- `/t/<track>` and `?track=` still resolve, but the island shows the same stops for every track.
+- Every world is its own URL, and steps take a hash: `/experience#nokia`, `/projects#bitgig`.
 
 ## Structure
 
 ```
 src/
-  app/                 routes, metadata, OG image, icons, sitemap, robots, 404, /lab (dev only)
-  content/profile.ts   all copy and data, including the island stops (`stops`)
-  world/               the 3D island
-    World.tsx          canvas, lights, load sequence (idle mount, async shader compile)
-    CameraRig.tsx      one camera shot per stop, eased from scroll progress
-    Island.tsx         sea, island, path, margam arcs, instanced trees and rocks
-    stations/          one file per stop
-    toon.tsx           toon material + outline, and ToonInstances
-    scroll.ts state.ts shared stores (scroll progress, approved, bells)
-  components/
-    v4/Journey.tsx     scroll sections and the cards over the world
-    skim/ ui/ v3/FooterV3.tsx  text version, nav, command menu, footer
-    bits/FuzzyText.tsx React Bits, used on the 404
+  app/
+    (island)/layout.tsx      nav, the persistent canvas shell, footer, easter eggs
+    (island)/page.tsx        the hub
+    (island)/[world]/        one static page per world
+    skim/ resume/ lab/       text version, printable resume, dev-only scene viewer
+  content/profile.ts         all copy and data: hubStops, worlds (steps), eggCopy
+  world/
+    World.tsx                the canvas: scene switch, lazy chunks, async shader compile
+    Lights.tsx atmosphere.ts sky, fog and night, blended per step
+    hub/                     the hub island, districts, portals, the bottle
+    worlds/Frame.tsx         a world: islet chain, camera path, plane or bridges, portal
+    worlds/<id>/             one folder per world, one file per diorama
+    props/                   shared toys: islet, sign, live clock, portal, trees, buildings, vehicles
+    pieces/                  bigger working models reused in worlds (agent, cloud, papers, drone, booth)
+    eggs.ts party.ts nav.ts  easter eggs, the barrel roll, scene navigation
+  components/v5/             Shell (sky, poster, canvas, cloud wipe), HubPage, WorldPage, cards, Eggs
 scripts/truth-lint.mjs
 ```
 

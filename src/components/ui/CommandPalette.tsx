@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { media, person, sections } from "@/content/profile";
 import { useView } from "@/lib/view";
+import { worldNav } from "@/world/nav";
 
 /** ⌘K: jump anywhere, copy the email, grab the resume. */
 export default function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
@@ -17,11 +18,7 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
     onOpenChange(false);
   };
 
-  const jump = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-    else router.push(`/#${id}`);
-  };
+  const jump = (href: string) => worldNav.go(href);
 
   const item =
     "flex cursor-pointer items-center justify-between gap-4 rounded-md px-3 py-2.5 text-[1rem] text-ink data-[selected=true]:bg-paper-deep data-[selected=true]:text-accent";
@@ -69,7 +66,7 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
         </Command.Group>
         <Command.Group heading="Sections" className={group}>
           {sections.map((s) => (
-            <Command.Item key={s.id} className={item} onSelect={() => run(() => jump(s.id))}>
+            <Command.Item key={s.id} className={item} onSelect={() => run(() => jump(s.href))}>
               {s.label}
             </Command.Item>
           ))}

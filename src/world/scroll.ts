@@ -13,6 +13,13 @@ export function setJourney(p: number) {
   listeners.forEach((l) => l());
 }
 
+/** A new scene starts where its page is scrolled to, with no glide from the last scene. */
+export function resetJourney(p: number) {
+  journey.target = p;
+  journey.progress = p;
+  listeners.forEach((l) => l());
+}
+
 /** For the on-demand frameloop (reduced motion): redraw only when the scroll moves. */
 export function onJourney(l: () => void) {
   listeners.add(l);

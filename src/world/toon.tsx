@@ -30,6 +30,7 @@ export function ToonInstances({
   outline = true,
   thickness = 2.2,
   castShadow = false,
+  emissive,
 }: {
   items: Instance[];
   children: ReactNode;
@@ -37,6 +38,7 @@ export function ToonInstances({
   outline?: boolean;
   thickness?: number;
   castShadow?: boolean;
+  emissive?: string;
 }) {
   const ref = useRef<THREE.InstancedMesh>(null);
   // Runs after the outline's own layout effect, which shares this instanceMatrix, so both pick up the transforms.
@@ -65,7 +67,7 @@ export function ToonInstances({
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, items.length]} castShadow={castShadow} receiveShadow>
       {children}
-      <Toon color={color} outline={outline} thickness={thickness} />
+      <Toon color={color} outline={outline} thickness={thickness} emissive={emissive} />
     </instancedMesh>
   );
 }

@@ -1,6 +1,39 @@
 # Harshita Jogi: Portfolio Design Doc
 
-## v4 "Playable world" (Oct 2026), current
+## v5 "A map of the resume" (Oct 2026), current
+
+**Why:** v4 looked right, but the island was a list of things she did in no particular order. A recruiter liked the look and could not get a clear picture. v5 keeps the island and gives it structure.
+
+**Structure: one hub, five worlds.**
+- **The hub** (`/`) is the island. Each of its seven districts is one section of the resume, in a classic new-grad order: Welcome, Education, Skills, Experience, Projects & research, Off-stage, Contact. Each district has a miniature of its world and a portal in its margam colour. Each card is a short summary with an **Enter** button.
+- **Worlds** (`/education`, `/skills`, `/experience`, `/projects`, `/offstage`) are separate routes, so any of them can be linked to directly. A world is a chain of islets in time order. Scrolling walks the path one step at a time. Each step has a full detail card with dates, place, every bullet, stack and links. The end of each world is a portal to the next world, so the whole site reads as one journey: Start the tour → Education → Skills → Experience → Projects → Off-stage → Contact.
+- **Moving between scenes**: the canvas lives in the layout and is never torn down. A cloud wipe closes, the route changes, the new scene builds and compiles behind the clouds, then they part.
+
+**The places are real.** Every locale detail comes from a fact in `profile.ts`:
+
+| Step | Place | Details |
+|---|---|---|
+| IIT Patna, Research Intern | Remote | A home desk. The laptop shows a maize leaf with a box locking onto the blight, and "86% detection accuracy". A quantized edge board. A Wi-Fi router broadcasting |
+| MSCI, Technology Analyst | Mumbai | A cable-stayed sea bridge with kaali-peeli taxis (click for a honk), the skyline, seafront lamps that light at dusk, a monsoon cloud, the Azure → GCP migration |
+| NSI, Research Assistant | Boston | Brownstones, fall maples and falling leaves, the Green Line trolley (click for the bell), a network-science sculpture, the 60% → 98% conveyor, a sailboat on the water |
+| Nokia, SWE Co-op | Sunnyvale | Golden hills, palms, a big sun, a rack of live hardware cabled to the test bench, the 50K+ line framework as a stack of printouts, the agent at the review gate, and a dashed "next suite" |
+| University of Mumbai | Mumbai | A Gothic clock tower, a circuit-board ground for Electronics |
+| Northeastern | Boston | Red brick and columns, a husky, course books, two medals. The cap is dashed until May 2027 |
+| Hackathons | Venue not shown | The exact venues are unconfirmed, so those dioramas show the event, not a city |
+
+Every city has a clock showing its **real local time**. The card shows it too ("10:19 PM in Sunnyvale"). This is a quiet nod to the Event Scheduler's timezone conversion.
+
+**The one rule still holds:** dashed = draft, solid = verified. It covers the robot's tests until APPROVE, the 2027 cap, the "next suite" crate, the "also familiar" skills cart and the "your team" plinth.
+
+**Easter eggs** (10, tracked in a small pill once you find the first, with hints for the rest): approve the agent, ring the ghungroo, light every pumpkin, meet the husky, ring the trolley bell, honk a taxi, take a chai break, find the message in a bottle in the hub's sea, light the lamp, and the Konami code (the camera does a barrel roll).
+
+**Cards:** numbers in bullets are set bold with a marker underline, so a skim finds 98%, 15+, 5TB. Facts (GPA, grant, placing) are yellow badges. On phones the bullets fold behind "What I did". A rail on the right (dots on a dashed path) shows where you are in the world. Phones get a segmented strip under the nav.
+
+**Performance:** each scene is its own chunk, so the hub never downloads a world. Pieces mount one per idle slice, shaders compile with `compileAsync`, and the canvas only draws once a scene is built. Repeated shapes are instanced. No scene adds lights after load, because adding a light recompiles every material.
+
+The v4 and v2 sections below are kept for the record. The content rules, truth ledger and copy constraints in them still apply.
+
+## v4 "Playable world" (Oct 2026), superseded
 
 **Why:** v1 to v3 were all text-led pages with effects on top. The feedback on each was the same: too much text, type too small next to the name, colours and fonts that looked generated, nothing to actually see. v4 drops the page metaphor.
 

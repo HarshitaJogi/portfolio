@@ -1,4 +1,5 @@
 import { execSync } from "node:child_process";
+import Link from "next/link";
 import { footer, person } from "@/content/profile";
 import { Monogram } from "@/components/ui/Monogram";
 
@@ -30,9 +31,9 @@ export function FooterV3({ updated }: { updated: string }) {
           <a href={person.links.source} className="link" target="_blank" rel="noopener noreferrer">
             {footer.source}
           </a>
-          <a href="/resume" className="link">
+          <Link href="/resume" className="link">
             /resume
-          </a>
+          </Link>
           <span>
             {sha ? `build ${sha} · ` : ""}
             {updated}

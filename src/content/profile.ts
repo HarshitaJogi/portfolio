@@ -485,15 +485,17 @@ export const consoleNote = [
 
 /** Section index (desktop rail, mobile menu, command palette). */
 export const sections = [
-  { id: "welcome", label: "Welcome", margam: "Alarippu" },
-  { id: "toolkit", label: "Toolkit", margam: "Jatiswaram" },
-  { id: "drone", label: "Drone research, IIT Patna", margam: "Shabdam" },
-  { id: "msci", label: "MSCI, cloud migration", margam: "Shabdam" },
-  { id: "nsi", label: "Network Science Institute, LLM annotation", margam: "Shabdam" },
-  { id: "nokia", label: "Nokia, agents", margam: "Varnam" },
-  { id: "quests", label: "Hackathons", margam: "Varnam" },
-  { id: "stage", label: "Off-stage", margam: "Padam" },
-  { id: "you", label: "Contact", margam: "Tillana" },
+  { id: "welcome", label: "The island", href: "/" },
+  { id: "education", label: "Education", href: "/education" },
+  { id: "skills", label: "Skills", href: "/skills" },
+  { id: "experience", label: "Experience", href: "/experience" },
+  { id: "nokia", label: "Nokia", href: "/experience#nokia" },
+  { id: "nsi", label: "Network Science Institute", href: "/experience#nsi" },
+  { id: "msci", label: "MSCI", href: "/experience#msci" },
+  { id: "projects", label: "Projects & research", href: "/projects" },
+  { id: "bitgig", label: "Bitgig", href: "/projects#bitgig" },
+  { id: "offstage", label: "Off-stage", href: "/offstage" },
+  { id: "contact", label: "Contact", href: "/#contact" },
 ] as const;
 
 export const seo = {
@@ -680,103 +682,14 @@ export const pipeline: PipelineStage[] = [
 ];
 
 /* ------------------------------------------------------------------ */
-/* v4: the island. Nine stops on a circular path, then the reveal.      */
-/* One huge headline and one stat line per stop. Nothing else.          */
+/* v5: the island is a map of the resume.                              */
+/* The hub has one district per resume section. Each district opens    */
+/* into its own world: a path in time order, one step per entry.       */
 /* ------------------------------------------------------------------ */
 
 export type MargamId = "alarippu" | "jatiswaram" | "shabdam" | "varnam" | "padam" | "tillana" | "mangalam";
-
-export type Stop = {
-  id: string;
-  margam: MargamId;
-  hud: string;
-  headline: string;
-  stat?: string;
-  hint?: string;
-  links?: { label: string; href: string; primary?: boolean }[];
-};
-
-export const stops: Stop[] = [
-  {
-    id: "welcome",
-    margam: "alarippu",
-    hud: "Software engineer · Sunnyvale, CA",
-    headline: "Harshita Jogi",
-    stat: "AI writes the first draft. I make it right.",
-    hint: "Scroll to explore the island",
-  },
-  {
-    id: "toolkit",
-    margam: "jatiswaram",
-    hud: "01 · The workshop",
-    headline: "My toolkit.",
-    stat: "Python, Java, TypeScript, LLM agents, GCP, Databricks, Kubernetes, and more.",
-    hint: "Click the blocks",
-  },
-  {
-    id: "drone",
-    margam: "shabdam",
-    hud: "02 · 2023 · IIT Patna + IEEE AESS research",
-    headline: "Taught a drone to read crop leaves.",
-    stat: "Real time, 15m up · $25,000 grant · 2 IEEE papers · patent filed",
-  },
-  {
-    id: "msci",
-    margam: "shabdam",
-    hud: "03 · 2024 – 2025 · MSCI",
-    headline: "Moved 15+ APIs to a new cloud.",
-    stat: "40% lower infra cost · 23% lower latency · 5TB migrated",
-  },
-  {
-    id: "nsi",
-    margam: "shabdam",
-    hud: "04 · 2025 – 2026 · Network Science Institute",
-    headline: "Took LLM annotations from 60% to 98%.",
-    stat: "GPT-4.1 over 1M+ biomedical papers · 97% F1 with SciBERT",
-  },
-  {
-    id: "nokia",
-    margam: "shabdam",
-    hud: "05 · Now · Nokia",
-    headline: "Agents that do real engineering.",
-    stat: "And the guardrails that make them trustworthy.",
-    hint: "Press APPROVE. You are the human in the loop.",
-  },
-  {
-    id: "quests",
-    margam: "varnam",
-    hud: "06 · Side quests",
-    headline: "Hackathons, shipped.",
-    stat: "Bitgig at Berkeley × DeepMind · TryBud, 2nd at Harvard ($3,600)",
-    links: [{ label: "Try Bitgig ↗", href: "https://bitgig-smoky.vercel.app/" }],
-  },
-  {
-    id: "stage",
-    margam: "padam",
-    hud: "07 · Off-stage",
-    headline: "Also, a trained Bharatanatyam dancer.",
-    stat: "The hard work stays invisible. What reaches people feels effortless.",
-    hint: "Ring the bells",
-  },
-  {
-    id: "you",
-    margam: "tillana",
-    hud: "08 · 2027",
-    headline: "Your team, next?",
-    stat: "Open to full-time roles starting 2027.",
-    links: [
-      { label: "Email me", href: "mailto:harshitajogi2001@gmail.com", primary: true },
-      { label: "Resume ↓", href: "/Harshita_Jogi_Resume.pdf" },
-    ],
-  },
-  {
-    id: "outro",
-    margam: "mangalam",
-    hud: "One more thing",
-    headline: "You just watched a margam.",
-    stat: "A Bharatanatyam recital moves through seven parts, in a circle. So did this island.",
-  },
-];
+export type WorldId = "education" | "skills" | "experience" | "projects" | "offstage";
+export type Link = { label: string; href: string; primary?: boolean };
 
 /** The seven parts of the recital, in order, with the colour each wears on the island. */
 export const margamParts: { id: MargamId; name: string; meaning: string; color: string }[] = [
@@ -788,3 +701,452 @@ export const margamParts: { id: MargamId; name: string; meaning: string; color: 
   { id: "tillana", name: "Tillana", meaning: "the joyful finale", color: "#3bb273" },
   { id: "mangalam", name: "Mangalam", meaning: "the blessing", color: "#16a3a3" },
 ];
+
+/** Time zones for the live clocks in each city. */
+export const places = {
+  mumbai: { city: "Mumbai", tz: "Asia/Kolkata" },
+  boston: { city: "Boston", tz: "America/New_York" },
+  sunnyvale: { city: "Sunnyvale", tz: "America/Los_Angeles" },
+} as const;
+export type PlaceId = keyof typeof places;
+
+/* ---------- the hub ---------- */
+
+export type HubStop = {
+  id: string;
+  margam: MargamId;
+  hud: string;
+  headline: string;
+  stat?: string;
+  /** Short scannable lines under the headline. */
+  lines?: string[];
+  world?: WorldId;
+  hint?: string;
+  links?: Link[];
+};
+
+const enter = (w: WorldId, label: string): Link => ({ label: `Enter ${label} →`, href: `/${w}`, primary: true });
+
+export const hubStops: HubStop[] = [
+  {
+    id: "welcome",
+    margam: "alarippu",
+    hud: "Software engineer · Sunnyvale, CA",
+    headline: "Harshita Jogi",
+    stat: "AI writes the first draft. I make it right.",
+    lines: ["SWE Co-op at Nokia · MS CS at Northeastern, May 2027"],
+    hint: "Or scroll for the map of the island",
+    links: [{ label: "Start the tour →", href: "/education", primary: true }],
+  },
+  {
+    id: "education",
+    margam: "jatiswaram",
+    world: "education",
+    hud: "01 · Education",
+    headline: "Education.",
+    lines: ["MS Computer Science · Northeastern · May 2027 · GPA 3.9/4.0", "BE Electronics · University of Mumbai · 2024 · GPA 9.04/10"],
+    links: [enter("education", "Education")],
+  },
+  {
+    id: "skills",
+    margam: "jatiswaram",
+    world: "skills",
+    hud: "02 · Skills",
+    headline: "Skills.",
+    lines: ["LLM systems · Machine learning · Data", "Backend · Cloud & DevOps · Languages & web"],
+    links: [enter("skills", "Skills")],
+  },
+  {
+    id: "experience",
+    margam: "shabdam",
+    world: "experience",
+    hud: "03 · Experience",
+    headline: "Experience.",
+    lines: ["Nokia · Software Engineer Co-op · Now", "Network Science Institute · Research Assistant", "MSCI · Technology Analyst", "IIT Patna · Research Intern"],
+    links: [enter("experience", "Experience")],
+  },
+  {
+    id: "projects",
+    margam: "varnam",
+    world: "projects",
+    hud: "04 · Projects & research",
+    headline: "Projects & research.",
+    lines: ["Bitgig · Berkeley × DeepMind Hackathon", "TryBud · 2nd place, Harvard Hack-o-Ween", "Drone research · $25,000 grant · 2 IEEE papers", "Event Scheduler · Java"],
+    links: [enter("projects", "Projects")],
+  },
+  {
+    id: "offstage",
+    margam: "padam",
+    world: "offstage",
+    hud: "05 · Off-stage",
+    headline: "Also, a trained Bharatanatyam dancer.",
+    stat: "The hard work stays invisible. What reaches people feels effortless.",
+    links: [enter("offstage", "Off-stage")],
+  },
+  {
+    id: "contact",
+    margam: "tillana",
+    hud: "06 · 2027",
+    headline: "Your team, next?",
+    stat: "Open to full-time roles starting 2027. Software, AI, and data teams.",
+    links: [
+      { label: "Email me", href: "mailto:harshitajogi2001@gmail.com", primary: true },
+      { label: "Resume ↓", href: "/Harshita_Jogi_Resume.pdf" },
+      { label: "LinkedIn ↗", href: "https://www.linkedin.com/in/harshita-jogi-563227215/" },
+      { label: "GitHub ↗", href: "https://github.com/HarshitaJogi" },
+    ],
+  },
+  {
+    id: "outro",
+    margam: "mangalam",
+    hud: "One more thing",
+    headline: "You just watched a margam.",
+    stat: "A Bharatanatyam recital moves through seven parts, in a circle. So did this island.",
+  },
+];
+
+/* ---------- the worlds ---------- */
+
+export type Fact = { label: string; value: string };
+
+export type WorldStep = {
+  id: string;
+  kind: "intro" | "item" | "next";
+  /** Small line above the title: dates and place, or a section label. */
+  kicker: string;
+  title: string;
+  subtitle?: string;
+  lede?: string;
+  /** Where the live clock and the location pin point. */
+  place?: PlaceId;
+  where?: string;
+  facts?: Fact[];
+  bullets?: string[];
+  chips?: string[];
+  /** "Where I used it" rows, for skills. */
+  used?: { where: string; what: string; href?: string }[];
+  links?: Link[];
+  /** Sky gradient while this step is in view: top, bottom. */
+  sky: [string, string];
+  night?: boolean;
+  hint?: string;
+};
+
+export type World = {
+  id: WorldId;
+  label: string;
+  margam: MargamId;
+  title: string;
+  description: string;
+  steps: WorldStep[];
+};
+
+const SKY = {
+  day: ["#ffe3b3", "#ffd6b8"] as [string, string],
+  dusk: ["#b9a6ff", "#ffcfb0"] as [string, string],
+  mumbai: ["#7f8fe0", "#ffb991"] as [string, string],
+  boston: ["#9fd0ff", "#ffe2bf"] as [string, string],
+  sunnyvale: ["#76cfff", "#fff0b0"] as [string, string],
+  halloween: ["#4b3a86", "#ff9c5f"] as [string, string],
+  night: ["#151c48", "#5e4a9a"] as [string, string],
+  stage: ["#3a1f4f", "#c4527a"] as [string, string],
+};
+
+const role = (id: string) => work.roles.find((r) => r.id === id)!;
+const school = (id: string) => education.schools.find((s) => s.id === id)!;
+const card = (id: string) => toolkit.cards.find((c) => c.id === id)!;
+
+const nextStep = (to: WorldId | "contact", title: string, lede: string): WorldStep => ({
+  id: "next",
+  kind: "next",
+  kicker: to === "contact" ? "End of the tour" : "Next world",
+  title,
+  lede,
+  sky: SKY.day,
+  links:
+    to === "contact"
+      ? [
+          { label: "Get in touch →", href: "/#contact", primary: true },
+          { label: "Back to the island", href: "/" },
+        ]
+      : [
+          { label: `Continue to ${title.replace(/\.$/, "")} →`, href: `/${to}`, primary: true },
+          { label: "Back to the island", href: "/" },
+        ],
+});
+
+/** Where each skill category was used, linked to the step that proves it. */
+const usedHref: Record<string, string> = {
+  Nokia: "/experience#nokia",
+  NSI: "/experience#nsi",
+  MSCI: "/experience#msci",
+  "IIT Patna": "/experience#iitp",
+  Drone: "/projects#drone",
+  Bitgig: "/projects#bitgig",
+  Coursework: "/projects#scheduler",
+};
+
+const skillStep = (id: string, sky: [string, string], night = false): WorldStep => {
+  const c = card(id);
+  return {
+    id,
+    kind: "item",
+    kicker: "Skills",
+    title: c.title,
+    chips: [...c.skills],
+    used: c.used.map((u) => ({ ...u, href: usedHref[u.where] })),
+    sky,
+    night,
+  };
+};
+
+export const worlds: Record<WorldId, World> = {
+  education: {
+    id: "education",
+    label: "Education",
+    margam: "jatiswaram",
+    title: "Education.",
+    description: "Electronics in Mumbai, then computer science in Boston.",
+    steps: [
+      { id: "intro", kind: "intro", kicker: "01 · Education · 2020 to 2027", title: "Education.", lede: "Electronics in Mumbai, then computer science in Boston.", sky: SKY.day, hint: "Scroll to walk the path" },
+      {
+        id: "mu",
+        kind: "item",
+        kicker: `${school("mu").start} – ${school("mu").end} · ${school("mu").location}`,
+        title: school("mu").school,
+        subtitle: school("mu").degree,
+        place: "mumbai",
+        where: school("mu").location,
+        facts: [
+          { label: "GPA", value: "9.04/10" },
+          { label: "Graduated", value: "May 2024" },
+        ],
+        lede: "Circuits first. The drone research and both IEEE papers came out of these years.",
+        links: [{ label: "See the research →", href: "/projects#drone" }],
+        sky: SKY.mumbai,
+      },
+      {
+        id: "neu",
+        kind: "item",
+        kicker: `${school("neu").start} – ${school("neu").end} · ${school("neu").location}`,
+        title: school("neu").school,
+        subtitle: school("neu").degree,
+        place: "boston",
+        where: school("neu").location,
+        facts: [
+          { label: "GPA", value: "3.9/4.0" },
+          { label: "Graduating", value: "May 2027" },
+        ],
+        chips: [...school("neu").details],
+        bullets: school("neu").awards.map((a) => `${a}`),
+        lede: "Graduating May 2027. Until then the cap stays dashed.",
+        sky: SKY.boston,
+      },
+      nextStep("skills", "Skills.", "Grouped by what they do, and tied to where I used each one."),
+    ],
+  },
+
+  skills: {
+    id: "skills",
+    label: "Skills",
+    margam: "jatiswaram",
+    title: "Skills.",
+    description: "Grouped by what they do, and tied to where I used each one.",
+    steps: [
+      { id: "intro", kind: "intro", kicker: "02 · Skills · six stalls", title: "Skills.", lede: "Grouped by what they do, and tied to where I used each one.", sky: SKY.day, hint: "Scroll down the market" },
+      skillStep("llm", SKY.dusk),
+      skillStep("ml", SKY.boston),
+      skillStep("data", SKY.day),
+      skillStep("backend", SKY.sunnyvale),
+      skillStep("cloud", SKY.boston),
+      skillStep("lang", SKY.day),
+      {
+        id: "also",
+        kind: "item",
+        kicker: "Skills",
+        title: toolkit.alsoLabel,
+        lede: "Familiar, and not yet shown in a role or project here.",
+        chips: [...toolkit.alsoFamiliar],
+        sky: SKY.dusk,
+      },
+      nextStep("experience", "Experience.", "Four roles across three cities, from edge ML research to LLM agents."),
+    ],
+  },
+
+  experience: {
+    id: "experience",
+    label: "Experience",
+    margam: "shabdam",
+    title: "Experience.",
+    description: "Four roles across three cities, from edge ML research to LLM agents.",
+    steps: [
+      { id: "intro", kind: "intro", kicker: "03 · Experience · 2023 to now", title: "Experience.", lede: "Four roles across three cities, from edge ML research to LLM agents.", sky: SKY.day, hint: "Follow the plane" },
+      ...(["iitp", "msci", "nsi", "nokia"] as const).map((id): WorldStep => {
+        const r = role(id);
+        const place: PlaceId | undefined = id === "msci" ? "mumbai" : id === "nsi" ? "boston" : id === "nokia" ? "sunnyvale" : undefined;
+        const sky = id === "iitp" ? SKY.dusk : id === "msci" ? SKY.mumbai : id === "nsi" ? SKY.boston : SKY.sunnyvale;
+        return {
+          id,
+          kind: "item",
+          kicker: `${r.start} – ${r.end} · ${r.location}`,
+          title: r.company,
+          subtitle: r.title,
+          place,
+          where: r.location,
+          lede: r.framing,
+          bullets: r.bullets,
+          chips: r.stack ?? r.chips,
+          links: r.note ? [{ label: `${r.note.text} ↗`, href: r.note.href }] : undefined,
+          hint: id === "nokia" ? "Press APPROVE. You are the human in the loop." : undefined,
+          sky,
+        };
+      }),
+      nextStep("projects", "Projects & research.", "Funded research, two IEEE papers, a patent filing, and two hackathons."),
+    ],
+  },
+
+  projects: {
+    id: "projects",
+    label: "Projects",
+    margam: "varnam",
+    title: "Projects & research.",
+    description: "Funded research, two IEEE papers, a patent filing, and two hackathons.",
+    steps: [
+      { id: "intro", kind: "intro", kicker: "04 · Projects & research · 2023 to 2026", title: "Projects & research.", lede: "Funded research, two IEEE papers, a patent filing, and two hackathons.", sky: SKY.day, hint: "Scroll to walk the path" },
+      {
+        id: "drone",
+        kind: "item",
+        kicker: `${drone.start} – ${drone.end} · ${drone.role}`,
+        title: drone.name,
+        subtitle: drone.funding,
+        facts: [
+          { label: "Grant", value: drone.grant },
+          { label: "Altitude", value: "15m" },
+        ],
+        lede: drone.tagline,
+        bullets: drone.bullets,
+        chips: [...projectCards.drone.specs],
+        sky: SKY.day,
+      },
+      {
+        id: "papers",
+        kind: "item",
+        kicker: "2024 · IEEE SPACE",
+        title: "Two papers and a patent.",
+        bullets: [...publications.map((p) => `${p.title}. ${p.venue}, ${p.pages}.`), `${patent.status}: ${patent.title}.`],
+        links: publications.map((p, i) => ({ label: `Paper ${i + 1} on IEEE Xplore ↗`, href: p.href })),
+        sky: SKY.dusk,
+      },
+      {
+        id: "trybud",
+        kind: "item",
+        kicker: `${hackathons.tickets[1].date} · Hackathon`,
+        title: "TryBud",
+        subtitle: hackathons.tickets[1].event,
+        facts: [
+          { label: "Placed", value: "2nd" },
+          { label: "Prize", value: "$3,600" },
+        ],
+        lede: `${hackathons.tickets[1].line}.`,
+        hint: "Light the pumpkins",
+        sky: SKY.halloween,
+        night: true,
+      },
+      {
+        id: "scheduler",
+        kind: "item",
+        kicker: `${scheduler.start} – ${scheduler.end} · ${scheduler.meta}`,
+        title: "Event Scheduler",
+        subtitle: scheduler.name,
+        lede: projectCards.scheduler.oneLiner,
+        bullets: scheduler.bullets,
+        chips: [...scheduler.patterns],
+        sky: SKY.boston,
+      },
+      {
+        id: "bitgig",
+        kind: "item",
+        kicker: `${bitgig.date} · Hackathon`,
+        title: bitgig.name,
+        subtitle: bitgig.event,
+        lede: bitgig.tagline,
+        bullets: bitgig.bullets,
+        chips: [...bitgig.stack],
+        links: [{ label: "Try the live demo ↗", href: bitgig.live, primary: true }],
+        sky: SKY.night,
+        night: true,
+      },
+      nextStep("offstage", "Off-stage.", "Bharatanatyam, and the rule it taught me."),
+    ],
+  },
+
+  offstage: {
+    id: "offstage",
+    label: "Off-stage",
+    margam: "padam",
+    title: "Off-stage.",
+    description: "Bharatanatyam, and the rule it taught me.",
+    steps: [
+      { id: "intro", kind: "intro", kicker: "05 · Off-stage", title: "Off-stage.", lede: "Bharatanatyam, and the rule it taught me.", sky: SKY.dusk, hint: "Scroll onto the stage" },
+      {
+        id: "dance",
+        kind: "item",
+        kicker: "Bharatanatyam",
+        title: "Kovida degree.",
+        subtitle: "Nalanda Dance Research Center",
+        lede: `${about.quote} ${about.quoteNote}`,
+        hint: "Ring the bells",
+        sky: SKY.stage,
+        night: true,
+      },
+      {
+        id: "margam",
+        kind: "item",
+        kicker: "The margam",
+        title: "A recital in seven parts.",
+        lede: "A Bharatanatyam recital moves through seven parts, from invocation to blessing. The island follows the same order. Each district wears its part's colour.",
+        sky: SKY.dusk,
+      },
+      {
+        id: "voice",
+        kind: "item",
+        kicker: "Trinity College London",
+        title: "Communication Skills, Grade 5.",
+        subtitle: "Distinction",
+        lede: "Explaining the work matters as much as doing it.",
+        sky: SKY.day,
+      },
+      nextStep("contact", "That is the whole island.", "Thanks for walking it. If your team builds AI or data systems that have to hold up, I would like to hear from you."),
+    ],
+  },
+};
+
+export const worldOrder: WorldId[] = ["education", "skills", "experience", "projects", "offstage"];
+
+/** Easter eggs: the hint shown for each one still hidden, and the note in the bottle. */
+export const eggCopy = {
+  label: "Easter eggs",
+  toast: "Easter egg found",
+  hints: {
+    approve: "Someone in Sunnyvale is waiting for a human.",
+    bells: "Ghungroo are meant to be rung.",
+    pumpkins: "It is dark at Hack-o-Ween.",
+    husky: "There is a good dog in Boston.",
+    trolley: "Boston's green streetcar has a bell.",
+    taxi: "Mumbai traffic. Honk once.",
+    chai: "Every class needs a break.",
+    bottle: "Something is floating near the island.",
+    lamp: "Light the lamp before the performance.",
+    konami: "Old games, old codes.",
+  },
+  bottle: {
+    title: "A message in a bottle",
+    lines: [
+      "Hi. You found the bottle, so you look closely at things.",
+      "That is most of the job. I would like to work with people like that.",
+      "There are more eggs hidden around the island.",
+    ],
+    sign: "Harshita",
+  },
+  konami: "Cheat code accepted. The island dances.",
+};

@@ -1,19 +1,32 @@
 "use client";
 
 import { Canvas, useThree } from "@react-three/fiber";
-import { Suspense, useCallback, useEffect, useState } from "react";
-import { CameraRig } from "./CameraRig";
-import { Island } from "./Island";
-import { Stations } from "./stations/Stations";
+import { lazy, Suspense, useCallback, useEffect, useState, type ComponentType, type ReactNode } from "react";
+import type { WorldId } from "@/content/profile";
 import { onJourney } from "./scroll";
 import { useReducedMotion } from "@/lib/device";
 
+export type SceneId = "hub" | WorldId;
+
+/** Every scene takes `done`, and renders it once its last piece is mounted. */
+export type SceneProps = { done: ReactNode };
+
+// One chunk per scene: the hub never downloads a world it is not showing.
+const SCENES: Record<SceneId, ComponentType<SceneProps>> = {
+  hub: lazy(() => import("./hub/HubScene")),
+  education: lazy(() => import("./worlds/education")),
+  skills: lazy(() => import("./worlds/skills")),
+  experience: lazy(() => import("./worlds/experience")),
+  projects: lazy(() => import("./worlds/projects")),
+  offstage: lazy(() => import("./worlds/offstage")),
+};
+
 /**
- * Rendered once every station is mounted. Compiles every shader in parallel (off the main
- * thread where the browser allows it), then starts the frameloop and reports ready.
- * The first frame then draws without a long compile stall.
+ * Rendered once a scene is fully mounted. Compiles its shaders in parallel (off the main
+ * thread where the browser allows it), then reports ready, two frames later, so the first
+ * real picture is on screen before anything fades to it.
  */
-function Ready({ onLive }: { onLive: () => void }) {
+function Ready({ onBuilt }: { onBuilt: () => void }) {
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
   const camera = useThree((s) => s.camera);
@@ -21,30 +34,18 @@ function Ready({ onLive }: { onLive: () => void }) {
     let alive = true;
     gl.compileAsync(scene, camera)
       .catch(() => undefined)
-      .then(() => alive && onLive());
+      .then(() => {
+        if (!alive) return;
+        requestAnimationFrame(() => requestAnimationFrame(() => alive && onBuilt()));
+      });
     return () => {
       alive = false;
     };
-  }, [gl, scene, camera, onLive]);
+  }, [gl, scene, camera, onBuilt]);
   return null;
 }
 
-/** Fires once the first live frames have drawn. */
-function FirstFrames({ onReady }: { onReady?: () => void }) {
-  useEffect(() => {
-    let a = 0;
-    const b = requestAnimationFrame(() => {
-      a = requestAnimationFrame(() => onReady?.());
-    });
-    return () => {
-      cancelAnimationFrame(a);
-      cancelAnimationFrame(b);
-    };
-  }, [onReady]);
-  return null;
-}
-
-/** With reduced motion the canvas only draws when the scroll moves, so nothing on the island drifts by itself. */
+/** With reduced motion the canvas only draws when the scroll moves, so nothing drifts by itself. */
 function DemandRedraw() {
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
@@ -67,46 +68,35 @@ function PauseWhenHidden() {
   return null;
 }
 
-/** The whole island. Mounted once, behind the page; the scroll position drives the camera. */
-export default function World({ onReady }: { onReady?: () => void }) {
+/**
+ * The one canvas. It lives in the layout, so moving between the hub and a world swaps
+ * the scene without tearing down WebGL. The page scroll drives the camera.
+ */
+export default function World({ scene, onReady }: { scene: SceneId; onReady?: (scene: SceneId) => void }) {
   const reduced = useReducedMotion();
-  // phones get a smaller shadow map: a quarter of the fill cost, and the toon look hides the difference
-  const [shadowSize] = useState(() => (window.innerWidth < 900 ? 1024 : 2048));
-  // nothing draws until the island is built and its shaders are compiled
+  // nothing draws until the first scene is built and its shaders are compiled
   const [live, setLive] = useState(false);
-  const goLive = useCallback(() => setLive(true), []);
+  const built = useCallback(() => {
+    setLive(true);
+    onReady?.(scene);
+  }, [onReady, scene]);
+  const Scene = SCENES[scene];
+
   return (
     <Canvas
       shadows
       frameloop={!live ? "never" : reduced ? "demand" : "always"}
       dpr={[1, 1.75]}
-      camera={{ fov: 34, near: 0.5, far: 400, position: [0, 30, 50] }}
+      camera={{ fov: 34, near: 0.5, far: 700, position: [0, 30, 50] }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       aria-hidden="true"
       onCreated={({ gl }) => {
         if (process.env.NODE_ENV !== "production") (window as Window & { __gl?: unknown }).__gl = gl;
       }}
     >
-      <fog attach="fog" args={["#ffd7b5", 70, 170]} />
-      <hemisphereLight args={["#fff1dc", "#5f8f9a", 1.15]} />
-      <directionalLight
-        position={[18, 30, 12]}
-        intensity={1.6}
-        color="#fff4e0"
-        castShadow
-        shadow-mapSize={[shadowSize, shadowSize]}
-        shadow-camera-left={-26}
-        shadow-camera-right={26}
-        shadow-camera-top={26}
-        shadow-camera-bottom={-26}
-        shadow-bias={-0.0005}
-      />
-      <Suspense fallback={null}>
-        <Island />
-        <Stations done={<Ready onLive={goLive} />} />
+      <Suspense fallback={null} key={scene}>
+        <Scene done={<Ready onBuilt={built} />} />
       </Suspense>
-      <CameraRig />
-      {live && <FirstFrames onReady={onReady} />}
       {live && (reduced ? <DemandRedraw /> : <PauseWhenHidden />)}
     </Canvas>
   );

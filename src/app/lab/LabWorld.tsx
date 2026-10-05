@@ -1,20 +1,24 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect } from "react";
-import { journey } from "@/world/scroll";
+import { useEffect, useSyncExternalStore } from "react";
+import { resetJourney } from "@/world/scroll";
+import type { SceneId } from "@/world/World";
 
 const World = dynamic(() => import("@/world/World"), { ssr: false });
 
+const noop = () => () => {};
+const param = (k: string) => new URLSearchParams(window.location.search).get(k);
+
+/** /lab?s=experience&p=2 frames step 2 of a scene, with no cards. Dev only. */
 export function LabWorld() {
+  const scene = useSyncExternalStore(noop, () => (param("s") ?? "hub") as SceneId, () => null);
   useEffect(() => {
-    const p = Number(new URLSearchParams(location.search).get("p") ?? 0);
-    journey.target = p;
-    journey.progress = p;
+    resetJourney(Number(param("p") ?? 0));
   }, []);
   return (
-    <div className="fixed inset-0 bg-[linear-gradient(180deg,#ffe3b3_0%,#ffcdb2_45%,#ffd6b8_100%)]">
-      <World />
+    <div id="sky" className="fixed inset-0 bg-[linear-gradient(180deg,var(--sky-top,#ffe3b3)_0%,var(--sky-bottom,#ffd6b8)_100%)]">
+      {scene && <World scene={scene} />}
     </div>
   );
 }
