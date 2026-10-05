@@ -1,5 +1,42 @@
 # Harshita Jogi: Portfolio Design Doc
 
+## v2 redesign (Oct 2026), current
+
+**Why:** v1 read like a writer's portfolio: serif editorial type, long prose in every section, and effects laid over content (the Bitgig dither covered the demo it was meant to show). Feedback: too much text, not tech enough, React Bits used for decoration.
+
+**Direction: "Harshita, as a running system."**
+- Dark-first instrument-panel look (light theme kept). Geist + Geist Mono, a fine grid, bordered panels. Kumkum red is the single accent.
+- The one visual rule stays: **dashed = draft, solid = verified.** It now drives the hero console border, the experience graph (current role dashed), the Bitgig pipeline and the margam ring.
+- **Text budget:** about 25 visible words per section. Every role and project is one line plus metric chips. Full bullets live behind "Details" / "What I built", and in full on /resume and /skim.
+- **Every effect must do a job.** If it hides or delays content, it is cut.
+
+**Page:** Hero (with the agent console and a metrics strip) → Experience → Projects → Stack → Off the clock (with the margam reveal) → Contact → Footer.
+
+| Where | React Bits | Job |
+|---|---|---|
+| Hero name | Tech Text | Hover shows the letters' construction lines: the engineering under the surface |
+| Hero background | Cursor Grid | The instrument grid lights up under the cursor (desktop only, off under reduced motion) |
+| Hero console | Status Mark, Call Chip, Lattice Loader, Hold Button | An agent run in the shape of her Nokia work: ground, recall, stage, verify. It stops at the review gate and the visitor holds to approve. The visitor is the human in the loop |
+| Metrics strip | Counter, Warm Tooltip | Six numbers roll in when seen. Hover or focus any of them for the one-line story |
+| Section labels | Decrypted Text | Mono labels decode once on view. Short, readable instantly after |
+| Experience | Rubber Segment (NSI), sticky proof panel | Hover or scroll a role and its proof appears beside it: NSI before/after, MSCI migration arc, the agent pipeline, edge detection |
+| Bitgig | Refine Frame, Status Mark | The screenshot plays raw → Gemini draft → expert review → verified once, in step with the 5-stage pipeline. Then it stays clear and readable |
+| Hackathons | Tear Ticket | Events as tickets |
+| Stack | Warm Tooltip | Every tool chip answers "where did you use it?" |
+| Off the clock | Pixel Swap | Headshot ↔ performance photo |
+| Margam reveal | Stroke Text + self-drawing ring | The ring draws as you scroll and lights each recital part. The last two stay dashed until you reach Contact and the footer |
+| Contact | Click Spark, Electric Logo | Copy confirmation, and the monogram finale |
+| Nav | Rubber Segment, Bell Toggle, Line Sidebar, Branched Menu | Story/Skim, ghungroo theme toggle, wide-screen index, mobile menu |
+
+**Cut in v2:** Dither Veil and Halftone Reveal (they covered content), Text Loop quote, page line, Flip Cards (a lot of text per card), Folder, True Focus, Circular Carousel, Shiny Text, Count Up (replaced by Counter), Stepper (replaced by the console), and the long-form Story section.
+
+**Performance:** Counter mounts only when the strip is on screen (about 30 animated elements per number). Entrances are transform-only, so contrast holds at every frame. Brand icons are extracted into a 33KB generated file (scripts/gen-icons.mjs) rather than bundling simple-icons.
+
+---
+
+# v1 design doc (superseded, kept for history)
+
+
 Status: **Phase 1 draft, awaiting review.** Nothing is built yet.
 Research snapshot: React Bits `main` at commit `e1bbb69` (30 Sep 2026), 213 free components across 5 categories, all reviewed (source read, 30 live demos captured in a real browser).
 

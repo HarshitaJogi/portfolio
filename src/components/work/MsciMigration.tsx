@@ -7,7 +7,7 @@ import { msciMigration } from "@/content/profile";
  * 15 dots, one per API, cross an arc from Azure to GCP as you scroll. Hollow and
  * dashed while in flight, solid once they land. The arc solidifies behind them.
  */
-export function MsciMigration() {
+export function MsciMigration({ className = "mt-8 border-t border-line pt-6" }: { className?: string }) {
   const { from, to, apis, apisLabel, via, results } = msciMigration;
   const wrap = useRef<HTMLDivElement>(null);
   const arc = useRef<SVGPathElement>(null);
@@ -60,7 +60,7 @@ export function MsciMigration() {
   const d = "M 70 170 C 110 30, 490 30, 530 170";
 
   return (
-    <div ref={wrap} className="mt-12 border-t border-hairline pt-8">
+    <div ref={wrap} className={className}>
       <h4 className="text-label font-mono text-ink">
         {apisLabel}, {from} to {to}, via {via}
       </h4>
@@ -92,7 +92,7 @@ export function MsciMigration() {
         {results.map((r) => (
           <div key={r.label} className="flex items-baseline gap-3">
             <dt className="sr-only">{r.label}</dt>
-            <dd className="font-display text-[clamp(2.5rem,1.8rem+2vw,3.5rem)] leading-none">{r.value}</dd>
+            <dd className="text-[clamp(2.5rem,1.8rem+2vw,3.5rem)] leading-none">{r.value}</dd>
             <dd className="text-body text-muted">{r.label}</dd>
           </div>
         ))}

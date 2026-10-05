@@ -17,10 +17,10 @@ export function EmailCopy() {
     } catch {}
   };
   return (
-    <div>
+    <div className="@container">
       <a
         href={`mailto:${person.email}`}
-        className="font-display block text-[clamp(1.5rem,7.6vw-0.4rem,6.25rem)] leading-[1.02] tracking-[-0.015em] break-words no-underline decoration-accent decoration-2 underline-offset-[0.12em] hover:text-accent hover:underline"
+        className="block text-[clamp(1.0625rem,6.4cqw,3.25rem)] leading-[1.05] font-semibold tracking-[-0.04em] whitespace-nowrap no-underline decoration-accent decoration-2 underline-offset-[0.12em] hover:text-accent hover:underline"
       >
         {person.email}
       </a>
@@ -29,7 +29,7 @@ export function EmailCopy() {
           <button
             type="button"
             onClick={copy}
-            className="rounded-full border border-ink/60 px-5 py-2.5 font-mono text-[0.8125rem] tracking-[0.08em] uppercase transition-colors hover:border-accent hover:text-accent"
+            className="rounded-lg border border-line px-4 py-2.5 font-mono text-[0.8125rem] transition-colors hover:border-ink"
           >
             {copied ? contact.copied : contact.copy}
           </button>

@@ -59,9 +59,11 @@ src/
   content/profile.ts   all copy and data
   components/
     bits/              React Bits sources, adapted (each file notes what changed)
-    sections/          Hero, Proof, Story, Work, Education, Projects, Toolkit, OffStage, Contact, Footer
-    line/PageLine.tsx  the line that runs through the page, dashed ahead and solid behind
-    ...                hero, work, projects, toolkit, offstage, contact, skim, ui
+    sections/          Hero, Experience, Projects, Stack, About, Contact, Footer
+    hero/              AgentConsole (hold to approve), MetricsBar, name, headline
+    experience/        role list with the sticky proof panel
+    ...                projects, work visuals, offstage, contact, skim, ui, v2 shared
+  content/icons.generated.ts   brand icons (node scripts/gen-icons.mjs)
   lib/                 motion tokens, device checks, one-WebGL-at-a-time slot, stores
 scripts/truth-lint.mjs
 ```

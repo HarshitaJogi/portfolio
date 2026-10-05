@@ -46,6 +46,9 @@ devDependencies:
   eslint-config-next:
     specifier: 16.3.8
     version: 16.3.8(@typescript-eslint/parser@8.71.0)(eslint@9.39.5)(typescript@5.9.3)
+  simple-icons:
+    specifier: ^16.34.0
+    version: 16.34.0
   tailwindcss:
     specifier: ^4
     version: 4.3.3
@@ -3777,6 +3780,11 @@ packages:
       side-channel-list: 1.0.1
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
+    dev: true
+
+  /simple-icons@16.34.0:
+    resolution: {integrity: sha512-UTxKn0PVspk84B2hHF3Dqiqht1yDjJmDc/t4cO7PyCQxCMk6OjEu95pnpGjhLaGeQ4qBrGASbefTIe/+czrX7g==}
+    engines: {node: '>=0.12.18'}
     dev: true
 
   /source-map-js@1.2.2:

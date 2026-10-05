@@ -11,7 +11,7 @@ const TechText = dynamic(() => import("@/components/bits/TechText"), { ssr: fals
 
 const PAD = 48; // room around the name for Tech Text's glyph labels
 
-type Fit = { x: number; baseline: number; size: number; family: string; ink: string; accent: string };
+type Fit = { x: number; baseline: number; size: number; family: string; weight: number; ink: string; accent: string };
 
 /**
  * The name is a real <h1>, painted first (it is the LCP element). On desktop, Tech Text
@@ -52,6 +52,7 @@ export function HeroName({ name }: { name: string }) {
         baseline: p.offsetTop + PAD,
         size,
         family: cs.fontFamily,
+        weight: Number(cs.fontWeight) || 600,
         ink: root.getPropertyValue("--ink").trim(),
         accent: root.getPropertyValue("--accent").trim(),
       });
@@ -71,7 +72,7 @@ export function HeroName({ name }: { name: string }) {
         ref={h1}
         id="hero-name"
         className={cn(
-          "font-display text-name text-ink transition-colors duration-300",
+          "text-name text-ink transition-colors duration-300",
           live && ready && "text-transparent",
         )}
       >
@@ -87,9 +88,9 @@ export function HeroName({ name }: { name: string }) {
           <TechText
             text={name}
             fontFamily={fit.family}
-            fontWeight={400}
+            fontWeight={fit.weight}
             fontSize={fit.size}
-            letterSpacing={-0.02}
+            letterSpacing={-0.045}
             color={fit.ink}
             accentColor={fit.accent}
             layout={{ x: fit.x, baseline: fit.baseline }}

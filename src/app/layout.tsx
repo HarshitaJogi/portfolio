@@ -1,27 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { education, person, SITE_URL, seo, work } from "@/content/profile";
 import { Providers } from "@/components/ui/Providers";
 import { ConsoleNote } from "@/components/ui/ConsoleNote";
-
-const display = Instrument_Serif({
-  variable: "--font-instrument-serif",
-  subsets: ["latin"],
-  weight: "400",
-  style: "normal",
-  display: "swap",
-});
-
-// Italic is only used for a few accent words, so it is not preloaded.
-const displayItalic = Instrument_Serif({
-  variable: "--font-instrument-serif-italic",
-  subsets: ["latin"],
-  weight: "400",
-  style: "italic",
-  display: "swap",
-  preload: false,
-});
 
 const sans = Geist({
   variable: "--font-geist",
@@ -33,7 +15,6 @@ const mono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   display: "swap",
-  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -61,10 +42,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f1e7" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f0d0b" },
+    { media: "(prefers-color-scheme: light)", color: "#0b0b0c" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0b0c" },
   ],
-  colorScheme: "light dark",
+  colorScheme: "dark light",
 };
 
 const personLd = {
@@ -87,7 +68,7 @@ const bootScript = `(function(){try{var d=document.documentElement;d.classList.a
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${display.variable} ${displayItalic.variable} ${sans.variable} ${mono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }} />

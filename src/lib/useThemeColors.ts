@@ -3,7 +3,7 @@
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
-export type ThemeColors = { paper: string; paperDeep: string; ink: string; muted: string; accent: string; rule: string };
+export type ThemeColors = { bg: string; surface: string; surface2: string; paper: string; paperDeep: string; ink: string; muted: string; accent: string; rule: string };
 
 /** Resolved token colours for canvas and WebGL components, which cannot read CSS variables. */
 export function useThemeColors(): ThemeColors | null {
@@ -12,7 +12,7 @@ export function useThemeColors(): ThemeColors | null {
   useEffect(() => {
     const cs = getComputedStyle(document.documentElement);
     const v = (n: string) => cs.getPropertyValue(n).trim();
-    setColors({ paper: v("--paper"), paperDeep: v("--paper-deep"), ink: v("--ink"), muted: v("--muted"), accent: v("--accent"), rule: v("--rule-strong") });
+    setColors({ bg: v("--bg"), surface: v("--surface"), surface2: v("--surface-2"), paper: v("--bg"), paperDeep: v("--surface-2"), ink: v("--ink"), muted: v("--muted"), accent: v("--accent"), rule: v("--line-strong") });
   }, [resolvedTheme]);
   return colors;
 }

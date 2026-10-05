@@ -26,11 +26,7 @@ export function MargamMap() {
     const el = box.current?.parentElement;
     if (!el) return;
     const ro = new ResizeObserver(() => {
-      const cs = getComputedStyle(document.documentElement);
-      const pad = parseFloat(cs.getPropertyValue("--rail-pad")) * 16 || 28;
-      const railX = parseFloat(cs.getPropertyValue("--rail-x")) * 16 || 8;
-      const avail = el.clientWidth + pad - railX;
-      setR(Math.round(Math.max(130, Math.min(220, avail / 2 - 4))));
+      setR(Math.round(Math.max(130, Math.min(210, el.clientWidth / 2 - 4))));
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -100,8 +96,19 @@ export function MargamMap() {
   const compact = r < 185;
 
   return (
-    <div ref={box} className="relative shrink-0" style={{ width: d, height: d, marginLeft: "calc(var(--rail-x) - var(--rail-pad))", marginBottom: compact ? "9.5rem" : undefined }}>
-      <span className="line-mark !top-1/2 !left-0" data-loop={r} aria-hidden="true" />
+    <div ref={box} className="relative shrink-0" style={{ width: d, height: d, marginBottom: compact ? "9.5rem" : undefined }}>
+      {/* The tala circle draws itself, starting at Alarippu and moving through the recital. */}
+      <svg aria-hidden="true" className="absolute inset-0 overflow-visible" width={d} height={d} viewBox={`0 0 ${d} ${d}`}>
+        <path d={`M 0 ${r} A ${r} ${r} 0 1 0 ${d} ${r} A ${r} ${r} 0 1 0 0 ${r}`} fill="none" stroke="var(--line-strong)" strokeWidth="1" strokeDasharray="4 6" />
+        <path
+          d={`M 0 ${r} A ${r} ${r} 0 1 0 ${d} ${r} A ${r} ${r} 0 1 0 0 ${r}`}
+          fill="none"
+          stroke="var(--ink)"
+          strokeWidth="1.25"
+          pathLength={1}
+          strokeDasharray={`${f.toFixed(4)} 1`}
+        />
+      </svg>
 
       <ol aria-label="The margam, in order" className="absolute inset-0">
         {margam.map((m, i) => {
@@ -154,7 +161,7 @@ export function MargamMap() {
       <div
         className={cn(
           "pointer-events-none grid place-items-center",
-          compact ? "absolute top-full right-0 left-[calc(var(--rail-pad)-var(--rail-x))] mt-8 place-items-start" : "absolute inset-0",
+          compact ? "absolute top-full right-0 left-0 mt-8 place-items-start" : "absolute inset-0",
         )}
       >
         <div className={cn(compact ? "text-left" : "max-w-[62%] text-center")} aria-live="polite">
@@ -162,7 +169,7 @@ export function MargamMap() {
             {active + 1} of {N}
             {!lit(active) && " · still ahead"}
           </p>
-          <p className="font-display mt-1 text-[clamp(1.75rem,1.2rem+1.4vw,2.5rem)] leading-none">{sel.name}</p>
+          <p className="mt-1 text-[clamp(1.5rem,1.2rem+1vw,2rem)] leading-none font-semibold tracking-[-0.03em]">{sel.name}</p>
           <p className="mt-2 text-[0.875rem] leading-snug text-muted">{sel.meaning}</p>
           <a href={sel.href} className="link pointer-events-auto mt-3 inline-block text-[0.875rem]">
             On this page: {sel.section}

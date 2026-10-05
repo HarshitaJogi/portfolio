@@ -29,7 +29,7 @@ export function Monogram({
           r="46"
           fill="none"
           stroke="var(--accent)"
-          strokeWidth="2.5"
+          strokeWidth="2"
           strokeDasharray={ring === "dashed" ? "5 5" : undefined}
         />
       )}

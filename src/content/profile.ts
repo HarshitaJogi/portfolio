@@ -70,6 +70,12 @@ export const hero = {
     { label: "Now", text: "Software Engineer Co-op at Nokia, Sunnyvale" },
     { label: "Study", text: "MS in Computer Science at Northeastern, graduating May 2027" },
   ],
+  /** v2 hero meta row: short, scannable. */
+  meta: [
+    { label: "Now", text: "SWE Co-op, Nokia" },
+    { label: "MS CS", text: "Northeastern, May 2027" },
+    { label: "Based", text: "Sunnyvale, CA" },
+  ],
   photoHint: { fine: "Hover for off-stage", coarse: "Tap for off-stage" },
 };
 
@@ -81,103 +87,7 @@ export const TRACKS = ["ai", "data", "swe", "systems"] as const;
 export type Track = (typeof TRACKS)[number];
 export type TrackOrDefault = Track | "default";
 
-/* ------------------------------------------------------------------ */
-/* Proof                                                               */
-/* ------------------------------------------------------------------ */
 
-export type Stat = {
-  id: string;
-  /** Final value, counted up to. */
-  value: number;
-  prefix?: string;
-  suffix?: string;
-  /** Thousands separator, e.g. 25,000. */
-  separator?: string;
-  /** Optional "before" value shown as a dashed draft, e.g. 60% → 98%. */
-  before?: string;
-  /** Count-up start. Defaults to 0. */
-  from?: number;
-  caption: string;
-  source: string;
-  href: string;
-};
-
-export const proof = {
-  title: "Proof",
-  intro: "Six numbers, each tied to the work behind it.",
-  stats: [
-    {
-      id: "accuracy",
-      before: "60%",
-      from: 60,
-      value: 98,
-      suffix: "%",
-      caption: "LLM annotation accuracy, after studying every false positive and false negative against ground truth.",
-      source: "Network Science Institute",
-      href: "#role-nsi",
-    },
-    {
-      id: "papers",
-      value: 1,
-      suffix: "M+",
-      caption: "Biomedical research papers in the GPT-4.1 annotation pipeline I created.",
-      source: "Network Science Institute",
-      href: "#role-nsi",
-    },
-    {
-      id: "cost",
-      value: 40,
-      suffix: "%",
-      caption: "Lower infrastructure cost after migrating 15+ APIs from Azure to GCP.",
-      source: "MSCI",
-      href: "#role-msci",
-    },
-    {
-      id: "data",
-      value: 5,
-      suffix: "TB",
-      caption: "Data moved from OracleDB to BigQuery through Databricks ETL pipelines.",
-      source: "MSCI",
-      href: "#role-msci",
-    },
-    {
-      id: "f1",
-      value: 97,
-      suffix: "% F1",
-      caption: "SciBERT fine-tuned to extract research tools from biomedical text.",
-      source: "Network Science Institute",
-      href: "#role-nsi",
-    },
-    {
-      id: "grant",
-      value: 25000,
-      prefix: "$",
-      separator: ",",
-      caption: "IEEE AESS research grant for the drone project I led.",
-      source: "IEEE AESS DSTEI",
-      href: "#project-drone",
-    },
-  ] satisfies Stat[],
-  order: {
-    default: ["accuracy", "papers", "cost", "data", "f1", "grant"],
-    ai: ["accuracy", "f1", "papers", "grant", "cost", "data"],
-    data: ["data", "papers", "accuracy", "cost", "f1", "grant"],
-    swe: ["cost", "accuracy", "data", "papers", "f1", "grant"],
-    systems: ["cost", "data", "accuracy", "papers", "f1", "grant"],
-  } satisfies Record<TrackOrDefault, string[]>,
-};
-
-/* ------------------------------------------------------------------ */
-/* Story                                                               */
-/* ------------------------------------------------------------------ */
-
-export const story = {
-  kicker: "How I work",
-  paragraph:
-    "I started in electronics, building a drone that could spot crop disease from fifteen meters up. Then I moved into software at MSCI, taking production APIs and terabytes of financial data to the cloud. At Northeastern I used LLMs to annotate over a million research papers, and learned that accuracy comes from studying every mistake. Now at Nokia I build LLM agents that do real engineering work, and the checks that make them safe to trust.",
-  principle: ["Build.", "Verify.", "Ship."],
-  principleNote: "Every role below follows that order.",
-};
 
 /* ------------------------------------------------------------------ */
 /* Work (reverse chronological)                                        */
@@ -185,6 +95,9 @@ export const story = {
 
 export type Role = {
   id: string;
+  /** v2: one scannable line, and the proof as chips. Bullets stay for the expanded view and /resume. */
+  oneLiner: string;
+  chips: string[];
   company: string;
   companyLong?: string;
   note?: { text: string; href: string };
@@ -202,6 +115,8 @@ export const work: { title: string; roles: Role[] } = {
   roles: [
     {
       id: "nokia",
+      oneLiner: "LLM agents that port test suites, with the guardrails that make them trustworthy.",
+      chips: ["LLM agents", "50K+ line Python framework", "Human review gates"],
       company: "Nokia",
       title: "Software Engineer Co-op, Test Automation & AI Tooling",
       location: "Sunnyvale, CA",
@@ -216,6 +131,8 @@ export const work: { title: string; roles: Role[] } = {
     },
     {
       id: "nsi",
+      oneLiner: "A GPT-4.1 pipeline that annotates 1M+ biomedical papers.",
+      chips: ["60% → 98% accuracy", "97% F1 SciBERT NER", "NIH-funded"],
       company: "Network Science Institute",
       companyLong: "Northeastern University",
       note: {
@@ -236,6 +153,8 @@ export const work: { title: string; roles: Role[] } = {
     },
     {
       id: "msci",
+      oneLiner: "Moved production APIs and data across clouds, guarded by tests and scans.",
+      chips: ["15+ APIs Azure → GCP", "23% lower latency", "40% lower infra cost", "5TB to BigQuery"],
       company: "MSCI",
       companyLong: "Morgan Stanley Capital International",
       title: "Technology Analyst",
@@ -253,6 +172,8 @@ export const work: { title: string; roles: Role[] } = {
     },
     {
       id: "iitp",
+      oneLiner: "Better crop-disease detection, small enough to run at the edge.",
+      chips: ["Modified YOLOv9", "86% detection accuracy", "NVIDIA Jetson"],
       company: "IIT Patna",
       companyLong: "Indian Institute of Technology Patna",
       title: "Research Intern",
@@ -269,39 +190,6 @@ export const work: { title: string; roles: Role[] } = {
   ],
 };
 
-/** Nokia agent walkthrough. Described at the level of the brief, nothing more. */
-export const nokiaAgent = {
-  title: "How the agent is designed",
-  disclaimer: "Described at a high level. The details belong to Nokia.",
-  steps: [
-    {
-      name: "Ground",
-      title: "Read the docs first",
-      body: "The agent looks up internal documentation through tool calls, so its work is grounded in real references.",
-      chip: { name: "tool call", argument: "documentation" },
-    },
-    {
-      name: "Recall",
-      title: "Learn from past failures",
-      body: "It also works from a failure checklist mined from past debugging, so it starts from what has gone wrong before.",
-    },
-    {
-      name: "Stage",
-      title: "Run in dependency order",
-      body: "After live evaluation, I redesigned it into staged runs ordered by dependency, so each step builds on work that already holds.",
-    },
-    {
-      name: "Verify",
-      title: "Catch false passes",
-      body: "A test that passes for the wrong reason is worse than one that fails. False-pass checks look for exactly that.",
-    },
-    {
-      name: "Review",
-      title: "A person signs off",
-      body: "Human review gates sit at the end. The agent drafts. An engineer decides.",
-    },
-  ],
-};
 
 /** NSI before/after. 50 marks, each mark is 2% of annotations. */
 export const nsiAccuracy = {
@@ -554,29 +442,13 @@ export const toolkit = {
 /* Off-stage and the margam                                            */
 /* ------------------------------------------------------------------ */
 
-export const offstage = {
-  title: "Off-stage",
-  paragraphs: [
-    "I am a trained Bharatanatyam dancer, with a Kovida degree from Nalanda Dance Research Center. Dance taught me that the hard work stays invisible. What reaches people feels effortless. I try to build software the same way.",
-    "I also care about saying things clearly. I hold Trinity College London's Communication Skills Grade 5, with Distinction.",
-  ],
-  credentials: [
-    { label: "Kovida degree in Bharatanatyam", org: "Nalanda Dance Research Center" },
-    { label: "Communication Skills Grade 5, Distinction", org: "Trinity College London" },
-  ],
-  quote: "The hard work stays invisible. What reaches people feels effortless.",
-  revealLead: "If you scrolled this far,",
-  revealLine: "you just watched a margam.",
-  revealSub: "A Bharatanatyam recital follows a fixed order, from invocation to blessing. This page does too.",
-  mapHint: "Each point is one part of the recital. Select one to go back to it.",
-};
 
 export const margam = [
   { id: "alarippu", name: "Alarippu", meaning: "The invocation. A short opening that greets the audience.", section: "Introduction", href: "#top" },
-  { id: "jatiswaram", name: "Jatiswaram", meaning: "Pure technique. Rhythm and footwork, no words.", section: "Proof", href: "#proof" },
-  { id: "shabdam", name: "Shabdam", meaning: "Movement joined to words, telling a story.", section: "How I work", href: "#story" },
-  { id: "varnam", name: "Varnam", meaning: "The centerpiece. The longest, most demanding piece.", section: "Work and projects", href: "#work" },
-  { id: "padam", name: "Padam", meaning: "Slow and expressive. The most personal part.", section: "Off-stage", href: "#offstage" },
+  { id: "jatiswaram", name: "Jatiswaram", meaning: "Pure technique. Rhythm and footwork, no words.", section: "The numbers", href: "#metrics" },
+  { id: "shabdam", name: "Shabdam", meaning: "Movement joined to words, telling a story.", section: "Experience", href: "#work" },
+  { id: "varnam", name: "Varnam", meaning: "The centerpiece. The longest, most demanding piece.", section: "Projects and stack", href: "#projects" },
+  { id: "padam", name: "Padam", meaning: "Slow and expressive. The most personal part.", section: "Off the clock", href: "#offstage" },
   { id: "tillana", name: "Tillana", meaning: "A brisk, joyful finale.", section: "Contact", href: "#contact" },
   { id: "mangalam", name: "Mangalam", meaning: "The closing blessing.", section: "Footer", href: "#footer" },
 ] as const;
@@ -590,6 +462,7 @@ export const contact = {
   line: "I am looking for full-time roles starting in 2027. If your team builds AI or data systems that have to hold up, I would like to hear from you.",
   copy: "Copy email",
   copied: "Copied",
+  short: "Open to full-time roles starting 2027. Software, AI, and data teams.",
 };
 
 export const footer = {
@@ -613,13 +486,11 @@ export const consoleNote = [
 /** Section index (desktop rail, mobile menu, command palette). */
 export const sections = [
   { id: "top", label: "Introduction", margam: "Alarippu" },
-  { id: "proof", label: "Proof", margam: "Jatiswaram" },
-  { id: "story", label: "How I work", margam: "Shabdam" },
-  { id: "work", label: "Work", margam: "Varnam" },
-  { id: "education", label: "Education", margam: "Varnam" },
+  { id: "metrics", label: "Numbers", margam: "Jatiswaram" },
+  { id: "work", label: "Experience", margam: "Shabdam" },
   { id: "projects", label: "Projects", margam: "Varnam" },
-  { id: "toolkit", label: "Toolkit", margam: "Varnam" },
-  { id: "offstage", label: "Off-stage", margam: "Padam" },
+  { id: "toolkit", label: "Stack", margam: "Varnam" },
+  { id: "offstage", label: "Off the clock", margam: "Padam" },
   { id: "contact", label: "Contact", margam: "Tillana" },
 ] as const;
 
@@ -627,4 +498,139 @@ export const seo = {
   title: "Harshita Jogi, Software Engineer",
   description:
     "Harshita Jogi is a software engineer building LLM agents, data pipelines, and the checks that make them trustworthy. MS CS at Northeastern, co-op at Nokia. Open to full-time roles starting 2027.",
+};
+
+/* ------------------------------------------------------------------ */
+/* v2: hero agent console, metrics bar, stack, short off-stage          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The hero console. The shape of the Nokia agent, simplified to the level of the brief.
+ * The visitor is the human review gate.
+ */
+export const agentConsole = {
+  title: "port-test-suite.agent",
+  caption: "The shape of my Nokia agent, simplified.",
+  steps: [
+    { id: "ground", label: "Ground", detail: "tool call: internal docs" },
+    { id: "recall", label: "Recall", detail: "failure checklist" },
+    { id: "stage", label: "Stage", detail: "dependency-ordered runs" },
+    { id: "verify", label: "Verify", detail: "false-pass checks" },
+  ],
+  gate: {
+    label: "Review",
+    waiting: "waiting for a human",
+    hold: "Hold to approve",
+    done: "Approved",
+    verified: "Verified. You were the human in the loop.",
+    replay: "Run again",
+  },
+  status: { running: "running", waiting: "needs review", done: "verified" },
+};
+
+export type Metric = { id: string; value: string; label: string; tip: string; source: string; href: string; from?: string };
+export const metrics: Metric[] = [
+  { id: "accuracy", value: "98%", from: "60%", label: "annotation accuracy", tip: "Up from 60% by analysing every false positive and false negative against ground truth.", source: "NSI", href: "#role-nsi" },
+  { id: "papers", value: "1M+", label: "papers annotated", tip: "GPT-4.1 pipeline over biomedical research papers for an NIH-funded project.", source: "NSI", href: "#role-nsi" },
+  { id: "f1", value: "97%", label: "F1, SciBERT NER", tip: "Fine-tuned SciBERT to extract research tools from biomedical text.", source: "NSI", href: "#role-nsi" },
+  { id: "cost", value: "40%", label: "lower infra cost", tip: "After migrating 15+ APIs from Azure to GCP on Kubernetes and Docker.", source: "MSCI", href: "#role-msci" },
+  { id: "data", value: "5TB", label: "data migrated", tip: "OracleDB to BigQuery through Databricks ETL pipelines.", source: "MSCI", href: "#role-msci" },
+  { id: "grant", value: "$25,000", label: "research grant", tip: "IEEE AESS DSTEI funding for the drone research I led.", source: "IEEE", href: "#project-drone" },
+];
+export const metricOrder: Record<TrackOrDefault, string[]> = {
+  default: ["accuracy", "papers", "f1", "cost", "data", "grant"],
+  ai: ["accuracy", "f1", "papers", "grant", "cost", "data"],
+  data: ["data", "papers", "accuracy", "cost", "f1", "grant"],
+  swe: ["cost", "accuracy", "data", "papers", "f1", "grant"],
+  systems: ["cost", "data", "accuracy", "papers", "f1", "grant"],
+};
+
+/** Short project fields for v2 cards. */
+export const projectCards = {
+  bitgig: {
+    oneLiner: "Expert annotation for lab and medical video. Gemini drafts, verified experts correct.",
+    chips: ["Human-in-the-loop", "Consensus QC", "Cloud Run"],
+    icons: ["googlegemini", "googlecloud", "nextdotjs", "react", "typescript", "vercel"] as const,
+  },
+  drone: {
+    oneLiner: "A drone that classifies crop leaves in real time from 15m up.",
+    chips: ["$25,000 IEEE AESS grant", "Research Lead", "2 IEEE papers", "Patent filed"],
+    specs: ["NDVI", "TensorFlow", "Quantized CNN", "NVIDIA Jetson", "15m altitude"],
+    icons: ["tensorflow", "nvidia", "python"] as const,
+  },
+  scheduler: {
+    oneLiner: "A Java calendar engine with 18+ commands, timezones, recurring events, and CSV and iCal export.",
+    icons: ["openjdk"] as const,
+  },
+};
+
+/**
+ * The stack, as proof. Every item with an icon or a "where" is tied to a role or project
+ * in the brief. Items without a confirmed "where" stay in toolkit.alsoFamiliar.
+ */
+export type StackItem = { name: string; icon?: import("./icons.generated").IconSlug; where: string };
+export const stack: { group: string; items: StackItem[] }[] = [
+  {
+    group: "AI and ML",
+    items: [
+      { name: "LLM agents", where: "Nokia: agent for test porting" },
+      { name: "MCP", icon: "modelcontextprotocol", where: "Nokia: agent tool integration" },
+      { name: "GPT-4.1", where: "NSI: annotation pipeline over 1M+ papers" },
+      { name: "Gemini API", icon: "googlegemini", where: "Bitgig: drafts SOP steps from video" },
+      { name: "LLM evaluation", where: "Nokia: redesign after live evaluation" },
+      { name: "SciBERT NER", where: "NSI: 97% F1 on research-tool extraction" },
+      { name: "TensorFlow", icon: "tensorflow", where: "Drone: NDVI pipeline" },
+      { name: "YOLOv9", icon: "yolo", where: "IIT Patna: modified architecture" },
+      { name: "NVIDIA Jetson", icon: "nvidia", where: "Drone and IIT Patna: quantized models at the edge" },
+      { name: "Prodigy", where: "NSI: annotation pipeline" },
+      { name: "Cursor", icon: "cursor", where: "Nokia: agent development" },
+    ],
+  },
+  {
+    group: "Data",
+    items: [
+      { name: "Databricks", icon: "databricks", where: "MSCI: ETL pipelines" },
+      { name: "PySpark", icon: "apachespark", where: "MSCI: ETL pipelines" },
+      { name: "Pandas", icon: "pandas", where: "MSCI: ETL pipelines" },
+      { name: "BigQuery", icon: "googlebigquery", where: "MSCI: 5TB moved from OracleDB" },
+      { name: "OracleDB", where: "MSCI: migration source" },
+      { name: "Data modeling", where: "MSCI: ETL pipelines" },
+    ],
+  },
+  {
+    group: "Cloud and DevOps",
+    items: [
+      { name: "GCP", icon: "googlecloud", where: "MSCI migration, Bitgig on Cloud Run" },
+      { name: "Azure", where: "MSCI: migration source" },
+      { name: "Kubernetes", icon: "kubernetes", where: "MSCI: 15+ APIs migrated" },
+      { name: "Docker", icon: "docker", where: "MSCI: 15+ APIs migrated" },
+      { name: "SonarQube", icon: "sonarqubeserver", where: "MSCI: CI/CD security scanning" },
+      { name: "Vercel", icon: "vercel", where: "Bitgig: expert-review interface" },
+    ],
+  },
+  {
+    group: "Languages and backend",
+    items: [
+      { name: "Python", icon: "python", where: "Nokia: 50K+ line framework. NSI: annotation pipeline" },
+      { name: "Java", icon: "openjdk", where: "MSCI, Event Scheduler" },
+      { name: "TypeScript", icon: "typescript", where: "Bitgig" },
+      { name: "Spring Boot", icon: "springboot", where: "MSCI: client-facing REST APIs" },
+      { name: "JUnit", icon: "junit5", where: "MSCI: 82% test coverage" },
+      { name: "Gatling", icon: "gatling", where: "MSCI: 82% test coverage" },
+      { name: "React", icon: "react", where: "Bitgig" },
+      { name: "Next.js", icon: "nextdotjs", where: "Bitgig, and this site" },
+    ],
+  },
+];
+
+export const about = {
+  title: "Off the clock",
+  lines: [
+    "Trained Bharatanatyam dancer. Kovida degree, Nalanda Dance Research Center.",
+    "Communication Skills Grade 5 with Distinction, Trinity College London.",
+  ],
+  quote: "The hard work stays invisible. What reaches people feels effortless.",
+  quoteNote: "That is how I try to build software.",
+  revealLead: "One more thing. This page follows a Bharatanatyam recital.",
+  revealLine: "You just watched a margam.",
 };

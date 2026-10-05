@@ -1,36 +1,41 @@
 import dynamic from "next/dynamic";
 import { contact, media, person } from "@/content/profile";
-import { Section } from "@/components/ui/Section";
-import { SectionHeading } from "@/components/ui/SectionHeading";
-import { CircleButton } from "@/components/ui/CircleButton";
+import { SectionHeader } from "@/components/v2/SectionHeader";
+
 const EmailCopy = dynamic(() => import("@/components/contact/EmailCopy").then((m) => m.EmailCopy));
 const ContactMark = dynamic(() => import("@/components/contact/ContactMark").then((m) => m.ContactMark));
 
-/** Tillana: brisk and joyful. Every way to reach her, one tap each. */
+/** Tillana, the brisk finale. Every way to reach her, one tap each. */
 export function Contact() {
   return (
-    <Section id="contact" className="pb-16 md:pb-24">
-      <SectionHeading id="contact" index="08" kicker="Contact" title={contact.title} margam="Tillana" />
-      <EmailCopy />
-      <div className="mt-16 grid items-center gap-12 md:grid-cols-12">
-        <div className="md:col-span-7">
-          <p className="text-lead measure">{contact.line}</p>
-          <div className="mt-10 flex flex-wrap items-center gap-5">
-            <CircleButton href={media.resumePdf} external sub="PDF" size={104}>
-              Resume
-            </CircleButton>
-            <CircleButton href={person.links.linkedin} external variant="outline" size={104} arrow>
-              LinkedIn
-            </CircleButton>
-            <CircleButton href={person.links.github} external variant="outline" size={104} arrow>
-              GitHub
-            </CircleButton>
+    <section id="contact" aria-labelledby="contact-title" className="px-gutter mx-auto max-w-[84rem] py-20 md:py-28">
+      <div className="panel relative overflow-hidden p-6 md:p-12">
+        <div aria-hidden="true" className="bg-grid pointer-events-none absolute inset-0" />
+        <div className="relative grid items-center gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <SectionHeader id="contact" index="05" label="CONTACT" title={contact.title} margam="Tillana" className="mb-6 md:mb-8" />
+            <p className="text-lead text-muted">{contact.short}</p>
+            <div className="mt-8">
+              <EmailCopy />
+            </div>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a href={media.resumePdf} target="_blank" rel="noopener" className="inline-flex h-11 items-center gap-2 rounded-lg bg-ink px-5 text-[0.9375rem] font-medium text-bg hover:bg-accent">
+                Resume <span className="font-mono text-[0.75rem] opacity-70">PDF</span>
+                <span className="sr-only">, opens in a new tab</span>
+              </a>
+              <a href={person.links.linkedin} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center rounded-lg border border-line px-5 text-[0.9375rem] hover:border-ink">
+                LinkedIn ↗<span className="sr-only">, opens in a new tab</span>
+              </a>
+              <a href={person.links.github} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center rounded-lg border border-line px-5 text-[0.9375rem] hover:border-ink">
+                GitHub ↗<span className="sr-only">, opens in a new tab</span>
+              </a>
+            </div>
+          </div>
+          <div className="hidden justify-center lg:col-span-4 lg:flex">
+            <ContactMark />
           </div>
         </div>
-        <div className="flex justify-center md:col-span-5 md:justify-end">
-          <ContactMark />
-        </div>
       </div>
-    </Section>
+    </section>
   );
 }

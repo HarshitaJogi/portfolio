@@ -13,7 +13,7 @@ const WRONG_BEFORE = new Set([2, 5, 7, 11, 13, 16, 19, 22, 24, 27, 29, 31, 34, 3
 const WRONG_AFTER = new Set([31]);
 
 /** Before and after error analysis. The marks are the illustration, the numbers are the brief's. */
-export function NsiAccuracy() {
+export function NsiAccuracy({ className = "mt-8 border-t border-line pt-6" }: { className?: string }) {
   const { before, after, marks, caption } = nsiAccuracy;
   const [state, setState] = useState<"before" | "after">("before");
   const [shown, setShown] = useState(before.value);
@@ -44,7 +44,7 @@ export function NsiAccuracy() {
   const isAfter = state === "after";
 
   return (
-    <div ref={ref} className="mt-12 border-t border-hairline pt-8">
+    <div ref={ref} className={className}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h4 className="text-label font-mono text-ink">Annotation accuracy</h4>
         <RubberSegment
@@ -67,7 +67,7 @@ export function NsiAccuracy() {
       </div>
 
       <p className="mt-6 flex items-baseline gap-4" aria-live="polite">
-        <span className="font-display text-stat">
+        <span className="text-stat">
           {!isAfter && shown === before.value ? (
             <DraftText text={`${shown}%`} mode="draft" strokeColor="var(--muted)" />
           ) : (

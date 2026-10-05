@@ -1,53 +1,74 @@
 import dynamic from "next/dynamic";
-import { bitgig, drone, hackathons, projectOrder, scheduler, type ProjectId, type TrackOrDefault } from "@/content/profile";
-import { Section, LineMark } from "@/components/ui/Section";
-import { SectionHeading } from "@/components/ui/SectionHeading";
+import Image from "next/image";
+import { bitgig, drone, media, patent, projectCards, projectOrder, publications, scheduler, type ProjectId, type TrackOrDefault } from "@/content/profile";
+import { SectionHeader } from "@/components/v2/SectionHeader";
 import { Reveal } from "@/components/ui/Reveal";
-import { CircleButton } from "@/components/ui/CircleButton";
-const BitgigMedia = dynamic(() => import("@/components/projects/BitgigMedia").then((m) => m.BitgigMedia));
-const BitgigPipeline = dynamic(() => import("@/components/projects/BitgigPipeline").then((m) => m.BitgigPipeline));
-const DroneMedia = dynamic(() => import("@/components/projects/DroneMedia").then((m) => m.DroneMedia));
-const Research = dynamic(() => import("@/components/projects/Research").then((m) => m.Research));
+import { StackIcons } from "@/components/v2/StackIcons";
+
+const BitgigCard = dynamic(() => import("@/components/projects/BitgigCard").then((m) => m.BitgigCard));
 const HackathonTickets = dynamic(() => import("@/components/projects/HackathonTickets").then((m) => m.HackathonTickets));
 
-function Bullets({ items }: { items: string[] }) {
+function Chips({ items, accentFirst = false }: { items: readonly string[]; accentFirst?: boolean }) {
   return (
-    <ul className="text-body space-y-4">
-      {items.map((b) => (
-        <li key={b} className="measure relative pl-6 before:absolute before:top-[0.8em] before:left-0 before:h-px before:w-3 before:bg-rule">
-          {b}
+    <ul className="flex flex-wrap gap-2">
+      {items.map((c, i) => (
+        <li key={c} className={accentFirst && i === 0 ? "chip border-accent/40 bg-accent-soft" : "chip"}>
+          {c}
         </li>
       ))}
     </ul>
   );
 }
 
-function Bitgig() {
+function MoreDetails({ items }: { items: string[] }) {
   return (
-    <article id="project-bitgig" aria-labelledby="project-bitgig-name" className="relative border-t border-hairline pt-12">
-      <LineMark node className="top-[4.2rem]" />
-      <p className="text-label font-mono text-muted">
-        {bitgig.event} · {bitgig.date}
-      </p>
-      <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
-        <h3 id="project-bitgig-name" className="font-display text-title">
+    <details className="group mt-5">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-2 font-mono text-[0.8125rem] text-muted hover:text-ink [&::-webkit-details-marker]:hidden">
+        <span className="inline-block transition-transform group-open:rotate-90" aria-hidden="true">
+          ▸
+        </span>
+        What I built
+      </summary>
+      <ul className="mt-3 space-y-2 text-[0.9375rem] leading-relaxed text-muted">
+        {items.map((b) => (
+          <li key={b} className="relative pl-5 before:absolute before:top-[0.7em] before:left-0 before:h-px before:w-2.5 before:bg-line-strong">
+            {b}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+function Bitgig() {
+  const c = projectCards.bitgig;
+  return (
+    <article id="project-bitgig" aria-labelledby="project-bitgig-name" className="panel grid gap-8 p-5 md:p-8 lg:grid-cols-12 lg:gap-10">
+      <div className="lg:col-span-7">
+        <BitgigCard />
+      </div>
+      <div className="flex flex-col lg:col-span-5">
+        <p className="text-label text-muted">
+          {bitgig.event} · {bitgig.date}
+        </p>
+        <h3 id="project-bitgig-name" className="mt-3 text-[2rem] leading-none font-semibold tracking-[-0.035em] md:text-[2.5rem]">
           {bitgig.name}
         </h3>
-        <CircleButton href={bitgig.live} external variant="outline" size={92} sub="Live" arrow>
-          Demo
-        </CircleButton>
-      </div>
-      <p className="text-lead mt-4 max-w-[40ch]">{bitgig.tagline}</p>
-      {bitgig.team && <p className="text-label mt-3 font-mono text-muted">Built with {bitgig.team}</p>}
-      <div className="mt-10">
-        <BitgigMedia />
-      </div>
-      <BitgigPipeline />
-      <div className="mt-12 grid gap-8 md:grid-cols-12">
-        <p className="text-label font-mono text-ink md:col-span-3">What I built</p>
-        <div className="md:col-span-9">
-          <Bullets items={bitgig.bullets} />
-          <p className="text-label mt-6 font-mono text-muted">{bitgig.stack.join(" · ")}</p>
+        <p className="mt-3 text-[1.0625rem]">{c.oneLiner}</p>
+        <div className="mt-5">
+          <Chips items={c.chips} />
+        </div>
+        <StackIcons slugs={c.icons} className="mt-5" />
+        <MoreDetails items={bitgig.bullets} />
+        <div className="mt-auto flex gap-3 pt-6">
+          <a href={bitgig.live} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-2 rounded-lg bg-ink px-4 text-[0.875rem] font-medium text-bg hover:bg-accent">
+            Live demo ↗<span className="sr-only">, opens in a new tab</span>
+          </a>
+          {bitgig.repo && (
+            <a href={bitgig.repo} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center rounded-lg border border-line px-4 text-[0.875rem] hover:border-ink">
+              Code ↗
+            </a>
+          )}
         </div>
       </div>
     </article>
@@ -55,95 +76,75 @@ function Bitgig() {
 }
 
 function Drone() {
+  const c = projectCards.drone;
   return (
-    <article id="project-drone" aria-labelledby="project-drone-name" className="relative border-t border-hairline pt-12">
-      <LineMark node className="top-[4.2rem]" />
-      <p className="text-label font-mono text-muted">
-        {drone.funding} · {drone.start} – {drone.end}
-      </p>
-      <div className="mt-4 grid gap-10 md:grid-cols-12">
-        <div className="md:col-span-6">
-          <h3 id="project-drone-name" className="font-display text-[clamp(2.5rem,1.6rem+3.2vw,4.5rem)] leading-[0.95]">
-            {drone.name}
-          </h3>
-          <p className="text-lead mt-5">{drone.tagline}</p>
-          <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-3">
-            <div>
-              <dt className="text-label font-mono text-muted">Grant</dt>
-              <dd className="font-display text-[2.25rem] leading-none text-accent">{drone.grant}</dd>
-            </div>
-            <div>
-              <dt className="text-label font-mono text-muted">Role</dt>
-              <dd className="font-display text-[2.25rem] leading-none">{drone.role}</dd>
-            </div>
-          </dl>
-          <div className="mt-8">
-            <Bullets items={drone.bullets} />
-          </div>
-          <p className="mt-6 text-[0.9375rem] text-muted">{drone.fullName}</p>
+    <article id="project-drone" aria-labelledby="project-drone-name" className="panel grid gap-8 p-5 md:p-8 lg:grid-cols-12 lg:gap-10">
+      <div className="flex flex-col lg:col-span-5">
+        <p className="text-label text-muted">
+          {drone.funding} · {drone.start} – {drone.end}
+        </p>
+        <h3 id="project-drone-name" className="mt-3 text-[2rem] leading-[1.02] font-semibold tracking-[-0.035em] md:text-[2.5rem]">
+          {drone.name}
+        </h3>
+        <p className="mt-3 text-[1.0625rem]">{c.oneLiner}</p>
+        <div className="mt-5">
+          <Chips items={c.chips} accentFirst />
         </div>
-        <div className="md:col-span-6">
-          <DroneMedia />
-        </div>
+        <p className="mt-4 font-mono text-[0.8125rem] text-muted">{c.specs.join("  ·  ")}</p>
+        <ul className="mt-6 space-y-2 border-t border-line pt-5 text-[0.9375rem]">
+          {publications.map((p) => (
+            <li key={p.id}>
+              <a href={p.href} target="_blank" rel="noopener noreferrer" className="link">
+                {p.title}
+              </a>
+              <span className="ml-2 font-mono text-[0.75rem] text-muted">IEEE SPACE {p.year}</span>
+            </li>
+          ))}
+          <li className="text-muted">
+            {patent.status}: {patent.title}
+          </li>
+        </ul>
       </div>
-      <Research />
+      <figure className="lg:col-span-7">
+        <div className="relative aspect-[16/10] overflow-hidden rounded-[10px] bg-surface-2">
+          <Image src={media.drone.src} alt={media.drone.alt} fill sizes="(min-width: 1024px) 640px, 100vw" className="object-cover" />
+        </div>
+      </figure>
     </article>
   );
 }
 
-function Scheduler() {
+function Small() {
   return (
-    <article id="project-scheduler" aria-labelledby="project-scheduler-name" className="relative grid gap-8 border-t border-hairline pt-12 md:grid-cols-12">
-      <LineMark node className="top-[4rem]" />
-      <div className="md:col-span-4">
-        <p className="text-label font-mono text-muted">
+    <div id="project-hackathons" className="grid gap-6 lg:grid-cols-12">
+      <div className="lg:col-span-8">
+        <h3 className="text-label text-muted">Hackathons · tear a stub</h3>
+        <HackathonTickets />
+      </div>
+      <article id="project-scheduler" aria-labelledby="project-scheduler-name" className="panel flex flex-col p-6 lg:col-span-4">
+        <p className="text-label text-muted">
           {scheduler.meta} · {scheduler.start} – {scheduler.end}
         </p>
-        <h3 id="project-scheduler-name" className="font-display mt-4 text-[clamp(2rem,1.5rem+1.6vw,3rem)] leading-tight">
+        <h3 id="project-scheduler-name" className="mt-3 text-[1.375rem] leading-tight font-semibold tracking-[-0.02em]">
           {scheduler.name}
         </h3>
-        <p className="mt-6 flex flex-wrap gap-x-4 gap-y-2" aria-label="Design patterns">
-          {scheduler.patterns.map((p, i) => (
-            <span key={p} className="font-mono text-[0.875rem] text-ink">
-              {p}
-              {i < scheduler.patterns.length - 1 && <span className="ml-4 text-rule">/</span>}
-            </span>
-          ))}
-        </p>
-      </div>
-      <div className="md:col-span-8">
-        <Bullets items={scheduler.bullets} />
-      </div>
-    </article>
+        <p className="mt-2 text-[0.9375rem] text-muted">{projectCards.scheduler.oneLiner}</p>
+        <div className="mt-4">
+          <Chips items={scheduler.patterns} />
+        </div>
+      </article>
+    </div>
   );
 }
 
-function Hackathons() {
-  return (
-    <article id="project-hackathons" aria-labelledby="project-hackathons-name" className="relative border-t border-hairline pt-12">
-      <LineMark node className="top-[4rem]" />
-      <h3 id="project-hackathons-name" className="font-display text-[clamp(2rem,1.5rem+1.6vw,3rem)] leading-tight">
-        {hackathons.title}
-      </h3>
-      <p className="text-label mt-3 font-mono text-muted">Tear a stub to stamp the ticket</p>
-      <HackathonTickets />
-    </article>
-  );
-}
-
-const blocks: Record<ProjectId, () => React.ReactNode> = {
-  bitgig: Bitgig,
-  drone: Drone,
-  scheduler: Scheduler,
-  hackathons: Hackathons,
-};
+const blocks: Record<ProjectId, () => React.ReactNode> = { bitgig: Bitgig, drone: Drone, scheduler: () => null, hackathons: Small };
 
 export function Projects({ track }: { track: TrackOrDefault }) {
   return (
-    <Section id="projects">
-      <SectionHeading id="projects" index="05" kicker="Selected work" title="Projects" margam="Varnam" />
-      <div className="space-y-24 md:space-y-32">
-        {projectOrder[track].map((id) => {
+    <section id="projects" aria-labelledby="projects-title" className="px-gutter mx-auto max-w-[84rem] py-20 md:py-28">
+      <SectionHeader id="projects" index="02" label="PROJECTS" title="Things I built" margam="Varnam" />
+      <div className="space-y-6">
+        {projectOrder[track].filter((id) => id !== "scheduler").map((id) => {
           const Block = blocks[id];
           return (
             <Reveal key={id}>
@@ -152,6 +153,6 @@ export function Projects({ track }: { track: TrackOrDefault }) {
           );
         })}
       </div>
-    </Section>
+    </section>
   );
 }
