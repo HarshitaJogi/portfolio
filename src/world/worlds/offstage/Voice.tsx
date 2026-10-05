@@ -1,14 +1,16 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { C } from "../../palette";
 import { Toon, ToonInstances, type Instance } from "../../toon";
 import { Label, chime, useHoverCursor } from "../../bits";
 import { Islet } from "../../props/basics";
 import { merge, put, type V3 } from "./parts";
+import { Tappable, TapHint } from "../../props/tappable";
+import { Burst, HINT, PopText, hump, sfx, since, useKick, wiggle, type Kick } from "@/world/fx";
 
 const FLOOR = 0.15;
 const ROSTRUM = { x: -0.4, z: -3.4, w: 7.8, d: 4.0, h: 0.45 };
@@ -53,6 +55,18 @@ function useChalk() {
 
 function Blackboard({ position, rotation = 0 }: { position: V3; rotation?: number }) {
   const chalk = useChalk();
+  const lines = useRef<THREE.Mesh>(null);
+  const [aha, fireAha] = useKick();
+  const cream = useMemo(() => new THREE.Color(C.cream), []);
+  const gold = useMemo(() => new THREE.Color(C.sun), []);
+  useFrame(() => {
+    const m = lines.current;
+    if (!m) return;
+    const s = since(aha);
+    // the diagram lights up, box by box, then dims back to chalk
+    (m.material as THREE.MeshBasicMaterial).color.copy(cream).lerp(gold, hump(s, 1.2));
+    m.scale.setScalar(1 + wiggle(s, 0.06, 18, 5));
+  });
   const wood = useMemo(
     () =>
       merge([
@@ -65,7 +79,16 @@ function Blackboard({ position, rotation = 0 }: { position: V3; rotation?: numbe
     [],
   );
   return (
-    <group position={position} rotation={[0, rotation, 0]}>
+    <Tappable
+      onTap={() => {
+        fireAha();
+        sfx.arp(587, 3, 0.1, "triangle");
+      }}
+      position={position}
+      rotation={[0, rotation, 0]}
+      hintAt={[1.1, 3.8, 0.2]}
+      hintScale={HINT}
+    >
       <mesh geometry={wood} castShadow>
         <Toon color={C.bark} thickness={1.8} />
       </mesh>
@@ -74,11 +97,12 @@ function Blackboard({ position, rotation = 0 }: { position: V3; rotation?: numbe
           <planeGeometry args={[3.1, 1.8]} />
           <meshBasicMaterial color={C.pcb} />
         </mesh>
-        <mesh geometry={chalk} position={[0, 0.05, 0.09]}>
+        <mesh ref={lines} geometry={chalk} position={[0, 0.05, 0.09]}>
           <meshBasicMaterial color={C.cream} />
         </mesh>
       </group>
-    </group>
+      <PopText kick={aha} text="AHA" position={[-0.9, 3.7, 0.4]} size={0.5} color={C.sun} outline={C.ink} />
+    </Tappable>
   );
 }
 
@@ -100,6 +124,7 @@ function usePodium() {
 
 function Podium({ position, onTap }: { position: V3; onTap: () => void }) {
   const { bind } = useHoverCursor();
+  const [seen, setSeen] = useState(false);
   const { cream, mic } = usePodium();
   return (
     <group position={position}>
@@ -116,7 +141,7 @@ function Podium({ position, onTap }: { position: V3; onTap: () => void }) {
         <meshBasicMaterial color={C.white} />
       </mesh>
       {/* the microphone on a gooseneck: click it */}
-      <group onClick={(e) => (e.stopPropagation(), onTap())} {...bind}>
+      <group onClick={(e) => (e.stopPropagation(), setSeen(true), onTap())} {...bind}>
         <mesh geometry={mic}>
           <Toon color={C.ink} thickness={1.4} />
         </mesh>
@@ -128,6 +153,7 @@ function Podium({ position, onTap }: { position: V3; onTap: () => void }) {
           <sphereGeometry args={[0.45, 8, 6]} />
           <meshBasicMaterial />
         </mesh>
+        {!seen && <TapHint position={[0.35, 3.0, 0.27]} scale={HINT / 1.3} />}
       </group>
     </group>
   );
@@ -265,8 +291,16 @@ function Rings({ tapped }: { tapped: React.RefObject<number> }) {
 
 function Certificate({ position, rotation = 0 }: { position: V3; rotation?: number }) {
   const seal = useRef<THREE.Group>(null);
+  const board = useRef<THREE.Group>(null);
+  const [shine, fireShine] = useKick();
   useFrame(({ clock }) => {
-    if (seal.current) seal.current.rotation.z = Math.sin(clock.elapsedTime * 1.3) * 0.08;
+    const s = since(shine);
+    if (seal.current) {
+      seal.current.rotation.z = Math.sin(clock.elapsedTime * 1.3) * 0.08;
+      seal.current.rotation.y = s < 0.9 ? (s / 0.9) * Math.PI * 4 : 0;
+      seal.current.scale.setScalar(1 + hump(s, 0.9) * 0.6);
+    }
+    if (board.current) board.current.rotation.z = wiggle(s, 0.05, 14, 4);
   });
   const legs: Instance[] = [
     { p: [-1.05, 1.35, 0.1], s: [0.13, 2.8, 0.13], r: [-0.12, 0, 0.13] },
@@ -277,11 +311,21 @@ function Certificate({ position, rotation = 0 }: { position: V3; rotation?: numb
   ];
   const tails = useMemo(() => merge([-0.09, 0.09].map((x) => put(new THREE.PlaneGeometry(0.13, 0.42), [x, -0.22, -0.01], [0, 0, x > 0 ? -0.25 : 0.25]))), []);
   return (
-    <group position={position} rotation={[0, rotation, 0]}>
+    <Tappable
+      onTap={() => {
+        fireShine();
+        chime(1320);
+        sfx.arp(1046, 3, 0.07, "sine");
+      }}
+      position={position}
+      rotation={[0, rotation, 0]}
+      hintAt={[0, 3.6, 0.2]}
+      hintScale={HINT}
+    >
       <ToonInstances items={legs} color={C.bark} thickness={1.6} castShadow>
         <boxGeometry />
       </ToonInstances>
-      <group position={[0, 2.08, 0.16]} rotation={[-0.12, 0, 0]}>
+      <group ref={board} position={[0, 2.08, 0.16]} rotation={[-0.12, 0, 0]}>
         <RoundedBox args={[3.1, 1.95, 0.1]} radius={0.04} castShadow>
           <Toon color={C.gold} />
         </RoundedBox>
@@ -311,7 +355,9 @@ function Certificate({ position, rotation = 0 }: { position: V3; rotation?: numb
           </mesh>
         </group>
       </group>
-    </group>
+      <Burst kick={shine} origin={[1.3, 1.4, 0.4]} count={12} colors={[C.sun, C.cobalt, C.cream]} size={0.1} speed={1.6} up={2.4} dur={0.9} />
+      <PopText kick={shine} text="DING" position={[1.1, 3.4, 0.5]} size={0.42} color={C.cobalt} />
+    </Tappable>
   );
 }
 
@@ -330,23 +376,27 @@ const SEATS: { p: V3; color: string }[] = [
   { p: [-2.1, FLOOR, 3.6], color: C.cobalt },
   { p: [-0.2, FLOOR, 3.8], color: C.sun },
   { p: [1.7, FLOOR, 3.6], color: C.green },
-  { p: [-1.2, FLOOR, 5.7], color: C.rose },
-  { p: [0.8, FLOOR, 5.8], color: C.teal },
+  // the back row sits to the right: the front left is where the traveler stands
+  { p: [1.7, FLOOR, 5.6], color: C.rose },
+  { p: [3.6, FLOOR, 5.1], color: C.teal },
 ];
 
-function Chairs() {
-  const { seats, backs, legs } = useMemo(() => {
-    const seats: Instance[] = [];
-    const backs: Instance[] = [];
-    const legs: Instance[] = [];
-    SEATS.forEach(({ p, color }) => {
+type Part = { p: V3; s: V3; r?: V3; color?: string; chair: number };
+
+/** The audience. Click a chair and the whole room bounces in its seats, applauding. */
+function Chairs({ clap }: { clap: Kick }) {
+  const sets = useMemo(() => {
+    const seats: Part[] = [];
+    const backs: Part[] = [];
+    const legs: Part[] = [];
+    SEATS.forEach(({ p, color }, chair) => {
       // facing the podium, so their backs are to us
       const yaw = Math.atan2(PODIUM[0] - p[0], PODIUM[2] - p[2]) + Math.PI;
       const fwd = (d: number, s: number): V3 => [p[0] - Math.sin(yaw) * d + Math.cos(yaw) * s, 0, p[2] - Math.cos(yaw) * d - Math.sin(yaw) * s];
       const seat = fwd(0, 0);
-      seats.push({ p: [seat[0], p[1] + 0.6, seat[2]], s: [1.0, 0.14, 0.92], r: [0, yaw, 0], color });
+      seats.push({ p: [seat[0], p[1] + 0.6, seat[2]], s: [1.0, 0.14, 0.92], r: [0, yaw, 0], color, chair });
       const back = fwd(-0.42, 0);
-      backs.push({ p: [back[0], p[1] + 1.1, back[2]], s: [1.0, 0.9, 0.12], r: [-0.08, yaw, 0], color });
+      backs.push({ p: [back[0], p[1] + 1.1, back[2]], s: [1.0, 0.9, 0.12], r: [-0.08, yaw, 0], color, chair });
       for (const [d, s] of [
         [0.37, 0.4],
         [0.37, -0.4],
@@ -354,22 +404,71 @@ function Chairs() {
         [-0.37, -0.4],
       ]) {
         const q = fwd(d, s);
-        legs.push({ p: [q[0], p[1] + 0.3, q[2]], s: [0.08, 0.6, 0.08] });
+        legs.push({ p: [q[0], p[1] + 0.3, q[2]], s: [0.08, 0.6, 0.08], chair });
       }
     });
-    return { seats, backs, legs };
+    const matrices = (parts: Part[]) => {
+      const o = new THREE.Object3D();
+      return parts.map((it) => {
+        o.position.set(...it.p);
+        o.rotation.set(...(it.r ?? [0, 0, 0]));
+        o.scale.set(...it.s);
+        o.updateMatrix();
+        return o.matrix.clone();
+      });
+    };
+    return [seats, backs, legs].map((parts) => ({ parts, base: matrices(parts) }));
   }, []);
+  const refs = useRef<(THREE.InstancedMesh | null)[]>([]);
+  const lift = useMemo(() => new THREE.Matrix4(), []);
+  const scratch = useMemo(() => new THREE.Matrix4(), []);
+  const resting = useRef(false);
+
+  const place = (s: number) => {
+    sets.forEach(({ parts, base }, k) => {
+      const m = refs.current[k];
+      if (!m) return;
+      parts.forEach((it, i) => {
+        // a ripple of hops along the rows, each chair a beat after the last
+        const h = hump(s - it.chair * 0.1, 0.32) * 0.45 + hump(s - 0.55 - it.chair * 0.1, 0.32) * 0.3;
+        lift.makeTranslation(0, h, 0);
+        m.setMatrixAt(i, scratch.multiplyMatrices(lift, base[i]));
+      });
+      m.instanceMatrix.needsUpdate = true;
+    });
+  };
+  useLayoutEffect(() => {
+    const c = new THREE.Color();
+    place(9);
+    sets.forEach(({ parts }, k) => {
+      const m = refs.current[k];
+      if (!m) return;
+      parts.forEach((it, i) => it.color && m.setColorAt(i, c.set(it.color)));
+      if (m.instanceColor) m.instanceColor.needsUpdate = true;
+      m.computeBoundingSphere();
+      if (m.boundingSphere) m.boundingSphere.radius += 1;
+      m.traverse((ch) => {
+        if (ch !== m && (ch as THREE.InstancedMesh).isInstancedMesh) (ch as THREE.InstancedMesh).boundingSphere = m.boundingSphere;
+      });
+    });
+    // place() only reads memoised data and refs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sets]);
+  useFrame(() => {
+    const s = since(clap);
+    const busy = s < 1.6;
+    if (!busy && resting.current) return;
+    place(busy ? s : 9);
+    resting.current = !busy;
+  });
   return (
     <group>
-      <ToonInstances items={seats} thickness={1.6} castShadow>
-        <boxGeometry />
-      </ToonInstances>
-      <ToonInstances items={backs} thickness={1.6} castShadow>
-        <boxGeometry />
-      </ToonInstances>
-      <ToonInstances items={legs} color={C.ink} outline={false}>
-        <boxGeometry />
-      </ToonInstances>
+      {sets.map(({ parts }, k) => (
+        <instancedMesh key={k} ref={(m) => void (refs.current[k] = m)} args={[undefined, undefined, parts.length]} castShadow={k < 2}>
+          <boxGeometry />
+          {k < 2 ? <Toon color={C.white} thickness={1.6} /> : <Toon color={C.ink} outline={false} />}
+        </instancedMesh>
+      ))}
     </group>
   );
 }
@@ -381,7 +480,13 @@ function Chairs() {
  * in speech bubbles, a blackboard of boxes and arrows, a small audience, and the
  * certificate on an easel.
  */
+const CONFETTI_AT: V3[] = [
+  [-1.0, 1.8, 3.7],
+  [2.6, 1.8, 5.3],
+];
+
 export function Voice() {
+  const [clap, fireClap] = useKick();
   const tapped = useRef(-10);
   const clockRef = useRef(0);
   useFrame(({ clock }) => {
@@ -411,7 +516,22 @@ export function Voice() {
       <Bubbles tapped={tapped} />
       <Rings tapped={tapped} />
       <Certificate position={[3.0, FLOOR, 1.5]} rotation={-0.4} />
-      <Chairs />
+      {/* the audience: click a chair for a round of applause */}
+      <Tappable
+        onTap={() => {
+          if (since(clap) < 1.2) return;
+          fireClap();
+          sfx.applause();
+        }}
+        hintAt={[-0.2, 2.7, 3.8]}
+        hintScale={HINT}
+      >
+        <Chairs clap={clap} />
+        {CONFETTI_AT.map((p, i) => (
+          <Burst key={i} kick={clap} origin={p} count={8} colors={[C.sun, C.coral, C.cobalt, C.green]} size={0.1} speed={1.4} up={3} dur={1.2} />
+        ))}
+        <PopText kick={clap} text="CLAP CLAP" position={[-1.4, 2.5, 4.6]} size={0.5} color={C.coral} />
+      </Tappable>
       <ToonInstances items={BUSHES} thickness={1.6}>
         <icosahedronGeometry args={[0.6, 0]} />
       </ToonInstances>

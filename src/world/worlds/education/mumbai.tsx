@@ -6,9 +6,11 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { education, places } from "@/content/profile";
 import { C } from "../../palette";
-import { Label, chime, useHoverCursor } from "../../bits";
+import { Label, chime } from "../../bits";
 import { findEgg } from "../../eggs";
 import { Islet } from "../../props/basics";
+import { Tappable } from "../../props/tappable";
+import { HINT, PopText, sfx, since, useKick, type Kick } from "@/world/fx";
 import { Baked, Hands, bake, box, capsule, clockFace, cone, cyl, move, sphere, toonRamp, torus, tube, type Part, type V3 } from "./kit";
 
 /**
@@ -16,6 +18,8 @@ import { Baked, Hands, bake, box, capsule, clockFace, cone, cyl, move, sphere, t
  * The campus stands on a circuit board: a Gothic clock tower on Mumbai time at the back,
  * an oscilloscope tracing a sine wave, a blinking breadboard, the GPA on a seven-segment
  * display, resistors whose colour bands read the years, and caps thrown in the air.
+ * The university's name runs on a banner across the tower and its hall.
+ * Click the oscilloscope (it changes waveform), the caps (they all go up) and the chai.
  */
 
 const G = 0.14; // sand
@@ -52,6 +56,10 @@ function lancet(x: number, y: number, z: number, w: number, h: number, color = C
 const TOWER_AT: V3 = [0.8, G, -6.9];
 const CLOCK_Y = 3.3;
 const CLOCK_R = 0.6;
+const BANNER = "#7a2e22";
+const BANNER_X = 1.65;
+const BANNER_Y = 1.97;
+const BANNER_W = 6.1;
 
 function towerParts() {
   const body: Part[] = [
@@ -99,9 +107,17 @@ function towerParts() {
     ...lancet(0.58, 4.6, 0.58, 0.2, 0.36, C.ink, Math.PI / 4),
     ...move([...lancet(-1.1, 1.0, 1.01, 0.36, 0.9), ...lancet(0, 1.0, 1.01, 0.36, 0.9), ...lancet(1.1, 1.0, 1.01, 0.36, 0.9)], [3.3, 0, -0.3]),
   ];
+  // the name banner across the tower and the hall, hung off the hall on two brackets
+  const banner: Part[] = [
+    box(BANNER, BANNER_W, 0.66, 0.08, { p: [BANNER_X, BANNER_Y, 1.27] }),
+    box(C.gold, BANNER_W + 0.1, 0.06, 0.1, { p: [BANNER_X, BANNER_Y + 0.35, 1.27] }),
+    box(C.gold, BANNER_W + 0.1, 0.06, 0.1, { p: [BANNER_X, BANNER_Y - 0.35, 1.27] }),
+    box(STONE_LIGHT, 0.14, 0.3, 0.56, { p: [2.6, BANNER_Y, 0.97] }),
+    box(STONE_LIGHT, 0.14, 0.3, 0.56, { p: [4.2, BANNER_Y, 0.97] }),
+  ];
   const clock = clockFace([0, CLOCK_Y, 1.06], CLOCK_R);
   return {
-    body: move([...body, ...move(wing, [3.3, 0, -0.3]), ...clock.body], TOWER_AT),
+    body: move([...body, ...move(wing, [3.3, 0, -0.3]), ...banner, ...clock.body], TOWER_AT),
     marks: move([...marks, ...clock.marks], TOWER_AT),
   };
 }
@@ -566,8 +582,23 @@ function boardParts() {
 
 /* ---------------- moving parts ---------------- */
 
-/** The oscilloscope's trace: a sine wave scrolling across the screen. */
-function SineTrace() {
+/** The waveforms the scope cycles through when clicked, each in -1..1 over a period of 2π. */
+const WAVES: ((a: number) => number)[] = [
+  Math.sin,
+  (a) => (Math.sin(a) >= 0 ? 0.85 : -0.85),
+  (a) => {
+    const u = (((a / (Math.PI * 2)) % 1) + 1) % 1;
+    return 1 - 4 * Math.abs(u - 0.5);
+  },
+  (a) => {
+    const u = (((a / (Math.PI * 2)) % 1) + 1) % 1;
+    return 2 * u - 1;
+  },
+];
+const WAVE_PITCH = [1, 0.8, 1.2, 1.45];
+
+/** The oscilloscope's trace: a wave scrolling across the screen. Click: the next waveform. */
+function SineTrace({ mode, kick }: { mode: { current: number }; kick: Kick }) {
   const ref = useRef<THREE.InstancedMesh>(null);
   const n = 70;
   const o = useMemo(() => new THREE.Object3D(), []);
@@ -575,12 +606,19 @@ function SineTrace() {
     const m = ref.current;
     if (!m) return;
     const t = clock.elapsedTime;
+    const wave = WAVES[mode.current % WAVES.length];
+    // the new wave springs in tall and settles
+    const s = since(kick);
+    const amp = 0.27 * (s < 0.5 ? 1 + Math.sin((s / 0.5) * Math.PI) * 0.35 : 1);
+    const dx = 1.12 / (n - 1);
     for (let i = 0; i < n; i++) {
-      const x = -0.56 + (i / (n - 1)) * 1.12;
-      const y = Math.sin(x * 8.4 - t * 4) * 0.27;
-      const slope = Math.cos(x * 8.4 - t * 4) * 0.27 * 8.4;
-      o.position.set(SCREEN[0] + x, SCREEN[1] + y, SCREEN[2]);
-      o.rotation.set(0, 0, Math.atan(slope));
+      const x = -0.56 + i * dx;
+      const y = wave(x * 8.4 - t * 4) * amp;
+      const y1 = wave((x + dx) * 8.4 - t * 4) * amp;
+      o.position.set(SCREEN[0] + x, SCREEN[1] + Math.min(Math.max(y, -0.4), 0.4), SCREEN[2]);
+      o.rotation.set(0, 0, Math.atan2(y1 - y, dx));
+      // a jump (the square's edges, the saw's drop) is drawn as one tall segment
+      o.scale.set(1, Math.max(1, Math.abs(y1 - y) / 0.045), 1);
       o.updateMatrix();
       m.setMatrixAt(i, o.matrix);
     }
@@ -593,6 +631,34 @@ function SineTrace() {
         <meshBasicMaterial color="#8dffb0" />
       </instancedMesh>
     </group>
+  );
+}
+
+/** The scope as a whole: the trace, and a target over the box. */
+function Scope() {
+  const mode = useRef(0);
+  const [kick, fire] = useKick();
+  return (
+    <>
+      <SineTrace mode={mode} kick={kick} />
+      <group position={SCOPE_AT} rotation={[0, SCOPE_RY, 0]}>
+        <Tappable
+          onTap={() => {
+            mode.current = (mode.current + 1) % WAVES.length;
+            fire();
+            sfx.beep(WAVE_PITCH[mode.current]);
+          }}
+          hintAt={[0, SCOPE.h + 0.85, 0.2]}
+          hintScale={HINT / SCALE}
+        >
+          <mesh position={[0, SCOPE.h / 2 + 0.1, 0]} visible={false}>
+            <boxGeometry args={[SCOPE.w + 0.1, SCOPE.h + 0.5, SCOPE.d + 0.2]} />
+            <meshBasicMaterial />
+          </mesh>
+        </Tappable>
+        <PopText kick={kick} text="BEEP" position={[-0.4, SCOPE.h + 0.7, SCOPE.d / 2 + 0.2]} size={0.36} color={C.pcb} />
+      </group>
+    </>
   );
 }
 
@@ -650,6 +716,7 @@ const CAP_RESTS: { p: V3; ry: number }[] = [
 
 function CapToss() {
   const ref = useRef<THREE.InstancedMesh>(null);
+  const [kick, fire] = useKick();
   const geo = useMemo(() => bake(CAP_PARTS), []);
   const o = useMemo(() => new THREE.Object3D(), []);
   useLayoutEffect(() => {
@@ -662,8 +729,11 @@ function CapToss() {
     if (!m) return;
     const P = 6.5;
     const T = 1.75;
+    const k = since(kick);
     CAP_RESTS.forEach((r, i) => {
-      const t = (clock.elapsedTime + 4.2 - i * 0.14) % P;
+      // clicked: all three go up together, a beat apart; otherwise every few seconds
+      const own = k - i * 0.1;
+      const t = k < T + 0.4 ? (own > 0 && own < T ? own : T) : (clock.elapsedTime + 4.2 - i * 0.14) % P;
       const f = t < T ? t / T : 0;
       const y = f ? 9.81 * (T / 2) * t - 4.905 * t * t : 0;
       const sway = Math.sin(f * Math.PI) * (i - 1) * 0.9;
@@ -677,10 +747,27 @@ function CapToss() {
     m.instanceMatrix.needsUpdate = true;
   });
   return (
-    <instancedMesh ref={ref} args={[geo, undefined, CAP_RESTS.length]} castShadow frustumCulled={false}>
-      <meshToonMaterial vertexColors gradientMap={toonRamp()} />
-      <Outlines thickness={1.8} color={C.ink} />
-    </instancedMesh>
+    <>
+      <instancedMesh ref={ref} args={[geo, undefined, CAP_RESTS.length]} castShadow frustumCulled={false}>
+        <meshToonMaterial vertexColors gradientMap={toonRamp()} />
+        <Outlines thickness={1.8} color={C.ink} />
+      </instancedMesh>
+      <Tappable
+        onTap={() => {
+          fire();
+          sfx.whoosh(1.3);
+          sfx.arp(659, 5, 0.09);
+        }}
+        hintAt={[-1.05, G + 1.0, -4.9]}
+        hintScale={HINT / SCALE}
+      >
+        <mesh position={[0.7, G + 0.4, -5.05]} visible={false}>
+          <boxGeometry args={[4.6, 0.9, 1.3]} />
+          <meshBasicMaterial />
+        </mesh>
+      </Tappable>
+      <PopText kick={kick} text="WOOHOO" position={[0.7, G + 2.6, -4.6]} size={0.5} rise={1.6} dur={1.6} />
+    </>
   );
 }
 
@@ -702,7 +789,7 @@ const TABLE_PARTS: Part[] = move(
 );
 
 function Chai() {
-  const { bind } = useHoverCursor();
+  const [kick, fire] = useKick();
   const steam = useRef<THREE.InstancedMesh>(null);
   const puff = useRef({ pending: false, start: -10 });
   const o = useMemo(() => new THREE.Object3D(), []);
@@ -748,20 +835,23 @@ function Chai() {
           <meshBasicMaterial color={C.white} transparent opacity={0.7} depthWrite={false} />
         </instancedMesh>
         {/* a generous invisible hit area round the table and glass */}
-        <mesh
-          position={[0, 0.85, 0]}
-          onClick={(e) => {
-            e.stopPropagation();
+        <Tappable
+          onTap={() => {
             puff.current.pending = true;
+            fire();
             chime(988);
             setTimeout(() => chime(1318), 140);
             findEgg("chai");
           }}
-          {...bind}
+          hintAt={[0, 1.8, 0]}
+          hintScale={HINT / SCALE}
         >
-          <cylinderGeometry args={[0.7, 0.7, 1.9, 10]} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-        </mesh>
+          <mesh position={[0, 0.85, 0]} visible={false}>
+            <cylinderGeometry args={[0.7, 0.7, 1.9, 10]} />
+            <meshBasicMaterial />
+          </mesh>
+        </Tappable>
+        <PopText kick={kick} text="AAH" position={[0.3, 2.3, 0.3]} size={0.4} />
       </group>
     </group>
   );
@@ -823,13 +913,17 @@ export function MumbaiU() {
         <Baked parts={parts.flat} look="flat" />
         <Baked parts={parts.glow} look="glow" />
         <Hands tz={places.mumbai.tz} r={CLOCK_R} position={[TOWER_AT[0], TOWER_AT[1] + CLOCK_Y, TOWER_AT[2] + 1.06]} />
-        <Label size={0.3} position={[TOWER_AT[0], TOWER_AT[1] + 1.78, TOWER_AT[2] + 1.22]}>
-          MUMBAI
+        {/* the university's name, big, on the banner, and the city, small, under the clock */}
+        <Label size={0.33} color={C.cream} position={[TOWER_AT[0] + BANNER_X, TOWER_AT[1] + BANNER_Y, TOWER_AT[2] + 1.32]}>
+          {mu.school.toUpperCase()}
+        </Label>
+        <Label size={0.2} position={[TOWER_AT[0], TOWER_AT[1] + 2.56, TOWER_AT[2] + 1.02]}>
+          {places.mumbai.city.toUpperCase()}
         </Label>
         {PALMS.map((pl) => (
           <Crown key={pl.phase} at={palmTop(pl.p, pl.h, pl.lean)} phase={pl.phase} />
         ))}
-        <SineTrace />
+        <Scope />
         <Leds />
         <CapToss />
         <Chai />

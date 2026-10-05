@@ -1,15 +1,19 @@
 "use client";
 
-import { Line, RoundedBox, useTexture } from "@react-three/drei";
+import { Line, useTexture } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { bitgig, media } from "@/content/profile";
+import { bitgig, media, places } from "@/content/profile";
 import { C } from "../../palette";
 import { Toon, ToonInstances, type Instance } from "../../toon";
-import { Label, textureUrl, useHoverCursor } from "../../bits";
+import { Label, chime, textureUrl, useHoverCursor } from "../../bits";
 import { Islet } from "../../props/basics";
-import { Boxes, Cyls, Glows, Moon, Moving, Stars, useCheckGeometry, type V3 } from "./kit";
+import { Tappable } from "../../props/tappable";
+import { HINT, PopText, sfx, since, useKick } from "@/world/fx";
+import { Baked, box, clockFace, cone, cyl, sphere, type Part } from "../education/kit";
+import { Boxes, ClockHands, Cyls, Glows, Moon, Moving, Stars, useCheckGeometry, type V3 } from "./kit";
 
 /*
  * Bitgig, Berkeley × DeepMind Hackathon, Sep 2026: expert annotation for lab and medical
@@ -19,6 +23,8 @@ import { Boxes, Cyls, Glows, Moon, Moving, Stars, useCheckGeometry, type V3 } fr
  * expert corrects them (CORRECT), three experts nod them through (AGREE, consensus QC),
  * and they leave solid with a green check (VERIFIED) onto the pile of training data.
  * Dashed is draft, solid is verified: the site's one rule. Pizza, because hackathon.
+ * Behind it all, a campanile in the spirit of UC Berkeley's, where the hackathon was held,
+ * its clock on Berkeley time. Click the tower and its bell rings a little tune.
  */
 
 const STAGES = bitgig.stages.map((s) => s.name.toUpperCase());
@@ -82,7 +88,7 @@ function Booth() {
         </Label>
       </group>
       {/* the screen: the real thing. Click it and the live demo opens */}
-      <group position={[0, 2.0, -0.3]} onClick={open} {...bind}>
+      <Tappable position={[0, 2.0, -0.3]} onTap={() => window.open(bitgig.live, "_blank", "noopener")} hintAt={[1.2, 1.15, 0.35]} hintScale={HINT / 1.3}>
         <RoundedBox args={[3.4, 2.15, 0.16]} radius={0.06} castShadow>
           <Toon color={C.ink} />
         </RoundedBox>
@@ -90,7 +96,7 @@ function Booth() {
           <planeGeometry args={[3.18, 1.99]} />
           <meshBasicMaterial map={tex} toneMapped={false} />
         </mesh>
-      </group>
+      </Tappable>
     </group>
   );
 }
@@ -273,8 +279,19 @@ function Reel() {
   );
 }
 
-/** A hack table: a laptop glowing and the pizza that fuelled it. */
+/** A hack table: a laptop glowing and the pizza that fuelled it. Click the pizza: it flips. */
 function Table() {
+  const [kick, fire] = useKick();
+  const pizza = useRef<THREE.Group>(null);
+  useFrame(() => {
+    const g = pizza.current;
+    if (!g) return;
+    const s = since(kick);
+    const k = s < 0.9 ? s / 0.9 : 1;
+    // up it goes, a spin and a flip, and back down into the box
+    g.position.y = 1.29 + Math.sin(k * Math.PI) * 0.9;
+    g.rotation.set(k * Math.PI * 2, k * Math.PI * 3, 0);
+  });
   const parts = useMemo<Instance[]>(
     () => [
       { p: [0, 0.86, 0], s: [2.6, 0.1, 1.15], color: C.cream },
@@ -302,26 +319,128 @@ function Table() {
   const pepperoni = useMemo<Instance[]>(
     () =>
       [
-        [0.6, 0.15],
-        [0.9, 0.2],
-        [0.75, -0.08],
-        [0.95, -0.1],
-        [0.58, -0.15],
-      ].map(([x, z]) => ({ p: [x, 1.31, z] as V3, s: [0.12, 0.02, 0.12] as V3, color: C.red })),
+        [-0.15, 0.1],
+        [0.15, 0.15],
+        [0, -0.13],
+        [0.2, -0.15],
+        [-0.17, -0.2],
+      ].map(([x, z]) => ({ p: [x, 0.03, z] as V3, s: [0.12, 0.02, 0.12] as V3, color: C.red })),
     [],
   );
   return (
     <group position={[4.7, 0.15, 0.6]} rotation={[0, -0.4, 0]}>
       <Boxes items={parts} />
-      <Cyls items={[...legs, ...pepperoni]} outline={false} sides={10} />
+      <Cyls items={legs} outline={false} sides={10} />
       {/* the pizza, one slice gone */}
-      <mesh position={[0.75, 1.29, 0.05]}>
-        <cylinderGeometry args={[0.4, 0.4, 0.04, 24, 1, false, 0, Math.PI * (5 / 3)]} />
-        <Toon color={C.sun} thickness={1.2} />
-      </mesh>
+      <Tappable
+        onTap={() => {
+          fire();
+          sfx.whee();
+          setTimeout(() => sfx.pop(0.8), 820);
+        }}
+        hintAt={[0.75, 2.1, 0.05]}
+        hintScale={HINT}
+      >
+        <group ref={pizza} position={[0.75, 1.29, 0.05]}>
+          <mesh>
+            <cylinderGeometry args={[0.4, 0.4, 0.04, 24, 1, false, 0, Math.PI * (5 / 3)]} />
+            <Toon color={C.sun} thickness={1.2} />
+          </mesh>
+          <Cyls items={pepperoni} outline={false} castShadow={false} sides={10} />
+        </group>
+        {/* a bigger, invisible target: a slice of pizza is small */}
+        <mesh position={[0.75, 1.4, 0.05]} visible={false}>
+          <boxGeometry args={[1.1, 0.7, 1.1]} />
+          <meshBasicMaterial />
+        </mesh>
+      </Tappable>
+      <PopText kick={kick} text="NOM" position={[0.75, 2.3, 0.3]} size={0.42} />
       <Glows items={[{ p: [-0.6, 1.24, -0.15], s: [0.8, 0.48, 1], r: [-0.15, 0, 0], color: "#9fc1ff" }]}>
         <planeGeometry args={[1, 1]} />
       </Glows>
+    </group>
+  );
+}
+
+/* ---------- the campanile ---------- */
+
+const GRANITE = "#e4ddcc";
+const GRANITE_2 = "#d3cab5";
+const COPPER = "#86ab9c";
+const LAMPLIGHT = "#ffd27a";
+const CAMP_AT: V3 = [6.0, 0.15, -7.2];
+const CAMP_RY = -0.3;
+const SHAFT = { w: 1.4, y0: 1.5, h: 4.3 };
+const BELFRY_Y = SHAFT.y0 + SHAFT.h; // 5.8
+const BELFRY_H = 1.3;
+const CAMP_CLOCK: V3 = [0, 5.05, SHAFT.w / 2 + 0.02];
+const CAMP_CLOCK_R = 0.5;
+const BELL_AT: V3 = [0, BELFRY_Y + 0.98, 0.86];
+/** The tune the bell plays: a little four-note phrase, there and back. */
+const TUNE = [659, 523, 587, 392, 392, 587, 659, 523];
+
+function campanileParts() {
+  const top = BELFRY_Y + BELFRY_H;
+  const body: Part[] = [
+    box(GRANITE_2, 3.2, 0.3, 2.6, { p: [0, 0.15, 0] }),
+    box(GRANITE, 2.9, 1.0, 2.3, { p: [0, 0.8, 0] }),
+    box(GRANITE_2, 3.05, 0.16, 2.45, { p: [0, 1.38, 0] }),
+    box(GRANITE, SHAFT.w, SHAFT.h, SHAFT.w, { p: [0, SHAFT.y0 + SHAFT.h / 2, 0] }),
+    // a band under the clock, and the belfry with its cornice
+    box(GRANITE_2, SHAFT.w + 0.12, 0.12, SHAFT.w + 0.12, { p: [0, 4.45, 0] }),
+    box(GRANITE_2, 1.75, 0.12, 1.75, { p: [0, BELFRY_Y + 0.06, 0] }),
+    box(GRANITE, 1.6, BELFRY_H, 1.6, { p: [0, BELFRY_Y + BELFRY_H / 2, 0] }),
+    box(GRANITE_2, 1.8, 0.18, 1.8, { p: [0, top + 0.09, 0] }),
+    // the copper spire: a four-sided pyramid, gone green-grey, and a gold finial
+    cone(COPPER, 1.15, 1.9, 4, { p: [0, top + 0.18 + 0.95, 0], r: [0, Math.PI / 4, 0] }),
+    cyl(C.gold, 0.03, 0.03, 0.45, 6, { p: [0, top + 2.25, 0] }),
+    sphere(C.gold, 0.08, { p: [0, top + 2.15, 0] }),
+  ];
+  const [rim, face] = clockFace(CAMP_CLOCK, CAMP_CLOCK_R, C.cream, C.ink).body;
+  const { marks } = clockFace(CAMP_CLOCK, CAMP_CLOCK_R, C.cream, C.ink);
+  // the belfry arch, lamplit at night, slit windows down the shaft, the door and the name plaque
+  const glow: Part[] = [
+    face,
+    box(LAMPLIGHT, 0.76, 0.75, 0.02, { p: [0, BELFRY_Y + 0.5, 0.81] }),
+    cyl(LAMPLIGHT, 0.38, 0.38, 0.02, 18, { p: [0, BELFRY_Y + 0.87, 0.81], r: [Math.PI / 2, 0, 0] }, [Math.PI / 2, Math.PI]),
+    ...[-0.3, 0, 0.3].map((x) => box("#3b3550", 0.12, 2.3, 0.02, { p: [x, 3.05, SHAFT.w / 2 + 0.01] })),
+    box("#efe6cf", 2.6, 0.52, 0.02, { p: [0, 0.82, 1.16] }),
+  ];
+  return { body: [...body, rim], glow: [...glow, ...marks] };
+}
+
+/** The campanile. Click it: the bell swings and plays its tune. */
+function Campanile() {
+  const parts = useMemo(() => campanileParts(), []);
+  const bell = useRef<THREE.Group>(null);
+  const [kick, fire] = useKick();
+  useFrame(() => {
+    if (!bell.current) return;
+    const s = since(kick);
+    bell.current.rotation.z = s < 4 ? Math.sin(s * 7) * 0.55 * Math.max(1 - s / 4, 0) : 0;
+  });
+  const ring = () => {
+    fire();
+    TUNE.forEach((f, i) => setTimeout(() => chime(f), i * 300 + (i > 3 ? 250 : 0)));
+  };
+  return (
+    <group position={CAMP_AT} rotation={[0, CAMP_RY, 0]}>
+      <Tappable onTap={ring} hintAt={[0, 3.6, 1.0]} hintScale={HINT}>
+        <Baked parts={parts.body} castShadow thickness={2} />
+        <Baked parts={parts.glow} look="glow" />
+        {/* the bell, hanging in the arch */}
+        <group ref={bell} position={BELL_AT}>
+          <mesh position={[0, -0.28, 0]}>
+            <cylinderGeometry args={[0.14, 0.3, 0.44, 14]} />
+            <Toon color={C.gold} thickness={1.4} />
+          </mesh>
+        </group>
+      </Tappable>
+      <ClockHands tz={places.berkeley.tz} r={CAMP_CLOCK_R} position={CAMP_CLOCK} />
+      <Label size={0.3} color={C.ink} position={[0, 0.82, 1.18]}>
+        UC BERKELEY
+      </Label>
+      <PopText kick={kick} text="DING DONG" position={[-0.4, BELFRY_Y + 1.6, 1.2]} size={0.42} rise={0.9} dur={2.2} />
     </group>
   );
 }
@@ -331,7 +450,8 @@ export function Bitgig() {
     <group>
       <Islet r={11} top="#d9c39a" />
       <Stars seed={7} />
-      <Moon position={[6.2, 7.5, -9]} />
+      <Moon position={[-3.4, 8.3, -9.5]} />
+      <Campanile />
       <Booth />
       <Pipeline />
       <Table />

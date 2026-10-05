@@ -6,7 +6,8 @@ import * as THREE from "three";
 import { hubStops, margamParts } from "@/content/profile";
 import { C, RING_R, STOP_COUNT, stopAngle } from "../palette";
 import { Toon, ToonInstances } from "../toon";
-import { journey } from "../scroll";
+import { ABOVE, hubView } from "./view";
+import { getStamps } from "@/components/v5/passportStore";
 
 const ISLAND_R = 21;
 
@@ -48,16 +49,25 @@ function Rocks({ rocks }: { rocks: { p: [number, number, number]; s: number }[] 
   );
 }
 
-/** One arc of the path per stop, in that stop's recital colour. Lights up once passed. */
+/**
+ * One arc of the path per district, in that district's recital colour. Faint until its
+ * world is stamped in the passport, bright from above. The island fills with colour as
+ * you walk the worlds.
+ */
 function MargamArcs() {
   const mats = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
   const color = useMemo(() => new Map(margamParts.map((m) => [m.id, m.color])), []);
   const span = (Math.PI * 2) / STOP_COUNT;
   useFrame(() => {
+    const above = hubView.get().focus === ABOVE;
+    const focus = hubView.get().focus;
+    const stamped = getStamps();
     mats.current.forEach((m, i) => {
       if (!m) return;
-      const lit = Math.min(Math.max(journey.progress - i + 0.6, 0), 1);
-      m.opacity += (lit - m.opacity) * 0.15;
+      const w = hubStops[i].world;
+      const done = w ? stamped.some((s) => s.id === w) : true;
+      const lit = above ? 1 : done ? 0.9 : focus === i ? 0.7 : 0.28;
+      m.opacity += (lit - m.opacity) * 0.08;
     });
   });
   return (
@@ -73,7 +83,7 @@ function MargamArcs() {
               }}
               color={color.get(s.margam)}
               transparent
-              opacity={0}
+              opacity={0.28}
             />
           </mesh>
         );

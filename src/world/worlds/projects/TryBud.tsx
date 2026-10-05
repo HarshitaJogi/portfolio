@@ -1,16 +1,20 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef, useState, type RefObject } from "react";
 import * as THREE from "three";
+import { places } from "@/content/profile";
 import { C } from "../../palette";
 import { Toon, ToonInstances, type Instance } from "../../toon";
 import { Label, chime, useHoverCursor } from "../../bits";
 import { Islet } from "../../props/basics";
+import { Tappable } from "../../props/tappable";
 import { findEgg } from "../../eggs";
 import { island } from "../../state";
-import { Boxes, Cyls, Glows, Moon, Moving, Stars, hash, useCheckGeometry, type V3 } from "./kit";
+import { Burst, HINT, Hinted, PopText, hump, sfx, since, useKick, wiggle, type Kick } from "@/world/fx";
+import { Baked, box, clockFace, move, prism, type Part } from "../education/kit";
+import { Boxes, ClockHands, Cyls, Glows, Moon, Moving, Stars, hash, useCheckGeometry, type V3 } from "./kit";
 
 /*
  * TryBud, Harvard Hack-o-Ween, Oct 2025: 2nd place, $3,600, a blockchain job-verification
@@ -18,7 +22,12 @@ import { Boxes, Cyls, Glows, Moon, Moving, Stars, hash, useCheckGeometry, type V
  * holding a job (a briefcase). A green light runs down the chain and stamps each job
  * verified. On the right the silver 2ND trophy, on the left the giant prize cheque. Five
  * jack-o'-lanterns wait in front: light all five and the bats come down to dance.
+ * The hackathon was in Boston, so a row of brownstones glows behind, and a street clock
+ * keeps Boston time. Click the trophy, the cheque and the pumpkins.
  */
+
+/** Scene-space scale of the main group, so hints come out the same size everywhere. */
+const S = 1.2;
 
 const BLOCKS = 5;
 const blockX = (i: number) => (i - 2) * 2.05;
@@ -28,11 +37,11 @@ const HOLD = 2.2;
 const LOOP = RUN + HOLD;
 
 const PUMPKINS: { p: V3; s: number }[] = [
-  { p: [-3.4, 0.15, 3.1], s: 1 },
-  { p: [-1.6, 0.15, 4.1], s: 0.82 },
-  { p: [0.3, 0.15, 4.5], s: 1.12 },
-  { p: [2.2, 0.15, 4.1], s: 0.88 },
-  { p: [3.9, 0.15, 3.1], s: 1 },
+  { p: [-3.4, 0.15, 2.7], s: 1 },
+  { p: [-1.6, 0.15, 3.5], s: 0.82 },
+  { p: [0.3, 0.15, 3.9], s: 1.12 },
+  { p: [2.2, 0.15, 3.5], s: 0.88 },
+  { p: [3.9, 0.15, 2.7], s: 1 },
 ];
 
 /** The chain: five job blocks linked together, and the verifying light. */
@@ -153,6 +162,9 @@ function usePumpkinGeometry() {
   }, []);
 }
 
+/** One kick per pumpkin: it hops and says BOO when clicked. There is only one TryBud islet. */
+const KICKS: Kick[] = PUMPKINS.map(() => ({ current: -1e9 }));
+
 /** A jack-o'-lantern face part: a small triangle. */
 const FACE = new THREE.CircleGeometry(1, 3);
 
@@ -163,6 +175,8 @@ function Pumpkins({ onAll }: { onAll: () => void }) {
     return PUMPKINS.map((_, i) => i < n);
   });
   const { bind } = useHoverCursor();
+  const kicks = KICKS;
+  const hop = (i: number) => hump(since(kicks[i]), 0.42) * 0.55;
   const unlit = useMemo(() => new THREE.Color("#ff9a3c"), []);
   const glow = useMemo(() => new THREE.Color("#ffb347"), []);
   const dark = useMemo(() => new THREE.Color("#3a1a05"), []);
@@ -173,7 +187,12 @@ function Pumpkins({ onAll }: { onAll: () => void }) {
   );
 
   const light = (i?: number) => {
-    if (i === undefined || lit[i]) return;
+    if (i === undefined) return;
+    kicks[i].current = performance.now();
+    if (lit[i]) {
+      sfx.boop(0.8 + i * 0.1);
+      return;
+    }
     const next = lit.map((l, j) => l || j === i);
     const n = next.filter(Boolean).length;
     setLit(next);
@@ -187,7 +206,10 @@ function Pumpkins({ onAll }: { onAll: () => void }) {
   };
 
   return (
-    <>
+    <Hinted at={[0.3, 1.55, 3.9]} scale={HINT / S} done={lit.some(Boolean)}>
+      {PUMPKINS.map(({ p, s }, i) => (
+        <PopText key={i} kick={kicks[i]} text="BOO" position={[p[0], p[1] + 1.4 * s, p[2] + 0.4]} size={0.4} rise={0.8} />
+      ))}
       <Moving
         count={PUMPKINS.length}
         thickness={1.6}
@@ -199,23 +221,34 @@ function Pumpkins({ onAll }: { onAll: () => void }) {
         bind={bind}
         onFrame={(put) => {
           PUMPKINS.forEach(({ p, s }, i) => {
-            put(i, p[0], p[1] + 0.45 * s, p[2], s);
+            const h = hop(i);
+            put(i, p[0], p[1] + 0.45 * s + h, p[2], s * (1 - h * 0.15), s * (1 + h * 0.25), s * (1 - h * 0.15));
             put.color(i, lit[i] ? glow : unlit);
           });
         }}
       >
         <primitive object={body} attach="geometry" />
       </Moving>
-      <ToonInstances items={stems} outline={false}>
+      <Moving
+        count={PUMPKINS.length}
+        color={C.leaf}
+        outline={false}
+        onFrame={(put) => {
+          stems.forEach(({ p, s }, i) => {
+            const v = s as V3;
+            put(i, p[0], p[1] + hop(i) * 1.15, p[2], v[0], v[1], v[2], 0.1, 0, 0.15);
+          });
+        }}
+      >
         <cylinderGeometry args={[0.4, 0.6, 1, 6]} />
-      </ToonInstances>
+      </Moving>
       {/* faces: two eyes and a grin each, dark until lit */}
       <Moving
         count={PUMPKINS.length * 3}
         basic
         onFrame={(put) => {
           PUMPKINS.forEach(({ p, s }, i) => {
-            const y = p[1] + 0.45 * s;
+            const y = p[1] + 0.45 * s + hop(i);
             const z = p[2] + 0.6 * s;
             put(i * 3, p[0] - 0.2 * s, y + 0.1 * s, z, 0.11 * s, 0.11 * s, 1, -0.2, 0, Math.PI / 2);
             put(i * 3 + 1, p[0] + 0.2 * s, y + 0.1 * s, z, 0.11 * s, 0.11 * s, 1, -0.2, 0, Math.PI / 2);
@@ -235,7 +268,7 @@ function Pumpkins({ onAll }: { onAll: () => void }) {
         onFrame={(put) => {
           PUMPKINS.forEach(({ p, s }, i) => {
             const k = lit[i] ? s * 1.01 : 0;
-            put(i, p[0], p[1] + 0.45 * s, p[2], k);
+            put(i, p[0], p[1] + 0.45 * s + hop(i), p[2], k);
           });
         }}
       >
@@ -251,13 +284,13 @@ function Pumpkins({ onAll }: { onAll: () => void }) {
         onFrame={(put, t) => {
           PUMPKINS.forEach(({ p, s }, i) => {
             const k = lit[i] ? s * (1.45 + Math.sin(t * 9 + i * 2) * 0.06 + Math.sin(t * 23 + i) * 0.03) : 0;
-            put(i, p[0], p[1] + 0.45 * s, p[2], k, k * 0.85, k);
+            put(i, p[0], p[1] + 0.45 * s + hop(i), p[2], k, k * 0.85, k);
           });
         }}
       >
         <sphereGeometry args={[0.6, 16, 12]} />
       </Moving>
-    </>
+    </Hinted>
   );
 }
 
@@ -325,9 +358,10 @@ function Bats({ party }: { party: RefObject<number> }) {
   );
 }
 
-/** The silver cup for second place, turning on its plinth. */
+/** The silver cup for second place, turning on its plinth. Click it: it spins and sparkles. */
 function SilverTrophy({ position }: { position: V3 }) {
   const cup = useRef<THREE.Group>(null);
+  const [kick, fire] = useKick();
   const lathe = useMemo(() => {
     const pts = [
       [0, 0],
@@ -344,10 +378,26 @@ function SilverTrophy({ position }: { position: V3 }) {
     return new THREE.LatheGeometry(pts, 24);
   }, []);
   useFrame((_, dt) => {
-    if (cup.current) cup.current.rotation.y += dt * 0.7;
+    const g = cup.current;
+    if (!g) return;
+    const s = since(kick);
+    // a fast spin that winds down, and a little jump
+    g.rotation.y += dt * (0.7 + (s < 1.6 ? 16 * (1 - s / 1.6) : 0));
+    g.position.y = 1 + hump(s, 0.5) * 0.45;
   });
   return (
-    <group position={position}>
+    <Tappable
+      position={position}
+      onTap={() => {
+        fire();
+        sfx.arp(880, 5, 0.06);
+        setTimeout(() => chime(1760), 320);
+      }}
+      hintAt={[0, 3.1, 0]}
+      hintScale={HINT / S}
+    >
+      <Burst kick={kick} origin={[0, 2.2, 0]} colors={[C.silver, C.cream, C.sun]} count={18} size={0.12} up={3.6} speed={1.8} />
+      <PopText kick={kick} text="YAY" position={[0, 2.9, 0.4]} size={0.42} />
       <RoundedBox args={[1.25, 1, 1.15]} radius={0.08} position={[0, 0.5, 0]} castShadow>
         <Toon color={C.cream} />
       </RoundedBox>
@@ -365,14 +415,36 @@ function SilverTrophy({ position }: { position: V3 }) {
           </mesh>
         ))}
       </group>
-    </group>
+    </Tappable>
   );
 }
 
-/** The oversized prize cheque on an easel. */
+/** The oversized prize cheque on an easel. Click it: it shakes and coins fly. */
 function Cheque({ position, rotation }: { position: V3; rotation: number }) {
+  const board = useRef<THREE.Group>(null);
+  const [kick, fire] = useKick();
+  useFrame(() => {
+    const g = board.current;
+    if (!g) return;
+    const s = since(kick);
+    g.rotation.z = wiggle(s, 0.16, 16, 3.5);
+    g.position.y = 1.95 + hump(s, 0.35) * 0.25;
+  });
   return (
-    <group position={position} rotation={[0, rotation, 0]}>
+    <Tappable
+      position={position}
+      rotation={[0, rotation, 0]}
+      onTap={() => {
+        fire();
+        chime(1568);
+        setTimeout(() => chime(2093), 110);
+        sfx.clank(1.6);
+      }}
+      hintAt={[0, 3.25, 0.2]}
+      hintScale={HINT / S}
+    >
+      <Burst kick={kick} origin={[0, 2.4, 0.3]} colors={[C.gold, C.sun, "#fff1b8"]} count={16} size={0.16} up={3.2} speed={2.2} />
+      <PopText kick={kick} text="CHA-CHING" position={[0, 3.1, 0.4]} size={0.36} />
       <Cyls
         items={[
           { p: [-0.85, 1.05, 0.1], s: [0.1, 2.2, 0.1], r: [0.1, 0, 0.12], color: C.bark },
@@ -382,7 +454,7 @@ function Cheque({ position, rotation }: { position: V3; rotation: number }) {
         outline={false}
         sides={6}
       />
-      <group position={[0, 1.95, 0.18]} rotation={[-0.1, 0, 0]}>
+      <group ref={board} position={[0, 1.95, 0.18]} rotation={[-0.1, 0, 0]}>
         <RoundedBox args={[2.9, 1.45, 0.08]} radius={0.04} castShadow>
           <Toon color={C.cream} />
         </RoundedBox>
@@ -401,7 +473,7 @@ function Cheque({ position, rotation }: { position: V3; rotation: number }) {
           <meshBasicMaterial color={C.ink} />
         </mesh>
       </group>
-    </group>
+    </Tappable>
   );
 }
 
@@ -473,6 +545,94 @@ function Garland() {
   );
 }
 
+/* ---------- Boston, behind it all ---------- */
+
+const WARM = ["#ffd27a", "#ffb85c", "#ffe3a3"];
+
+/** A brownstone (or a red-brick one): bay window, stoop, cornice, windows lit for the night. */
+function rowHouse(x: number, color: string, floors: number, seed: number): { body: Part[]; glow: Part[] } {
+  const w = 2.0;
+  const d = 1.6;
+  const h = floors * 1.1 + 0.5;
+  const f = d / 2;
+  const body: Part[] = [
+    box(color, w, h, d, { p: [0, h / 2, 0] }),
+    box(color, 0.95, h - 0.95, 0.36, { p: [-0.42, (h - 0.95) / 2 + 0.55, f + 0.18] }),
+    box(C.stone, w + 0.2, 0.22, d + 0.3, { p: [0, h + 0.11, 0.08] }),
+    box(C.stone, 1.05, 0.08, 0.44, { p: [-0.42, h - 0.36, f + 0.2] }),
+  ];
+  for (let i = 0; i < 3; i++) body.push(box(C.stone, 0.62, 0.15, 0.3, { p: [0.55, 0.075 + i * 0.15, f + 0.5 - i * 0.15] }));
+  const glow: Part[] = [box("#2a1a14", 0.42, 0.72, 0.02, { p: [0.55, 0.85, f + 0.01] })];
+  for (let r = 0; r < floors; r++) {
+    // a few windows stay dark, the way a street does at night
+    const lit = hash(seed, r) > 0.22;
+    glow.push(box(lit ? WARM[(seed + r) % 3] : "#3b2f4a", 0.6, 0.62, 0.02, { p: [-0.42, 1.0 + r * 1.1, f + 0.37] }));
+    if (r > 0) glow.push(box(hash(seed, r + 5) > 0.3 ? WARM[(seed + r + 1) % 3] : "#3b2f4a", 0.42, 0.6, 0.02, { p: [0.55, 1.0 + r * 1.1, f + 0.01] }));
+  }
+  return { body: move(body, [x, 0, 0]), glow: move(glow, [x, 0, 0]) };
+}
+
+/** The middle of the row: a red-brick hall with a clock in its gable, on Boston time. */
+const HALL_AT: V3 = [0.6, 0.15, -8.7];
+const CLOCK_AT: V3 = [0, 6.55, 0.84];
+const CLOCK_R = 0.5;
+const PLATE_Y = 5.5;
+
+function hallParts(): { body: Part[]; glow: Part[] } {
+  const w = 3.0;
+  const h = 6.0;
+  const f = 0.8;
+  const face = clockFace(CLOCK_AT, CLOCK_R, C.cream, C.ink);
+  const body: Part[] = [
+    box(C.brick, w, h, 1.6, { p: [0, h / 2, 0] }),
+    prism(C.brick, w + 0.1, 1.35, 1.6, { p: [0, h, 0] }),
+    box(C.stone, w + 0.3, 0.18, 1.8, { p: [0, h, 0.02] }),
+    box(C.stone, w + 0.2, 0.3, 1.8, { p: [0, 0.15, 0] }),
+    box(C.ink, 1.75, 0.5, 0.08, { p: [0, PLATE_Y, f + 0.03] }),
+    face.body[0],
+  ];
+  const glow: Part[] = [face.body[1], ...face.marks, box("#fff1d0", 1.6, 0.38, 0.02, { p: [0, PLATE_Y, f + 0.08] }), box("#2a1a14", 0.7, 1.1, 0.02, { p: [0, 0.85, f + 0.01] })];
+  for (let r = 0; r < 4; r++)
+    [-0.95, 0, 0.95].forEach((x, c) => {
+      if (r === 0 && c === 1) return; // the door
+      glow.push(box(hash(r * 3 + c, 9) > 0.2 ? WARM[(r + c) % 3] : "#3b2f4a", 0.5, 0.72, 0.02, { p: [x, 0.95 + r * 1.2, f + 0.01] }));
+    });
+  return { body: move(body, HALL_AT), glow: move(glow, HALL_AT) };
+}
+
+function bostonParts() {
+  const houses = [
+    { at: [-5.7, 0.15, -6.9] as V3, ry: 0.55, h: rowHouse(0, C.brownstone, 3, 1) },
+    { at: [-3.2, 0.15, -8.1] as V3, ry: 0.3, h: rowHouse(0, C.brick, 4, 2) },
+    { at: [4.3, 0.15, -8.0] as V3, ry: -0.3, h: rowHouse(0, C.brownstone, 4, 3) },
+    { at: [6.6, 0.15, -6.5] as V3, ry: -0.6, h: rowHouse(0, C.brick, 3, 4) },
+  ];
+  const hall = hallParts();
+  const body: Part[] = [...hall.body];
+  const glow: Part[] = [...hall.glow];
+  for (const { at, ry, h } of houses) {
+    body.push(...move(h.body, at, ry));
+    glow.push(...move(h.glow, at, ry));
+  }
+  return { body, glow };
+}
+
+function Boston() {
+  const parts = useMemo(() => bostonParts(), []);
+  return (
+    <>
+      <Baked parts={parts.body} castShadow thickness={2} />
+      <Baked parts={parts.glow} look="glow" />
+      <group position={HALL_AT}>
+        <ClockHands tz={places.boston.tz} r={CLOCK_R} position={CLOCK_AT} />
+        <Label size={0.3} color={C.ink} position={[0, PLATE_Y, 0.91]}>
+          BOSTON
+        </Label>
+      </group>
+    </>
+  );
+}
+
 export function TryBud() {
   const party = useRef(-100);
   const clock = useThree((s) => s.clock);
@@ -480,8 +640,9 @@ export function TryBud() {
     <group>
       <Islet r={11} top="#a7b886" />
       <Stars seed={3} />
-      <Moon position={[6.4, 7.4, -9]} />
-      <group position={[0, 0, 0.5]} scale={1.2}>
+      <Moon position={[5.4, 8.6, -10]} />
+      <Boston />
+      <group position={[0, 0, 0.5]} scale={S}>
         <Garland />
         <Chain />
         <HackTable />

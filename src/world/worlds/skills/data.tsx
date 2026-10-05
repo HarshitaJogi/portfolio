@@ -7,7 +7,9 @@ import { C } from "../../palette";
 import { Label } from "../../bits";
 import { Toon } from "../../toon";
 import type { DioramaProps } from "../Frame";
-import { Crates, Market, Painted, hash, paint, stack, type V3 } from "./kit";
+import { Crates, Market, Painted, STALL_HINT, hash, paint, stack, type V3 } from "./kit";
+import { Tappable } from "../../props/tappable";
+import { Burst, PopText, Ripple, hump, sfx, since, squash, useKick, wiggle, type Kick } from "@/world/fx";
 
 /*
  * MSCI: 5TB out of OracleDB, through a Databricks ETL in PySpark, into BigQuery.
@@ -59,7 +61,10 @@ function plant() {
   );
 }
 
-function Pipeline() {
+const SPARK_COLORS = [C.sun, C.coral, "#ffe08a"];
+const RAW_COLORS = [C.steel, C.silver, C.concrete];
+
+function Pipeline({ blaze, tip, gulp }: { blaze: Kick; tip: Kick; gulp: Kick }) {
   const geo = useMemo(() => plant(), []);
   const raw = useRef<THREE.InstancedMesh>(null);
   const clean = useRef<THREE.InstancedMesh>(null);
@@ -68,9 +73,13 @@ function Pipeline() {
   const o = useMemo(() => new THREE.Object3D(), []);
   const glow = useMemo(() => [new THREE.Color(C.coral), new THREE.Color(C.sun)], []);
   const tmp = useMemo(() => new THREE.Color(), []);
+  const white = useMemo(() => new THREE.Color(C.white), []);
 
+  const plantRef = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
     const time = clock.elapsedTime;
+    // the whole plant shudders a little when poked anywhere
+    if (plantRef.current) squash(plantRef.current, wiggle(Math.min(since(blaze), since(tip), since(gulp)), 0.03, 20, 6));
     for (let i = 0; i < N; i++) {
       const u = (time * 0.12 + i / N) % 1;
       // 0..0.4 raw, out of the barrel and along the belt. 0.4..0.6 inside the furnace. 0.6..1 clean, up to the silo.
@@ -99,12 +108,12 @@ function Pipeline() {
       sparks.current?.setMatrixAt(i, o.matrix);
     }
     [raw.current, clean.current, sparks.current].forEach((m) => m && (m.instanceMatrix.needsUpdate = true));
-    mouth.current?.color.copy(tmp.copy(glow[0]).lerp(glow[1], 0.5 + 0.5 * Math.sin(time * 9) * Math.sin(time * 3.7)));
+    mouth.current?.color.copy(tmp.copy(glow[0]).lerp(glow[1], 0.5 + 0.5 * Math.sin(time * 9) * Math.sin(time * 3.7))).lerp(white, hump(since(blaze), 0.6) * 0.8);
   });
 
   return (
     <group>
-      <Painted geometry={geo} castShadow thickness={1.8} />
+      <Painted refMesh={plantRef} geometry={geo} castShadow thickness={1.8} />
       {/* the furnace mouth, flickering */}
       <mesh position={[FURNACE[0], 0.7, FURNACE[2] + 0.585]}>
         <circleGeometry args={[0.36, 20, 0, Math.PI]} />
@@ -173,10 +182,68 @@ export default function Data({ step }: DioramaProps) {
       ),
     [],
   );
+  const [blaze, fireBlaze] = useKick();
+  const [tip, fireTip] = useKick();
+  const [gulp, fireGulp] = useKick();
   return (
     <Market id={step.id} color={C.cobalt} title="DATA">
       <group position={[0.55, 0, 1.2]} scale={0.92}>
-        <Pipeline />
+        <Pipeline blaze={blaze} tip={tip} gulp={gulp} />
+        {/* the furnace: stoke it */}
+        <Tappable
+          onTap={() => {
+            fireBlaze();
+            sfx.crackle();
+            sfx.whoosh(0.6);
+          }}
+          position={[FURNACE[0], 0, FURNACE[2]]}
+          hintAt={[0.45, 3.3, -0.2]}
+          hintScale={STALL_HINT / 0.92}
+        >
+          <mesh position={[0, 1.2, 0]} visible={false}>
+            <boxGeometry args={[1.8, 2.6, 1.4]} />
+            <meshBasicMaterial />
+          </mesh>
+          <Burst kick={blaze} origin={[0.45, 2.75, -0.2]} count={22} colors={SPARK_COLORS} size={0.13} speed={2.2} up={4.5} gravity={8} dur={1.3} />
+          <Burst kick={blaze} origin={[0, 0.7, 0.62]} count={10} colors={SPARK_COLORS} size={0.1} speed={1.4} up={1.6} gravity={6} dur={0.8} spread={[1, 1, 2]} />
+          <PopText kick={blaze} text="WHOOSH" position={[0.3, 3.5, 0.5]} size={0.38} color={C.coral} />
+        </Tappable>
+        {/* the barrel: knock it and raw rows pop out */}
+        <Tappable
+          onTap={() => {
+            fireTip();
+            sfx.pop(0.7);
+            sfx.pop(0.9);
+          }}
+          position={[BARREL[0], 0, BARREL[2]]}
+          hintAt={[0, 2.6, 0]}
+          hintScale={STALL_HINT / 0.92}
+        >
+          <mesh position={[0, 0.9, 0]} visible={false}>
+            <cylinderGeometry args={[1.0, 1.0, 1.9, 10]} />
+            <meshBasicMaterial />
+          </mesh>
+          <Burst kick={tip} origin={[0, 1.8, 0]} count={12} colors={RAW_COLORS} size={0.22} speed={1.4} up={3.4} gravity={9} dur={0.9} floor={0.15} />
+          <PopText kick={tip} text="POP" position={[0, 2.5, 0.6]} size={0.36} color={C.ink} />
+        </Tappable>
+        {/* the silo: it swallows and shines */}
+        <Tappable
+          onTap={() => {
+            fireGulp();
+            sfx.boop(0.6);
+          }}
+          position={[SILO[0], 0, SILO[2]]}
+          hintAt={[0, 4.3, 0]}
+          hintScale={STALL_HINT / 0.92}
+        >
+          <mesh position={[0, 1.8, 0]} visible={false}>
+            <cylinderGeometry args={[0.9, 0.9, 3.8, 10]} />
+            <meshBasicMaterial />
+          </mesh>
+          <Ripple kick={gulp} position={[0, 3.75, 0]} color={C.sun} from={0.3} to={1.8} dur={0.6} />
+          <Ripple kick={gulp} position={[0, 0.2, 0]} color={C.cobalt} from={0.9} to={2.4} dur={0.7} delay={0.1} />
+          <PopText kick={gulp} text="GULP" position={[0, 4.2, 0.6]} size={0.38} color={C.cobalt} />
+        </Tappable>
       </group>
       <Crates items={crates} />
     </Market>

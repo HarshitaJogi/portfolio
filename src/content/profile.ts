@@ -707,6 +707,7 @@ export const places = {
   mumbai: { city: "Mumbai", tz: "Asia/Kolkata" },
   boston: { city: "Boston", tz: "America/New_York" },
   sunnyvale: { city: "Sunnyvale", tz: "America/Los_Angeles" },
+  berkeley: { city: "Berkeley", tz: "America/Los_Angeles" },
 } as const;
 export type PlaceId = keyof typeof places;
 
@@ -815,12 +816,16 @@ export type WorldStep = {
   /** Small line above the title: dates and place, or a section label. */
   kicker: string;
   title: string;
+  /** A short name for buttons and the rail ("Next: NSI"). Defaults to the title. */
+  short?: string;
   subtitle?: string;
   lede?: string;
   /** Where the live clock and the location pin point. */
   place?: PlaceId;
   where?: string;
   facts?: Fact[];
+  /** One-line highlights shown on the card. The full bullets open on request. */
+  highlights?: string[];
   bullets?: string[];
   chips?: string[];
   /** "Where I used it" rows, for skills. */
@@ -853,6 +858,14 @@ const SKY = {
 };
 
 const role = (id: string) => work.roles.find((r) => r.id === id)!;
+
+/** Short, single-line versions of each role's bullets. Same facts, same numbers. */
+const roleHighlights: Record<string, string[]> = {
+  iitp: ["Modified YOLOv9 for agricultural imagery", "86% detection accuracy", "Quantized for NVIDIA Jetson"],
+  msci: ["15+ APIs from Azure to GCP", "23% lower latency, 40% lower infra cost", "5TB moved from OracleDB to BigQuery", "Spring Boot APIs at 82% test coverage"],
+  nsi: ["GPT-4.1 pipeline over 1M+ biomedical papers", "Accuracy from 60% to 98% via error analysis", "97% F1 with fine-tuned SciBERT NER", "Fewer tokens with structured output schemas"],
+  nokia: ["Extending a 50K+ line Python test framework", "LLM agent that automates test porting", "Staged runs, false-pass checks, human review gates"],
+};
 const school = (id: string) => education.schools.find((s) => s.id === id)!;
 const card = (id: string) => toolkit.cards.find((c) => c.id === id)!;
 
@@ -914,6 +927,7 @@ export const worlds: Record<WorldId, World> = {
         kind: "item",
         kicker: `${school("mu").start} – ${school("mu").end} · ${school("mu").location}`,
         title: school("mu").school,
+        short: "U of Mumbai",
         subtitle: school("mu").degree,
         place: "mumbai",
         where: school("mu").location,
@@ -930,6 +944,7 @@ export const worlds: Record<WorldId, World> = {
         kind: "item",
         kicker: `${school("neu").start} – ${school("neu").end} · ${school("neu").location}`,
         title: school("neu").school,
+        short: "Northeastern",
         subtitle: school("neu").degree,
         place: "boston",
         where: school("neu").location,
@@ -938,7 +953,7 @@ export const worlds: Record<WorldId, World> = {
           { label: "Graduating", value: "May 2027" },
         ],
         chips: [...school("neu").details],
-        bullets: school("neu").awards.map((a) => `${a}`),
+        highlights: [...school("neu").awards],
         lede: "Graduating May 2027. Until then the cap stays dashed.",
         sky: SKY.boston,
       },
@@ -965,6 +980,7 @@ export const worlds: Record<WorldId, World> = {
         kind: "item",
         kicker: "Skills",
         title: toolkit.alsoLabel,
+        short: "Also familiar",
         lede: "Familiar, and not yet shown in a role or project here.",
         chips: [...toolkit.alsoFamiliar],
         sky: SKY.dusk,
@@ -990,10 +1006,12 @@ export const worlds: Record<WorldId, World> = {
           kind: "item",
           kicker: `${r.start} – ${r.end} · ${r.location}`,
           title: r.company,
+          short: id === "nsi" ? "NSI" : r.company,
           subtitle: r.title,
           place,
           where: r.location,
           lede: r.framing,
+          highlights: roleHighlights[id],
           bullets: r.bullets,
           chips: r.stack ?? r.chips,
           links: r.note ? [{ label: `${r.note.text} ↗`, href: r.note.href }] : undefined,
@@ -1018,12 +1036,14 @@ export const worlds: Record<WorldId, World> = {
         kind: "item",
         kicker: `${drone.start} – ${drone.end} · ${drone.role}`,
         title: drone.name,
+        short: "Drone research",
         subtitle: drone.funding,
         facts: [
           { label: "Grant", value: drone.grant },
           { label: "Altitude", value: "15m" },
         ],
         lede: drone.tagline,
+        highlights: ["Research Lead, $25,000 IEEE AESS DSTEI grant", "Quantized CNN on a Jetson drone at 15m", "2 IEEE papers and a patent filed"],
         bullets: drone.bullets,
         chips: [...projectCards.drone.specs],
         sky: SKY.day,
@@ -1033,6 +1053,8 @@ export const worlds: Record<WorldId, World> = {
         kind: "item",
         kicker: "2024 · IEEE SPACE",
         title: "Two papers and a patent.",
+        short: "Papers & patent",
+        highlights: ["Maize leaf blight detection with modified YOLOv9", "Multi-stage drone system for crop health", "Patent filed: UAV crop health monitoring"],
         bullets: [...publications.map((p) => `${p.title}. ${p.venue}, ${p.pages}.`), `${patent.status}: ${patent.title}.`],
         links: publications.map((p, i) => ({ label: `Paper ${i + 1} on IEEE Xplore ↗`, href: p.href })),
         sky: SKY.dusk,
@@ -1040,9 +1062,11 @@ export const worlds: Record<WorldId, World> = {
       {
         id: "trybud",
         kind: "item",
-        kicker: `${hackathons.tickets[1].date} · Hackathon`,
+        kicker: `${hackathons.tickets[1].date} · Boston, MA`,
         title: "TryBud",
         subtitle: hackathons.tickets[1].event,
+        place: "boston",
+        where: "Boston, MA",
         facts: [
           { label: "Placed", value: "2nd" },
           { label: "Prize", value: "$3,600" },
@@ -1057,8 +1081,10 @@ export const worlds: Record<WorldId, World> = {
         kind: "item",
         kicker: `${scheduler.start} – ${scheduler.end} · ${scheduler.meta}`,
         title: "Event Scheduler",
+        short: "Scheduler",
         subtitle: scheduler.name,
         lede: projectCards.scheduler.oneLiner,
+        highlights: ["MVC engine with 18+ commands", "Timezones, recurring events, conflict detection", "CSV and iCal export"],
         bullets: scheduler.bullets,
         chips: [...scheduler.patterns],
         sky: SKY.boston,
@@ -1066,10 +1092,13 @@ export const worlds: Record<WorldId, World> = {
       {
         id: "bitgig",
         kind: "item",
-        kicker: `${bitgig.date} · Hackathon`,
+        kicker: `${bitgig.date} · UC Berkeley`,
         title: bitgig.name,
         subtitle: bitgig.event,
+        place: "berkeley",
+        where: "UC Berkeley, Berkeley, CA",
         lede: bitgig.tagline,
+        highlights: ["Gemini drafts SOP steps from video", "Experts correct, consensus QC agrees", "Cloud Run pipeline, Next.js review app"],
         bullets: bitgig.bullets,
         chips: [...bitgig.stack],
         links: [{ label: "Try the live demo ↗", href: bitgig.live, primary: true }],
@@ -1093,6 +1122,7 @@ export const worlds: Record<WorldId, World> = {
         kind: "item",
         kicker: "Bharatanatyam",
         title: "Kovida degree.",
+        short: "Bharatanatyam",
         subtitle: "Nalanda Dance Research Center",
         lede: `${about.quote} ${about.quoteNote}`,
         hint: "Ring the bells",
@@ -1104,6 +1134,7 @@ export const worlds: Record<WorldId, World> = {
         kind: "item",
         kicker: "The margam",
         title: "A recital in seven parts.",
+        short: "The margam",
         lede: "A Bharatanatyam recital moves through seven parts, from invocation to blessing. The island follows the same order. Each district wears its part's colour.",
         sky: SKY.dusk,
       },
@@ -1112,6 +1143,7 @@ export const worlds: Record<WorldId, World> = {
         kind: "item",
         kicker: "Trinity College London",
         title: "Communication Skills, Grade 5.",
+        short: "Speaking",
         subtitle: "Distinction",
         lede: "Explaining the work matters as much as doing it.",
         sky: SKY.day,

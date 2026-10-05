@@ -1,6 +1,6 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -8,7 +8,9 @@ import { C } from "../../palette";
 import { Toon, ToonInstances, type Instance } from "../../toon";
 import { Label } from "../../bits";
 import type { DioramaProps } from "../Frame";
-import { Crates, Market, Painted, paint, smooth, stack, type V3 } from "./kit";
+import { Crates, Market, Painted, STALL_HINT, paint, smooth, stack, type V3 } from "./kit";
+import { Tappable } from "../../props/tappable";
+import { Burst, PopText, Ripple, sfx, since, squash, useKick, wiggle } from "@/world/fx";
 
 /*
  * MSCI moved 15+ APIs from Azure to GCP on Kubernetes and Docker, with CI/CD releases
@@ -54,14 +56,33 @@ function Containers() {
   const stackGeo = useMemo(() => containerStack(), []);
   const wheelGeo = useMemo(() => wheel(), []);
   const helm = useRef<THREE.Mesh>(null);
+  const boxes = useRef<THREE.Mesh>(null);
+  const [steer, fireSteer] = useKick();
   useFrame(({ clock }) => {
+    const s = since(steer);
+    // a hard spin: two full turns, easing out
+    const spin = s < 1.6 ? smooth(s / 1.6) * Math.PI * 4 : 0;
     // steering: a slow turn one way, then the other
-    if (helm.current) helm.current.rotation.z = Math.sin(clock.elapsedTime * 0.7) * 0.9;
+    if (helm.current) helm.current.rotation.z = Math.sin(clock.elapsedTime * 0.7) * 0.9 + spin;
+    if (boxes.current) squash(boxes.current, wiggle(s - 0.2, 0.05, 18, 4));
   });
   return (
     <group position={BOX}>
-      <Painted geometry={stackGeo} castShadow thickness={1.8} />
-      <Painted refMesh={helm} geometry={wheelGeo} position={[0, 2.55, 0.08]} castShadow thickness={1.4} />
+      <Painted refMesh={boxes} geometry={stackGeo} castShadow thickness={1.8} />
+      {/* the wheel: give it a spin */}
+      <Tappable
+        onTap={() => {
+          if (since(steer) < 1.2) return;
+          fireSteer();
+          sfx.whoosh(0.9);
+          sfx.clank(0.6);
+        }}
+        hintAt={[0, 3.65, 0.1]}
+        hintScale={STALL_HINT}
+      >
+        <Painted refMesh={helm} geometry={wheelGeo} position={[0, 2.55, 0.08]} castShadow thickness={1.4} />
+        <PopText kick={steer} text="WHEE" position={[1.1, 3.2, 0.4]} size={0.36} color={C.teal} />
+      </Tappable>
       <group position={[0, 1.02, 0.4]}>
         <RoundedBox args={[1.3, 0.42, 0.06]} radius={0.04}>
           <Toon color={C.cream} outline={false} />
@@ -181,14 +202,38 @@ function Clouds() {
     [],
   );
   const ref = useRef<THREE.Group>(null);
+  const puffy = useRef<THREE.Group>(null);
+  const [poof, firePoof] = useKick();
   useFrame(({ clock }) => {
     if (ref.current) ref.current.position.y = Math.sin(clock.elapsedTime * 1.1) * 0.1;
+    if (puffy.current) {
+      const w = wiggle(since(poof), 0.22, 14, 4);
+      puffy.current.scale.set(1 + w, 1 - w * 0.7, 1 + w);
+    }
   });
   return (
     <group ref={ref}>
-      <ToonInstances items={puffs} color={C.white} thickness={1.8}>
-        <sphereGeometry args={[1, 18, 14]} />
-      </ToonInstances>
+      {/* the cloud: squeeze it */}
+      <Tappable
+        onTap={() => {
+          firePoof();
+          sfx.pop(0.6);
+          sfx.whoosh(1.2);
+        }}
+        hintAt={[CLOUD[0], CLOUD[1] + 1.25, CLOUD[2]]}
+        hintScale={STALL_HINT}
+      >
+        <group ref={puffy} position={CLOUD}>
+          <group position={[-CLOUD[0], -CLOUD[1], -CLOUD[2]]}>
+            <ToonInstances items={puffs} color={C.white} thickness={1.8}>
+              <sphereGeometry args={[1, 18, 14]} />
+            </ToonInstances>
+          </group>
+        </group>
+        <Ripple kick={poof} position={CLOUD} rotation={[0, 0, 0]} color={C.cream} from={0.8} to={2.6} dur={0.6} />
+        <Burst kick={poof} origin={CLOUD} count={10} colors={[C.white, C.cream]} size={0.2} speed={2} up={1} gravity={2} dur={0.8} />
+        <PopText kick={poof} text="POOF" position={[CLOUD[0] - 0.4, CLOUD[1] + 1.0, CLOUD[2] + 0.6]} size={0.36} color={C.teal} />
+      </Tappable>
     </group>
   );
 }

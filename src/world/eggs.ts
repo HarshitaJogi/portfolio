@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { travelerCheer } from "./traveler";
 
 /**
  * Easter eggs hidden around the island and its worlds. Found ones are remembered in this
@@ -45,6 +46,7 @@ export function findEgg(id: EggId) {
   if (found.includes(id)) return;
   found = [...found, id];
   lastFound = id;
+  travelerCheer();
   try {
     localStorage.setItem(KEY, JSON.stringify(found));
   } catch {

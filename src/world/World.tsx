@@ -81,17 +81,19 @@ export default function World({ scene, onReady }: { scene: SceneId; onReady?: (s
     onReady?.(scene);
   }, [onReady, scene]);
   const Scene = SCENES[scene];
+  // phones skip the shadow pass: about a fifth of the draw calls, for a little depth
+  const [shadows] = useState(() => window.innerWidth >= 900);
 
   return (
     <Canvas
-      shadows
+      shadows={shadows}
       frameloop={!live ? "never" : reduced ? "demand" : "always"}
       dpr={[1, 1.75]}
       camera={{ fov: 34, near: 0.5, far: 700, position: [0, 30, 50] }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       aria-hidden="true"
-      onCreated={({ gl }) => {
-        if (process.env.NODE_ENV !== "production") (window as Window & { __gl?: unknown }).__gl = gl;
+      onCreated={({ gl, scene }) => {
+        if (process.env.NODE_ENV !== "production") Object.assign(window, { __gl: gl, __scene: scene });
       }}
     >
       <Suspense fallback={null} key={scene}>

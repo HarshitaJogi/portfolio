@@ -1,14 +1,16 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { C } from "../../palette";
 import { Toon } from "../../toon";
 import { Label, chime, useHoverCursor } from "../../bits";
 import type { DioramaProps } from "../Frame";
-import { CRATE_H, Crates, Market, Painted, paint, smooth, stack, type V3 } from "./kit";
+import { CRATE_H, Crates, Market, Painted, STALL_HINT, paint, smooth, stack, type V3 } from "./kit";
+import { Tappable, TapHint } from "../../props/tappable";
+import { Burst, PopText, Ripple, hump, sfx, since, squash, useKick, wiggle, type Kick } from "@/world/fx";
 
 /*
  * MSCI: Spring Boot REST APIs for client-facing services, 82% test coverage with JUnit
@@ -41,7 +43,7 @@ function gear(r: number, teeth: number, depth: number, thick: number) {
 const KIOSK: V3 = [1.55, 0, -0.85];
 const LEDGE_Y = 1.03;
 
-function Kiosk() {
+function Kiosk({ rush }: { rush: Kick }) {
   const shell = useMemo(
     () =>
       paint(
@@ -71,12 +73,18 @@ function Kiosk() {
   const req = useRef<THREE.Group>(null);
   const res = useRef<THREE.Group>(null);
   const spin = useRef(0);
+  const body = useRef<THREE.Group>(null);
 
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime % LOOP;
     // request slides in, the service works (gears race), the response slides back out
     const busy = t > 0.9 && t < 1.6 ? 1 : 0;
-    spin.current += dt * (0.6 + busy * 3.2);
+    const r = since(rush);
+    spin.current += dt * (0.6 + busy * 3.2 + hump(r, 2) * 16);
+    if (body.current) {
+      squash(body.current, wiggle(r, 0.07, 16, 4));
+      body.current.position.x = Math.sin(r * 70) * 0.03 * hump(r, 1.6);
+    }
     if (g1.current) g1.current.rotation.z = spin.current;
     if (g2.current) g2.current.rotation.z = -spin.current * (10 / 7) + 0.2;
     if (req.current) {
@@ -93,6 +101,7 @@ function Kiosk() {
 
   return (
     <group position={KIOSK}>
+      <group ref={body}>
       <Painted geometry={shell} castShadow thickness={1.8} />
       <mesh geometry={inside}>
         <meshBasicMaterial vertexColors />
@@ -120,6 +129,9 @@ function Kiosk() {
           <Toon color={C.green} thickness={1.2} />
         </RoundedBox>
       </group>
+      </group>
+      <Burst kick={rush} origin={[0.72, 1.1, 0.9]} count={10} colors={[C.sun, C.cream, C.steel]} size={0.1} speed={1.8} up={2.4} dur={0.9} />
+      <PopText kick={rush} text="WHIRR" position={[0.4, 3.3, 0.5]} size={0.38} color={C.cobalt} />
     </group>
   );
 }
@@ -129,6 +141,8 @@ function Gauge({ position }: { position: V3 }) {
   const needle = useRef<THREE.Group>(null);
   const run = useRef(0);
   const { bind } = useHoverCursor();
+  const [seen, setSeen] = useState(false);
+  const [rerun, fireRerun] = useKick();
   // 0% at the lower left, 100% at the lower right, sweeping 240 degrees clockwise
   const angle = (f: number) => THREE.MathUtils.degToRad(210 - f * 240);
   const face = useMemo(() => {
@@ -161,6 +175,9 @@ function Gauge({ position }: { position: V3 }) {
         e.stopPropagation();
         run.current = 1;
         chime(1112);
+        setSeen(true);
+        fireRerun();
+        sfx.whee();
       }}
       {...bind}
     >
@@ -187,6 +204,9 @@ function Gauge({ position }: { position: V3 }) {
           COVERAGE
         </Label>
       </group>
+      {!seen && <TapHint position={[0, 1.35, 0]} scale={STALL_HINT} />}
+      <Ripple kick={rerun} position={[0, 0, 0.05]} rotation={[0, 0, 0]} color={C.green} from={0.8} to={1.6} dur={0.6} delay={2.0} />
+      <PopText kick={rerun} text="RERUN" position={[0, 1.0, 0.3]} size={0.34} color={C.cobalt} />
     </group>
   );
 }
@@ -195,11 +215,24 @@ export default function Backend({ step }: DioramaProps) {
   const pile = useMemo(() => stack([[{ t: "SPRING BOOT", c: C.green }], [{ t: "REST APIS", c: C.cobalt }]], [-0.95, 0.15, -0.75], 0.08, 0.1), []);
   const plinth = useMemo(() => stack([[{ t: "GATLING", c: C.coral }], [{ t: "JUNIT", c: C.sun }]], [-3.0, 0.15, 1.5], 0.08, 0.15), []);
   const crates = useMemo(() => [...pile, ...plinth], [pile, plinth]);
+  const [rush, fireRush] = useKick();
   return (
     <Market id={step.id} color={C.sun} alt={C.cream} title="BACKEND">
-      <group position={[0.55, 0, 1.1]} scale={1.05}>
-        <Kiosk />
-      </group>
+      {/* the service window: click it and the gears race */}
+      <Tappable
+        onTap={() => {
+          if (since(rush) < 1) return;
+          fireRush();
+          sfx.whirr();
+        }}
+        position={[0.55, 0, 1.1]}
+        hintAt={[KIOSK[0], 3.55, KIOSK[2] + 0.2]}
+        hintScale={STALL_HINT / 1.05}
+      >
+        <group scale={1.05}>
+          <Kiosk rush={rush} />
+        </group>
+      </Tappable>
       <Gauge position={[-3.0, 0.15 + CRATE_H * 2 + 1.26, 1.45]} />
       <Crates items={crates} />
     </Market>

@@ -267,6 +267,57 @@ export function useCheckGeometry(depth = 0.08) {
   }, [depth]);
 }
 
+/* ---------- a lean clock: three hands in one draw, real local time, no allocations ---------- */
+
+const offsets = new Map<string, { ms: number; at: number }>();
+/** How far `tz` is ahead of UTC, in ms. Read with Intl now and then, cached in between. */
+function tzOffset(tz: string) {
+  const now = Date.now();
+  const hit = offsets.get(tz);
+  if (hit && now - hit.at < 600_000) return hit.ms;
+  const f = new Intl.DateTimeFormat("en-US", { timeZone: tz, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23" });
+  const v: Record<string, number> = {};
+  for (const p of f.formatToParts(new Date(now))) v[p.type] = Number(p.value);
+  const ms = Date.UTC(v.year, v.month - 1, v.day, v.hour, v.minute, v.second) - (now - (now % 1000));
+  offsets.set(tz, { ms, at: now });
+  return ms;
+}
+
+const INK = new THREE.Color(C.ink);
+const CORAL = new THREE.Color(C.coral);
+/** A hand: a unit plane whose pivot is at its base. */
+const HAND = new THREE.PlaneGeometry(1, 1).translate(0, 0.42, 0);
+
+/**
+ * Hour, minute and second hands showing the real time in `tz`, as one instanced draw.
+ * Pair with a baked `clockFace` of the same radius at the same spot (it has the centre pin).
+ */
+export function ClockHands({ tz, r, position }: { tz: string; r: number; position: V3 }) {
+  return (
+    <group position={position}>
+      <Moving
+        count={3}
+        basic
+        margin={r}
+        onFrame={(put) => {
+          const sec = ((Date.now() + tzOffset(tz)) / 1000) % 86400;
+          const h = (sec / 3600) % 12;
+          const m = (sec / 60) % 60;
+          const s = Math.floor(sec % 60);
+          put(0, 0, 0, 0.1, r * 0.11, r * 0.55, 1, 0, 0, -(h / 12) * Math.PI * 2);
+          put(1, 0, 0, 0.11, r * 0.07, r * 0.8, 1, 0, 0, -(m / 60) * Math.PI * 2);
+          put(2, 0, 0, 0.12, r * 0.03, r * 0.85, 1, 0, 0, -(s / 60) * Math.PI * 2);
+          put.color(0, INK);
+          put.color(1, INK);
+          put.color(2, CORAL);
+        }}
+      >
+        <primitive object={HAND} attach="geometry" />
+      </Moving>
+    </group>
+  );
+}
+
 /** A rectangle outline of width w, height h and border b, centred on the origin. */
 export function frameGeometry(w: number, h: number, b: number) {
   const s = new THREE.Shape();

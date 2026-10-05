@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { C } from "../../palette";
 import { Toon } from "../../toon";
@@ -9,6 +9,10 @@ import { chime, useHoverCursor } from "../../bits";
 import { atmo } from "../../atmosphere";
 import { findEgg } from "../../eggs";
 import { flameGeometry, lampGeometry, type V3 } from "./parts";
+import { TapHint } from "../../props/tappable";
+import { Burst, HINT, PopText, sfx, useKick } from "@/world/fx";
+
+const EMBERS = [C.sun, "#ffb02e", C.pumpkin];
 
 const WICKS = 5;
 const BOWL_Y = 2.36;
@@ -18,7 +22,9 @@ const BOWL_R = 0.52;
  * A kuthuvilakku, the brass standing lamp lit before a recital. Unlit until you
  * click it: then its five wicks catch one after another and flicker.
  */
-export function Kuthuvilakku({ position = [0, 0, 0], scale = 1, phase = 0 }: { position?: V3; scale?: number; phase?: number }) {
+export function Kuthuvilakku({ position = [0, 0, 0], scale = 1, phase = 0, hint = false }: { position?: V3; scale?: number; phase?: number; hint?: boolean }) {
+  const [isLit, setIsLit] = useState(false);
+  const [spark, fireSpark] = useKick();
   const body = useMemo(() => lampGeometry(), []);
   const flame = useMemo(() => flameGeometry(), []);
   const flames = useRef<THREE.InstancedMesh>(null);
@@ -77,9 +83,13 @@ export function Kuthuvilakku({ position = [0, 0, 0], scale = 1, phase = 0 }: { p
       // already burning: the flames jump, a softer bell
       flare.current = 1;
       chime(660);
+      fireSpark();
+      sfx.crackle();
       return;
     }
     lit.current = t.current;
+    setIsLit(true);
+    fireSpark();
     chime(990);
     setTimeout(() => chime(1320), 140);
     findEgg("lamp");
@@ -100,6 +110,9 @@ export function Kuthuvilakku({ position = [0, 0, 0], scale = 1, phase = 0 }: { p
       <instancedMesh ref={flames} args={[flame, undefined, WICKS]}>
         <meshBasicMaterial color="#ffb02e" toneMapped={false} />
       </instancedMesh>
+      {hint && !isLit && <TapHint position={[0, 3.6, 0]} scale={HINT} />}
+      <Burst kick={spark} origin={[0, BOWL_Y + 0.2, 0]} count={12} colors={EMBERS} size={0.08} speed={1.2} up={2.6} gravity={5} dur={1} />
+      <PopText kick={spark} text="GLOW" position={[0, 3.5, 0.3]} size={0.3} color={C.pumpkin} />
       <mesh ref={pool} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]} visible={false}>
         <circleGeometry args={[1.3, 28]} />
         <meshBasicMaterial color={C.sun} transparent opacity={0} depthWrite={false} toneMapped={false} />

@@ -1,14 +1,16 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
-import { useFrame, useThree } from "@react-three/fiber";
+import { RoundedBox } from "@/world/rounded";
+import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 import { places } from "@/content/profile";
 import { C } from "../../palette";
 import { Toon, ToonInstances, type Instance } from "../../toon";
-import { Label, chime, useHoverCursor } from "../../bits";
+import { Label, chime } from "../../bits";
 import { Islet } from "../../props/basics";
+import { Tappable } from "../../props/tappable";
+import { HINT, PopText, hump, sfx, since, useKick, wiggle } from "@/world/fx";
 import { Boxes, Glows, Moving, type V3 } from "./kit";
 
 /*
@@ -19,7 +21,12 @@ import { Boxes, Glows, Moving, type V3 } from "./kit";
  * blocks, MVC at the bottom. In front, a timeline where a new event tries to land on a
  * taken slot, flashes red (conflict detection) and moves to a free one. The printer
  * exports CSV and ICAL cards (Strategy and Factory). And a mug of java.
+ * Click the calendar (it riffles through its pages), the pattern blocks (they wobble)
+ * and the mug (a sip, a puff of steam).
  */
+
+/** The desk's props are drawn at this scale, so hints come out the same size everywhere. */
+const S = 1.08;
 
 const DESK_Y = 0.29;
 
@@ -172,16 +179,26 @@ const decMarks = (c: number, r: number) => (c === 2 && r < 3 ? C.teal : r === 1 
 
 function Calendar() {
   const flip = useRef<THREE.Group>(null);
+  const [kick, fire] = useKick();
   useFrame(({ clock }) => {
     // NOV for a while, flip over the top to DEC, then back again
     const u = clock.elapsedTime % 9;
     const s = (x: number) => x * x * (3 - 2 * x);
     const k = u < 3.5 ? 0 : u < 4.6 ? s((u - 3.5) / 1.1) : u < 8 ? 1 : 1 - s((u - 8) / 1);
-    if (flip.current) flip.current.rotation.x = -k * (Math.PI * 2 - 0.62);
+    // clicked: three fast turns of the page on top of wherever it is, ending where it began
+    const c = since(kick);
+    const extra = c >= 0 && c < 1.3 ? s(c / 1.3) * Math.PI * 6 : 0;
+    if (flip.current) flip.current.rotation.x = -k * (Math.PI * 2 - 0.62) - extra;
   });
+  const riffle = () => {
+    fire();
+    for (let i = 0; i < 7; i++) setTimeout(() => sfx.click(1 + i * 0.06), i * 150);
+    setTimeout(() => chime(1046), 1250);
+  };
   const rings = useMemo<Instance[]>(() => Array.from({ length: 6 }, (_, i) => ({ p: [-1.35 + i * 0.54, 0, 0.02] as V3, r: [0, Math.PI / 2, 0] as V3, color: C.silver })), []);
   return (
-    <group position={[-1.1, DESK_Y, -1.9]}>
+    <Tappable position={[-1.1, DESK_Y, -1.9]} onTap={riffle} hintAt={[1.3, 3.2, 0.5]} hintScale={HINT / S}>
+      <PopText kick={kick} text="FLIP" position={[0, 4.1, 0.6]} size={0.42} />
       {/* the stand: a base and a back leg, leaning */}
       <Boxes
         items={[
@@ -198,7 +215,7 @@ function Calendar() {
           <Page month="NOV" marks={novMarks} />
         </group>
       </group>
-    </group>
+    </Tappable>
   );
 }
 
@@ -214,18 +231,40 @@ const PATTERNS: { name: string; w: number; color: string; ink: string; yaw: numb
 function PatternTower() {
   const H = 0.78;
   const D = 1.3;
+  const tower = useRef<THREE.Group>(null);
+  const [kick, fire] = useKick();
+  useFrame(() => {
+    const g = tower.current;
+    if (!g) return;
+    // a wobble from the base, like a stack of toy blocks bumped
+    const s = since(kick);
+    g.rotation.z = wiggle(s, 0.13, 11, 2.6);
+    g.rotation.x = wiggle(s - 0.05, 0.05, 9, 2.6);
+  });
   const blocks = useMemo<Instance[]>(() => PATTERNS.map((p, i) => ({ p: [0, H / 2 + i * H, 0] as V3, s: [p.w, H, D] as V3, r: [0, p.yaw, 0] as V3, color: p.color })), []);
   return (
-    <group position={[3.9, DESK_Y, -1.3]} rotation={[0, -0.18, 0]}>
-      <Boxes items={blocks} thickness={2} />
-      {PATTERNS.map((p, i) => (
-        <group key={p.name} rotation={[0, p.yaw, 0]}>
-          <Label size={i === 0 ? 0.42 : 0.3} color={p.ink} position={[0, H / 2 + i * H, D / 2 + 0.01]}>
-            {p.name}
-          </Label>
-        </group>
-      ))}
-    </group>
+    <Tappable
+      position={[3.9, DESK_Y, -1.3]}
+      rotation={[0, -0.18, 0]}
+      onTap={() => {
+        fire();
+        PATTERNS.forEach((_, i) => setTimeout(() => sfx.boop(0.9 + i * 0.22), i * 90));
+      }}
+      hintAt={[0, H * 4 + 0.75, 0]}
+      hintScale={HINT / S}
+    >
+      <PopText kick={kick} text="CLACK" position={[0, H * 4 + 0.6, 0.6]} size={0.38} />
+      <group ref={tower}>
+        <Boxes items={blocks} thickness={2} />
+        {PATTERNS.map((p, i) => (
+          <group key={p.name} rotation={[0, p.yaw, 0]}>
+            <Label size={i === 0 ? 0.42 : 0.3} color={p.ink} position={[0, H / 2 + i * H, D / 2 + 0.01]}>
+              {p.name}
+            </Label>
+          </group>
+        ))}
+      </group>
+    </Tappable>
   );
 }
 
@@ -377,52 +416,62 @@ function Printer() {
 /* ---------- a mug of java ---------- */
 
 function Mug() {
-  const puff = useRef(-10);
-  const clock = useThree((s) => s.clock);
-  const { bind } = useHoverCursor();
+  const [kick, fire] = useKick();
+  const body = useRef<THREE.Group>(null);
+  useFrame(() => {
+    const g = body.current;
+    if (!g) return;
+    const h = hump(since(kick), 0.45);
+    g.position.y = h * 0.4;
+    g.rotation.z = h * 0.25;
+  });
   return (
-    <group
+    <Tappable
       position={[-4.6, DESK_Y, 2.5]}
-      onClick={(e) => {
-        e.stopPropagation();
-        puff.current = clock.elapsedTime;
+      onTap={() => {
+        fire();
         chime(880);
+        sfx.pop(0.7);
       }}
-      {...bind}
+      hintAt={[0, 1.65, 0]}
+      hintScale={HINT / S}
     >
-      <mesh position={[0, 0.48, 0]} castShadow>
-        <cylinderGeometry args={[0.48, 0.42, 0.96, 20]} />
-        <Toon color={C.coral} />
-      </mesh>
-      <mesh position={[0, 0.9, 0]}>
-        <cylinderGeometry args={[0.41, 0.41, 0.02, 20]} />
-        <meshBasicMaterial color="#5a3420" />
-      </mesh>
-      <mesh position={[-0.5, 0.5, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <torusGeometry args={[0.22, 0.07, 8, 16, Math.PI]} />
-        <Toon color={C.coral} thickness={1.4} />
-      </mesh>
-      <Label size={0.25} color={C.cream} position={[0, 0.5, 0.47]}>
-        JAVA
-      </Label>
-      <Moving
-        count={3}
-        basic
-        color={C.white}
-        transparent
-        opacity={0.5}
-        onFrame={(put, t) => {
-          const burst = t - puff.current < 1.5 ? 1.8 : 1;
-          for (let i = 0; i < 3; i++) {
-            const u = (t * 0.45 + i / 3) % 1;
-            const sc = (0.07 + u * 0.12) * burst * Math.sin(u * Math.PI);
-            put(i, Math.sin(t * 2 + i * 2) * 0.12, 1.05 + u * 1.3, 0, sc);
-          }
-        }}
-      >
-        <sphereGeometry args={[1, 10, 8]} />
-      </Moving>
-    </group>
+      <PopText kick={kick} text="SIP" position={[0.3, 2.2, 0.3]} size={0.4} />
+      <group ref={body}>
+        <mesh position={[0, 0.48, 0]} castShadow>
+          <cylinderGeometry args={[0.48, 0.42, 0.96, 20]} />
+          <Toon color={C.coral} />
+        </mesh>
+        <mesh position={[0, 0.9, 0]}>
+          <cylinderGeometry args={[0.41, 0.41, 0.02, 20]} />
+          <meshBasicMaterial color="#5a3420" />
+        </mesh>
+        <mesh position={[-0.5, 0.5, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <torusGeometry args={[0.22, 0.07, 8, 16, Math.PI]} />
+          <Toon color={C.coral} thickness={1.4} />
+        </mesh>
+        <Label size={0.25} color={C.cream} position={[0, 0.5, 0.47]}>
+          JAVA
+        </Label>
+        <Moving
+          count={3}
+          basic
+          color={C.white}
+          transparent
+          opacity={0.5}
+          onFrame={(put, t) => {
+            const burst = since(kick) < 1.5 ? 1.8 : 1;
+            for (let i = 0; i < 3; i++) {
+              const u = (t * 0.45 + i / 3) % 1;
+              const sc = (0.07 + u * 0.12) * burst * Math.sin(u * Math.PI);
+              put(i, Math.sin(t * 2 + i * 2) * 0.12, 1.05 + u * 1.3, 0, sc);
+            }
+          }}
+        >
+          <sphereGeometry args={[1, 10, 8]} />
+        </Moving>
+      </group>
+    </Tappable>
   );
 }
 
@@ -458,7 +507,7 @@ export function Scheduler() {
       <RoundedBox args={[12.4, 0.2, 8.4]} radius={0.08} position={[0.2, 0.2, 0.6]} receiveShadow>
         <Toon color="#d9a066" />
       </RoundedBox>
-      <group position={[0, 0, 1.3]} scale={1.08}>
+      <group position={[0, 0, 1.3]} scale={S}>
         <WorldClocks />
         <Calendar />
         <PatternTower />

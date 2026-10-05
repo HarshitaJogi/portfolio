@@ -1,13 +1,15 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { C } from "../../palette";
-import { ToonInstances, type Instance } from "../../toon";
+import { Toon, ToonInstances, type Instance } from "../../toon";
 import { Label } from "../../bits";
 import type { DioramaProps } from "../Frame";
-import { Crates, Market, Painted, hash, paint, smooth, stack, type V3 } from "./kit";
+import { Crates, Market, Painted, STALL_HINT, hash, paint, smooth, stack, type V3 } from "./kit";
+import { Tappable } from "../../props/tappable";
+import { PopText, Ripple, hump, sfx, since, useKick, type Kick } from "@/world/fx";
 
 /* ---------- the network: three layers, pulses running through ---------- */
 
@@ -18,7 +20,7 @@ const LAYERS: { x: number; ys: number[]; c: string }[] = [
 ];
 const PULSES = 7;
 
-function Network({ position }: { position: V3 }) {
+function Network({ position, fire }: { position: V3; fire: Kick }) {
   const { nodes, bars } = useMemo(() => {
     const nodes: Instance[] = LAYERS.flatMap((l) => l.ys.map((y) => ({ p: [l.x, y, 0] as V3, color: l.c })));
     const bars: Instance[] = [];
@@ -43,12 +45,50 @@ function Network({ position }: { position: V3 }) {
     [],
   );
   const pulses = useRef<THREE.InstancedMesh>(null);
+  const nodeMesh = useRef<THREE.InstancedMesh>(null);
   const o = useMemo(() => new THREE.Object3D(), []);
-  useFrame(({ clock }) => {
+  const col = useMemo(() => ({ base: nodes.map((n) => new THREE.Color(n.color)), hot: new THREE.Color(C.white), tmp: new THREE.Color() }), [nodes]);
+  const layerOf = useMemo(() => LAYERS.flatMap((l, k) => l.ys.map(() => k)), []);
+  const phase = useRef(0);
+  const settled = useRef(true);
+  const placeNodes = (s: number) => {
+    const m = nodeMesh.current;
+    if (!m) return;
+    nodes.forEach((n, i) => {
+      // the cascade: each layer swells and flashes a beat after the one before
+      const h = hump(s - layerOf[i] * 0.22, 0.35);
+      o.position.set(...n.p);
+      o.rotation.set(0, 0, 0);
+      o.scale.setScalar(1 + h * 0.6);
+      o.updateMatrix();
+      m.setMatrixAt(i, o.matrix);
+      m.setColorAt(i, col.tmp.copy(col.base[i]).lerp(col.hot, h * 0.8));
+    });
+    m.instanceMatrix.needsUpdate = true;
+    if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  };
+  useLayoutEffect(() => {
+    placeNodes(9);
+    const m = nodeMesh.current;
+    if (!m) return;
+    m.computeBoundingSphere();
+    if (m.boundingSphere) m.boundingSphere.radius += 0.5;
+    m.traverse((ch) => {
+      if (ch !== m && (ch as THREE.InstancedMesh).isInstancedMesh) (ch as THREE.InstancedMesh).boundingSphere = m.boundingSphere;
+    });
+    // placeNodes only reads memoised data and refs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes]);
+  useFrame((_, dt) => {
     const m = pulses.current;
     if (!m) return;
+    const s = since(fire);
+    const busy = s < 1.4;
+    if (busy || !settled.current) placeNodes(busy ? s : 9);
+    settled.current = !busy;
+    phase.current += dt * (0.45 + hump(s, 1.4) * 2.2);
     routes.forEach((r, i) => {
-      const u = (clock.elapsedTime * 0.45 + i / PULSES) % 1;
+      const u = (phase.current + i / PULSES) % 1;
       const f = u * 2;
       const seg = Math.min(1, Math.floor(f));
       o.position.lerpVectors(r[seg], r[seg + 1], smooth(f - seg));
@@ -76,9 +116,10 @@ function Network({ position }: { position: V3 }) {
       <ToonInstances items={bars} color={C.ink} outline={false}>
         <cylinderGeometry args={[0.028, 0.028, 1, 5]} />
       </ToonInstances>
-      <ToonInstances items={nodes} castShadow thickness={1.8}>
+      <instancedMesh ref={nodeMesh} args={[undefined, undefined, nodes.length]} castShadow>
         <sphereGeometry args={[0.24, 16, 12]} />
-      </ToonInstances>
+        <Toon color={C.white} thickness={1.8} />
+      </instancedMesh>
       <instancedMesh ref={pulses} args={[undefined, undefined, PULSES]} frustumCulled={false}>
         <sphereGeometry args={[0.1, 8, 6]} />
         <meshBasicMaterial color={C.white} />
@@ -124,7 +165,7 @@ const leaf = LEAVES.find((l) => l.sick)!;
 const LEAF_C = new THREE.Vector3(Math.cos(leaf.yaw) * leaf.len * 0.5, leaf.y + Math.sin(leaf.tilt) * leaf.len * 0.5, -Math.sin(leaf.yaw) * leaf.len * 0.5);
 const BOX = { w: 1.25, h: 0.72 };
 
-function Detection({ position }: { position: V3 }) {
+function Detection({ position, rescan }: { position: V3; rescan: Kick }) {
   const plant = useMemo(() => maizeGeometry(), []);
   const box = useRef<THREE.Group>(null);
   const tag = useRef<THREE.Group>(null);
@@ -140,7 +181,8 @@ function Detection({ position }: { position: V3 }) {
     ]);
   }, []);
   useFrame(({ clock }) => {
-    const t = clock.elapsedTime % 4.2;
+    const r = since(rescan);
+    const t = r < 4.2 ? r : clock.elapsedTime % 4.2;
     // search wide and loose, then snap tight onto the leaf, hold, let go
     const snap = smooth((t - 1.0) / 0.22);
     const s = 1.7 - 0.7 * snap + Math.sin(t * 5) * 0.04 * (1 - snap);
@@ -154,6 +196,7 @@ function Detection({ position }: { position: V3 }) {
   return (
     <group position={position}>
       <Painted geometry={plant} castShadow thickness={1.4} />
+      <Ripple kick={rescan} position={[LEAF_C.x, LEAF_C.y, LEAF_C.z + 0.36]} rotation={[0, -0.12, 0]} color={C.coral} from={0.3} to={1.4} dur={0.5} delay={1.2} />
       <group ref={box} rotation={[0, -0.12, 0]}>
         <mesh geometry={frame}>
           <meshBasicMaterial vertexColors side={THREE.DoubleSide} />
@@ -187,11 +230,12 @@ function edgeRig() {
 }
 
 /** The board the quantized models ran on. Its LED goes green each time the detector locks on. */
-function EdgeBoard({ at }: { at: V3 }) {
+function EdgeBoard({ at, rescan }: { at: V3; rescan: Kick }) {
   const board = useMemo(() => edgeRig(), []);
   const led = useRef<THREE.MeshBasicMaterial>(null);
   useFrame(({ clock }) => {
-    const t = clock.elapsedTime % 4.2;
+    const r = since(rescan);
+    const t = r < 4.2 ? r : clock.elapsedTime % 4.2;
     led.current?.color.set(t > 1.2 && t < 3.7 ? C.green : "#1f3a2a");
   });
   return (
@@ -231,15 +275,53 @@ export default function Ml({ step }: DioramaProps) {
     ],
     [],
   );
+  const [fire, fireNet] = useKick();
+  const [rescan, fireScan] = useKick();
   return (
     <Market id={step.id} color={C.green} title="MACHINE LEARNING">
-      <group position={[0.85, 0, 0.55]} scale={1.1}>
-        <Network position={[0, 0.15, 0]} />
-      </group>
-      <group position={[3.15, 0, 1.7]} scale={1.1}>
-        <Detection position={[0, 0.15, 0]} />
-      </group>
-      <EdgeBoard at={[1.75, 0.55, 2.55]} />
+      {/* the network: click it and a pulse cascades through every layer */}
+      <Tappable
+        onTap={() => {
+          if (since(fire) < 0.8) return;
+          fireNet();
+          sfx.arp(523, 3, 0.22, "sine");
+          sfx.whoosh(1.6);
+        }}
+        position={[0.85, 0, 0.55]}
+        hintAt={[0, 4.05, 0]}
+        hintScale={STALL_HINT / 1.1}
+      >
+        <group scale={1.1}>
+          <Network position={[0, 0.15, 0]} fire={fire} />
+          <mesh position={[0, 2.5, 0]} visible={false}>
+            <boxGeometry args={[2.6, 2.4, 0.8]} />
+            <meshBasicMaterial />
+          </mesh>
+        </group>
+        <PopText kick={fire} text="ZAP" position={[1.2, 3.9, 0.4]} size={0.4} color={C.green} />
+      </Tappable>
+      {/* the maize: click it and the detector looks again */}
+      <Tappable
+        onTap={() => {
+          if (since(rescan) < 1.4) return;
+          fireScan();
+          sfx.beep(0.9);
+          setTimeout(() => sfx.arp(988, 2, 0.06, "square"), 1150);
+        }}
+        position={[3.15, 0, 1.7]}
+        hintAt={[0, 3.25, 0]}
+        hintScale={STALL_HINT / 1.1}
+      >
+        <group scale={1.1}>
+          <Detection position={[0, 0.15, 0]} rescan={rescan} />
+          <mesh position={[0, 1.4, 0]} visible={false}>
+            <cylinderGeometry args={[0.8, 0.8, 2.6, 8]} />
+            <meshBasicMaterial />
+          </mesh>
+        </group>
+        <PopText kick={rescan} text="BEEP" position={[0.2, 2.9, 0.4]} size={0.36} color={C.coral} />
+      </Tappable>
+      <EdgeBoard at={[1.75, 0.55, 2.55]} rescan={rescan} />
       <Crates items={crates} />
     </Market>
   );

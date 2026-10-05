@@ -6,18 +6,17 @@ import * as THREE from "three";
 import type { World, WorldStep } from "@/content/profile";
 import { C } from "../palette";
 import { Toon, ToonInstances, type Instance } from "../toon";
-import { journey } from "../scroll";
+import { journey, stepJourney } from "../scroll";
 import { blendSky } from "../atmosphere";
 import { partyRoll } from "../party";
 import { Lights } from "../Lights";
 import { Progressive } from "../progressive";
 import { Islet, Portal, Sign } from "../props/basics";
-import { Plane } from "../props/vehicles";
+import { WorldTraveler } from "../TravelerRig";
 import { useReducedMotion } from "@/lib/device";
 
-export const SPACING = 46;
-/** Where item k stands. A gentle zigzag, so the path reads as a path and not a ruler. */
-export const anchor = (k: number) => new THREE.Vector3(k * SPACING, 0, k % 2 ? -5 : 5);
+import { anchor, SPACING } from "./layout";
+export { anchor, SPACING };
 
 export type DioramaProps = { step: WorldStep };
 
@@ -75,8 +74,7 @@ function Rig({ world, focus }: { world: World; focus: React.RefObject<THREE.Vect
   }, [get, size, wide]);
 
   useFrame((state, dt) => {
-    const k = reduced ? 1 : 1 - Math.exp(-dt * 3.2);
-    journey.progress += (journey.target - journey.progress) * k;
+    stepJourney(dt, reduced);
     const p = Math.min(Math.max(journey.progress, 0), list.length - 1);
     const i = Math.min(Math.floor(p), list.length - 2);
     const f = smooth(p - i);
@@ -94,46 +92,11 @@ function Rig({ world, focus }: { world: World; focus: React.RefObject<THREE.Vect
   return null;
 }
 
-/** The plane: circles the islet you are at, and flies to the next one as you scroll. */
-function Flight({ items }: { items: number }) {
-  const ref = useRef<THREE.Group>(null);
-  const theta = useRef(0);
-  const scratch = useRef({ prev: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3() });
-  useFrame((_, dt) => {
-    const g = ref.current;
-    if (!g) return;
-    const { prev, a, b } = scratch.current;
-    // step 0 is the overview; items are steps 1..n; the portal is n+1
-    const q = Math.min(Math.max(journey.progress - 1, -0.4), items);
-    const i = Math.floor(q);
-    const f = q - i;
-    a.copy(i < 0 ? anchor(0).add(new THREE.Vector3(-SPACING * 0.5, 0, 0)) : anchor(i));
-    b.copy(anchor(i + 1));
-    const center = a.lerp(b, smooth(Math.max(f, 0)));
-    const travel = Math.sin(Math.max(f, 0) * Math.PI);
-    theta.current += dt * 0.55;
-    const r = 8.5 * (1 - travel);
-    prev.copy(g.position);
-    g.position.set(center.x + Math.cos(theta.current) * r, 7.6 + travel * 4, center.z + Math.sin(theta.current) * r);
-    const dx = g.position.x - prev.x;
-    const dz = g.position.z - prev.z;
-    if (dx * dx + dz * dz > 1e-6) {
-      const yaw = Math.atan2(-dz, dx);
-      g.rotation.set(0, yaw, -0.35 * (1 - travel));
-    }
-  });
-  return (
-    <group ref={ref} scale={0.9}>
-      <Plane />
-    </group>
-  );
-}
-
 /**
  * Draws a diorama in full only when the camera is near enough to see its detail.
  * Further away it swaps to a plain islet, which keeps the overview shot cheap.
  */
-function Cull({ at, children, far = 120 }: { at: THREE.Vector3; children: ReactNode; far?: number }) {
+function Cull({ at, children, far = 80 }: { at: THREE.Vector3; children: ReactNode; far?: number }) {
   const full = useRef<THREE.Group>(null);
   const proxy = useRef<THREE.Group>(null);
   useFrame(({ camera }) => {
@@ -273,9 +236,9 @@ export function WorldFrame({
   if (connector === "bridge") {
     pieces.push(<Bridge key="b-dock" from={dock} to={anchor(0)} r0={6.6} />);
     items.forEach((_, k) => pieces.push(<Bridge key={`b${k}`} from={anchor(k)} to={anchor(k + 1)} r1={k === items.length - 1 ? 7.1 : 10.6} />));
-  } else {
-    pieces.push(<Flight key="flight" items={items.length} />);
   }
+  // the visitor's traveler walks the bridges, or flies between cities
+  pieces.push(<WorldTraveler key="traveler" world={world} plane={connector === "plane"} />);
   if (extras) pieces.push(<group key="extras">{extras}</group>);
 
   return (

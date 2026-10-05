@@ -1,14 +1,19 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { margamParts } from "@/content/profile";
 import { C } from "../../palette";
 import { Toon, ToonInstances, type Instance } from "../../toon";
-import { Label } from "../../bits";
+import { Label, chime, useHoverCursor } from "../../bits";
 import { Islet } from "../../props/basics";
 import { limb, merge, put, type V3 } from "./parts";
+import { Tappable, TapHint } from "../../props/tappable";
+import { Burst, HINT, PopText, Ripple, hump, sfx, since, squash, useKick, wiggle } from "@/world/fx";
+
+/** One note per stone, rising through the recital. */
+const STONE_NOTES = [660, 742, 833, 880, 990, 1112, 1320];
 
 /* ------------------------------------------------------------------ */
 /* layout: the seven parts zigzag in front of the dancer, left to      */
@@ -23,12 +28,12 @@ const STONE_H = 0.42;
 const CAM = { x: -3, z: 22 };
 const ROPE_Y = 6.4;
 const BUNTING_Z = -5.0;
-const FRONT_Z = 4.4;
-const BACK_Z = 1.1;
+const FRONT_Z = 2.7; // well back from the front left, where the traveler stands
+const BACK_Z = 0.1;
 
 const spots = margamParts.map((part, i) => {
   const front = i % 2 === 0;
-  const x = -4.05 + i * 1.35;
+  const x = -3.5 + i * 1.35;
   const z = front ? FRONT_Z : BACK_Z;
   return { part, x, z, front };
 });
@@ -123,6 +128,11 @@ function Dancer({ yaw }: { yaw: React.RefObject<THREE.Group | null> }) {
 
 /** Seven flags across the back, in the order and colours of the recital: the same colours the island's districts wear. */
 function Bunting() {
+  const flutter = useRef<THREE.Group>(null);
+  const [wave, fireWave] = useKick();
+  useFrame(() => {
+    if (flutter.current) flutter.current.rotation.x = wiggle(since(wave), 0.35, 12, 2.5);
+  });
   const { flags, posts } = useMemo(() => {
     const flags: Instance[] = margamParts.map((p, i) => {
       const f = (i + 0.5) / margamParts.length;
@@ -148,12 +158,31 @@ function Bunting() {
       <ToonInstances items={posts} color={C.bark} castShadow>
         <cylinderGeometry args={[0.5, 0.5, 1, 8]} />
       </ToonInstances>
-      <mesh geometry={rope}>
-        <meshBasicMaterial color={C.ink} />
-      </mesh>
-      <ToonInstances items={flags} thickness={1.6}>
-        <cylinderGeometry args={[1, 1, 1, 3]} />
-      </ToonInstances>
+      {/* the flags: give them a flick and they flutter */}
+      <Tappable
+        onTap={() => {
+          fireWave();
+          sfx.whoosh(1.3);
+          sfx.flutter();
+        }}
+        hintAt={[2.6, ROPE_Y + 0.5, BUNTING_Z]}
+        hintScale={HINT}
+      >
+        <group ref={flutter} position={[0, ROPE_Y - 0.4, BUNTING_Z]}>
+          <group position={[0, -(ROPE_Y - 0.4), -BUNTING_Z]}>
+            <mesh geometry={rope}>
+              <meshBasicMaterial color={C.ink} />
+            </mesh>
+            <ToonInstances items={flags} thickness={1.6}>
+              <cylinderGeometry args={[1, 1, 1, 3]} />
+            </ToonInstances>
+          </group>
+        </group>
+        <mesh position={[0, ROPE_Y - 0.5, BUNTING_Z]} visible={false}>
+          <boxGeometry args={[8.4, 1.4, 0.6]} />
+          <meshBasicMaterial />
+        </mesh>
+      </Tappable>
     </group>
   );
 }
@@ -176,6 +205,14 @@ export function Margam() {
   const col = useMemo(() => new THREE.Color(), []);
   const base = useMemo(() => spots.map((s) => new THREE.Color(s.part.color)), []);
   const white = useMemo(() => new THREE.Color(C.white), []);
+  const offset = useRef(0);
+  const clockNow = useRef(0);
+  const pose = useRef<THREE.Group>(null);
+  const ping = useRef<THREE.Group>(null);
+  const [twirl, fireTwirl] = useKick();
+  const [jump, fireJump] = useKick();
+  const [seen, setSeen] = useState(false);
+  const { bind } = useHoverCursor();
 
   const dots = useMemo(() => {
     // stepping marks on the ground between stones
@@ -212,8 +249,17 @@ export function Margam() {
   }, [o, base]);
 
   useFrame(({ clock }, dt) => {
-    const now = clock.elapsedTime;
+    clockNow.current = clock.elapsedTime;
+    // the recital's own clock: a click on a stone moves it to that stone
+    const now = clock.elapsedTime - offset.current;
     const { i, hop, bow } = at(now);
+    // she strikes a pose: a leap and a full turn, landing with a squash
+    const tw = since(twirl);
+    if (pose.current) {
+      pose.current.position.y = hump(tw, 0.6) * 0.45;
+      pose.current.rotation.y = tw < 0.6 ? (tw / 0.6) * Math.PI * 2 : 0;
+      squash(pose.current, wiggle(tw - 0.6, 0.18, 16, 5));
+    }
     const k = 1 - Math.exp(-dt * 8);
     const m = stones.current;
     // the stone under the light rises a little and brightens
@@ -231,7 +277,7 @@ export function Margam() {
       }
       const g = labels.current[j];
       if (g) {
-        g.position.y = (s.front ? 0.34 : 1.35) + l * (s.front ? 0.2 : 0.35);
+        g.position.y = 1.35 + l * 0.35;
         const sc = 1 + l * 0.18;
         g.scale.set(sc, sc, sc);
       }
@@ -311,13 +357,50 @@ export function Margam() {
           <cylinderGeometry args={[1.42, 1.42, 0.04, 36]} />
           <Toon color={C.sun} outline={false} />
         </mesh>
-        <group ref={body} position={[0, DAIS_H + 0.15, 0]} scale={SCALE}>
-          <Dancer yaw={dancer} />
-        </group>
+        <Tappable
+          onTap={() => {
+            if (since(twirl) < 0.7) return;
+            fireTwirl();
+            chime(1500);
+            setTimeout(() => chime(1800), 90);
+            setTimeout(() => sfx.whee(), 120);
+          }}
+          hintAt={[0, DAIS_H + 0.15 + 2.5 * SCALE + 0.5, 0]}
+          hintScale={HINT}
+        >
+          <group ref={body} position={[0, DAIS_H + 0.15, 0]} scale={SCALE}>
+            <group ref={pose}>
+              <Dancer yaw={dancer} />
+            </group>
+          </group>
+          <mesh position={[0, DAIS_H + 0.15 + 1.6 * SCALE, 0]} visible={false}>
+            <cylinderGeometry args={[1.3, 1.3, 2.4 * SCALE, 8]} />
+            <meshBasicMaterial />
+          </mesh>
+          <Burst kick={twirl} origin={[0, DAIS_H + 1.2 * SCALE, 0]} count={16} colors={[C.sun, C.rose, C.white]} size={0.1} speed={2.4} up={2} gravity={4} dur={1.2} />
+          <PopText kick={twirl} text="TA DHA" position={[1.6, DAIS_H + 2.6 * SCALE, 0.6]} size={0.45} color={C.rose} />
+        </Tappable>
       </group>
 
-      {/* the seven stones */}
-      <instancedMesh ref={stones} args={[undefined, undefined, spots.length]} castShadow receiveShadow>
+      {/* the seven stones: click one and the light jumps to it */}
+      <instancedMesh
+        ref={stones}
+        args={[undefined, undefined, spots.length]}
+        castShadow
+        receiveShadow
+        onClick={(e) => {
+          e.stopPropagation();
+          const j = e.instanceId;
+          if (j === undefined) return;
+          offset.current = clockNow.current - (j * STEP + 0.02);
+          setSeen(true);
+          fireJump();
+          chime(STONE_NOTES[j % STONE_NOTES.length]);
+          sfx.pop(STONE_NOTES[j % STONE_NOTES.length] / 660);
+          ping.current?.position.set(spots[j].x, 0.17 + STONE_H + 0.3, spots[j].z);
+        }}
+        {...bind}
+      >
         <cylinderGeometry args={[0.78, 0.86, STONE_H, 9]} />
         <Toon color={C.white} thickness={2} />
       </instancedMesh>
@@ -325,13 +408,18 @@ export function Margam() {
         <cylinderGeometry args={[1, 1, 1, 10]} />
       </ToonInstances>
       {spots.map((s, j) => (
-        <group key={s.part.id} ref={(el) => void (labels.current[j] = el)} position={[s.x, s.front ? 0.34 : 1.35, s.front ? s.z + 1.1 : s.z]}>
+        <group key={s.part.id} ref={(el) => void (labels.current[j] = el)} position={[s.x, 1.35, s.z]}>
           <Label size={0.29} color={C.ink} outline={C.cream} rotation={[0, Math.atan2(CAM.x - s.x, CAM.z - s.z), 0]}>
             {s.part.name.toUpperCase()}
           </Label>
         </group>
       ))}
 
+      {!seen && <TapHint position={[spots[3].x, 1.9, spots[3].z]} scale={HINT} />}
+      <group ref={ping}>
+        <Ripple kick={jump} position={[0, 0, 0]} color={C.sun} from={0.5} to={1.8} dur={0.5} />
+        <Burst kick={jump} origin={[0, 0.3, 0]} count={10} colors={[C.sun, C.white]} size={0.09} speed={1.5} up={2.4} dur={0.8} />
+      </group>
       {/* the travelling light */}
       <group ref={puck}>
         <mesh>

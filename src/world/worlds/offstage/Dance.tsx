@@ -1,8 +1,9 @@
 "use client";
 
-import { RoundedBox, useTexture } from "@react-three/drei";
+import { useTexture } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { media } from "@/content/profile";
 import { C } from "../../palette";
@@ -14,6 +15,8 @@ import { island } from "../../state";
 import { Islet } from "../../props/basics";
 import { Kuthuvilakku } from "./Lamp";
 import { merge, put, type V3 } from "./parts";
+import { Tappable, TapHint } from "../../props/tappable";
+import { Burst, HINT, PopText, Ripple, hump, sfx, since, useKick, wiggle } from "@/world/fx";
 
 const STAGE_TOP = 0.95;
 const STAGE = { x: 4.7, back: -3.4, front: 1.6 };
@@ -193,10 +196,12 @@ function Portrait({ position }: { position: V3 }) {
   const flip = useRef(-1); // seconds into a flip, or -1
   const t = useRef(0);
   const { bind } = useHoverCursor();
+  const [seen, setSeen] = useState(false);
+  const [spot, fireSpot] = useKick();
 
   useFrame(({ clock }, dt) => {
     t.current = clock.elapsedTime;
-    const n = atmo.night;
+    const n = atmo.night + hump(since(spot), 0.9) * 0.9;
     if (beam.current) beam.current.opacity = 0.05 + 0.13 * n;
     if (pool.current) pool.current.opacity = 0.08 + 0.22 * n;
     if (flip.current < 0 && clock.elapsedTime > nextAt.current) flip.current = 0;
@@ -233,7 +238,10 @@ function Portrait({ position }: { position: V3 }) {
   const next = () => {
     if (flip.current >= 0) return;
     flip.current = 0;
+    setSeen(true);
+    fireSpot();
     chime(1046);
+    sfx.whoosh(1.1);
   };
 
   return (
@@ -256,6 +264,7 @@ function Portrait({ position }: { position: V3 }) {
           <meshBasicMaterial map={texs[0]} toneMapped={false} />
         </mesh>
       </group>
+      {!seen && <TapHint position={[1.5, 3.0, 0.3]} scale={HINT} />}
       {/* the spotlight: a soft cone from above, and its pool on the floor */}
       <mesh position={[0, 3.3, 0.55]} rotation={[0.12, 0, 0]}>
         <coneGeometry args={[1.75, 6.6, 28, 1, true]} />
@@ -296,6 +305,8 @@ function Ghungroo({ position, rotation = 0 }: { position: V3; rotation?: number 
     [],
   );
   const { bind } = useHoverCursor();
+  const [seen, setSeen] = useState(false);
+  const [jingle, fireJingle] = useKick();
 
   useFrame(({ clock }, dt) => {
     swing.current = Math.max(0, swing.current - dt * 0.7);
@@ -318,6 +329,8 @@ function Ghungroo({ position, rotation = 0 }: { position: V3; rotation?: number 
     setTimeout(() => chime(1650 + Math.random() * 300), 200);
     island.set({ bells: island.get().bells + 1 });
     findEgg("bells");
+    setSeen(true);
+    fireJingle();
   };
 
   const strand = (ref: React.RefObject<THREE.Group | null>, x: number) => (
@@ -348,6 +361,8 @@ function Ghungroo({ position, rotation = 0 }: { position: V3; rotation?: number 
           <meshBasicMaterial />
         </mesh>
       </group>
+      {!seen && <TapHint position={[0, 2.9, 0]} scale={HINT} />}
+      <PopText kick={jingle} text="CHHAM CHHAM" position={[0, 2.7, 0.4]} size={0.38} color={C.sun} outline={C.ink} />
     </group>
   );
 }
@@ -381,8 +396,26 @@ function useScroll() {
 /** The degree: a scroll on a reading stand. */
 function Scroll({ position, rotation = 0 }: { position: V3; rotation?: number }) {
   const { stand, rollers, caps } = useScroll();
+  const hop = useRef<THREE.Group>(null);
+  const [cheer, fireCheer] = useKick();
+  useFrame(() => {
+    const s = since(cheer);
+    if (!hop.current) return;
+    hop.current.position.y = hump(s, 0.4) * 0.45;
+    hop.current.rotation.z = wiggle(s, 0.12, 14, 4);
+  });
   return (
-    <group position={position} rotation={[0, rotation, 0]}>
+    <Tappable
+      onTap={() => {
+        fireCheer();
+        sfx.arp(784, 4, 0.08, "triangle");
+      }}
+      position={position}
+      rotation={[0, rotation, 0]}
+      hintAt={[0, 2.6, 0]}
+      hintScale={HINT}
+    >
+    <group ref={hop}>
       <mesh geometry={stand} castShadow>
         <Toon color={C.bark} emissive={C.brickDark} thickness={1.6} />
       </mesh>
@@ -402,6 +435,10 @@ function Scroll({ position, rotation = 0 }: { position: V3; rotation?: number })
         </Label>
       </group>
     </group>
+      <Burst kick={cheer} origin={[0, 1.6, 0]} count={14} colors={[C.sun, C.red, C.cream]} size={0.1} speed={1.8} up={3} dur={1.1} />
+      <Ripple kick={cheer} position={[0, 0.05, 0]} color={C.sun} from={0.5} to={2} dur={0.6} />
+      <PopText kick={cheer} text="BRAVO" position={[0, 2.3, 0.4]} size={0.38} color={C.red} />
+    </Tappable>
   );
 }
 
@@ -492,10 +529,11 @@ export function Dance() {
       <Tower position={[0, 0, -5.3]} />
       <Platform />
       <Portrait position={[0, STAGE_TOP, -1.7]} />
-      <Kuthuvilakku position={[-3.3, STAGE_TOP, -0.5]} scale={1.05} />
+      <Kuthuvilakku position={[-3.3, STAGE_TOP, -0.5]} scale={1.05} hint />
       <Kuthuvilakku position={[3.3, STAGE_TOP, -0.5]} scale={1.05} phase={1.7} />
       <Ghungroo position={[4.1, 0.15, 5.6]} rotation={-0.4} />
-      <Scroll position={[-3.2, 0.15, 5.0]} rotation={0.3} />
+      {/* out to the left, clear of the front where the traveler stands */}
+      <Scroll position={[-6.6, 0.15, 3.0]} rotation={0.5} />
       <Footprints />
     </group>
   );

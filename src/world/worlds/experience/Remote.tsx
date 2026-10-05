@@ -1,8 +1,8 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { C } from "../../palette";
 import { Toon } from "../../toon";
@@ -10,6 +10,8 @@ import { Label } from "../../bits";
 import { atmo } from "../../atmosphere";
 import { Islet, Sign } from "../../props/basics";
 import { Bush } from "../../props/nature";
+import { Tappable } from "../../props/tappable";
+import { HINT, PopText, Ripple, hump, sfx, since, squash, useKick, wiggle, type Kick } from "@/world/fx";
 
 /**
  * The laptop screen: a maize leaf, a bounding box snapping onto the blight, and the
@@ -62,17 +64,21 @@ function useDetectionScreen() {
   }, []);
 }
 
-/** The red box that hunts across the leaf and locks onto the lesion. */
-function DetectionBox() {
+/** The red box that hunts across the leaf and locks onto the lesion. A rerun hunts harder and locks with a flash. */
+function DetectionBox({ rerun }: { rerun: Kick }) {
   const ref = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
     const g = ref.current;
     if (!g) return;
-    const t = clock.elapsedTime % 4;
+    const r = since(rerun);
+    const again = r < 4;
+    const t = again ? r : clock.elapsedTime % 4;
     const lock = Math.min(1, Math.max(0, (t - 1.2) / 0.5));
-    const s = 1.6 - lock * 0.9;
+    // on a rerun it lands with a punch: overshoot, then settle
+    const punch = again ? hump(t - 1.7, 0.35) * 0.35 : 0;
+    const s = 1.6 - lock * 0.9 + punch;
     g.scale.set(s, s * 0.8, 1);
-    g.position.x = 0.32 * lock + Math.sin(clock.elapsedTime * 3) * 0.2 * (1 - lock);
+    g.position.x = 0.32 * lock + Math.sin(clock.elapsedTime * (again ? 9 : 3)) * (again ? 0.6 : 0.2) * (1 - lock);
     g.visible = t < 3.6;
   });
   const bars: [number, number, number, number][] = [
@@ -101,18 +107,24 @@ function DetectionBox() {
 }
 
 /** Wi-Fi arcs, pulsing out from the router: a remote internship runs on this. */
-function WifiArcs() {
-  const mats = useMemo(() => [0, 1, 2].map(() => new THREE.MeshBasicMaterial({ color: C.cobalt, transparent: true, side: THREE.DoubleSide })), []);
-  useFrame(({ clock }) => {
-    mats.forEach((m, i) => {
-      m.opacity = Math.max(0, Math.sin(clock.elapsedTime * 3 - i * 0.9));
+function WifiArcs({ ping }: { ping: Kick }) {
+  const arcs = useRef<(THREE.Mesh | null)[]>([]);
+  const group = useRef<THREE.Group>(null);
+  const phase = useRef(0);
+  useFrame((_, dt) => {
+    const boost = hump(since(ping), 1.6);
+    phase.current += dt * (3 + boost * 9);
+    arcs.current.forEach((m, i) => {
+      if (m) (m.material as THREE.MeshBasicMaterial).opacity = Math.max(0, Math.sin(phase.current - i * 0.9));
     });
+    group.current?.scale.setScalar(1 + boost * 0.6);
   });
   return (
-    <group position={[0, 1.15, 0]}>
-      {mats.map((m, i) => (
-        <mesh key={i} material={m} rotation={[0, 0, Math.PI / 4]}>
+    <group ref={group} position={[0, 1.15, 0]}>
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} ref={(m) => void (arcs.current[i] = m)} rotation={[0, 0, Math.PI / 4]}>
           <ringGeometry args={[0.25 + i * 0.28, 0.36 + i * 0.28, 24, 1, 0, Math.PI / 2]} />
+          <meshBasicMaterial color={C.cobalt} transparent side={THREE.DoubleSide} />
         </mesh>
       ))}
     </group>
@@ -123,13 +135,57 @@ function WifiArcs() {
 export function Remote() {
   const screen = useDetectionScreen();
   const lamp = useRef<THREE.MeshBasicMaterial>(null);
+  const beam = useRef<THREE.Mesh>(null);
+  const shade = useRef<THREE.Group>(null);
   const day = useMemo(() => new THREE.Color("#fff1c4"), []);
   const warm = useMemo(() => new THREE.Color("#ffc44d"), []);
+  const off = useMemo(() => new THREE.Color("#6b6152"), []);
   const holo = useRef<THREE.Group>(null);
+  const router = useRef<THREE.Group>(null);
+  const lampOn = useRef(true);
+  const [rerun, fireRerun] = useKick();
+  const [flip, fireFlip] = useKick();
+  const [ping, firePing] = useKick();
+  const [lock, fireLock] = useKick();
+  const lockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => void (lockTimer.current && clearTimeout(lockTimer.current)), []);
   useFrame(({ clock }) => {
-    lamp.current?.color.copy(day).lerp(warm, 0.4 + atmo.night * 0.6);
-    if (holo.current) holo.current.position.y = 5.2 + Math.sin(clock.elapsedTime * 1.4) * 0.12;
+    if (lampOn.current) lamp.current?.color.copy(day).lerp(warm, 0.4 + atmo.night * 0.6);
+    else lamp.current?.color.copy(off);
+    if (beam.current) {
+      beam.current.visible = lampOn.current;
+      (beam.current.material as THREE.MeshBasicMaterial).opacity = 0.07 + atmo.night * 0.2 + hump(since(flip), 0.5) * 0.2;
+    }
+    if (shade.current) squash(shade.current, wiggle(since(flip), 0.3));
+    const r = since(rerun);
+    if (holo.current) {
+      holo.current.position.y = 5.2 + Math.sin(clock.elapsedTime * 1.4) * 0.12 + hump(r, 0.5) * 0.5;
+      holo.current.rotation.z = -0.14 + wiggle(r - 1.7, 0.08, 22, 6);
+    }
+    if (router.current) squash(router.current, wiggle(since(ping), 0.35));
   });
+
+  /** Run the detector again: it hunts, then locks on with a flash and a ding. */
+  const detect = () => {
+    if (since(rerun) < 3.6) return;
+    fireRerun();
+    sfx.beep(0.8);
+    if (lockTimer.current) clearTimeout(lockTimer.current);
+    lockTimer.current = setTimeout(() => {
+      fireLock();
+      sfx.arp(880, 3, 0.06);
+    }, 1700);
+  };
+  const toggleLamp = () => {
+    lampOn.current = !lampOn.current;
+    fireFlip();
+    sfx.click(lampOn.current ? 1 : 0.7);
+  };
+  const broadcast = () => {
+    firePing();
+    sfx.whoosh(1.4);
+    sfx.beep(1.2);
+  };
 
   return (
     <group>
@@ -160,8 +216,8 @@ export function Remote() {
           )),
         )}
 
-        {/* laptop */}
-        <group position={[-0.6, 1.68, 0.1]}>
+        {/* laptop: click to run the detector again */}
+        <Tappable onTap={detect} position={[-0.6, 1.68, 0.1]}>
           <mesh position={[0, 0.05, 0.35]} castShadow>
             <boxGeometry args={[2.3, 0.1, 1.4]} />
             <Toon color={C.steel} />
@@ -178,7 +234,7 @@ export function Remote() {
               </mesh>
             )}
           </group>
-        </group>
+        </Tappable>
 
         {/* the edge board the model was quantized for */}
         <group position={[1.75, 1.7, 0.2]}>
@@ -197,8 +253,8 @@ export function Remote() {
           </Label>
         </group>
 
-        {/* desk lamp */}
-        <group position={[2.4, 1.68, -0.6]}>
+        {/* desk lamp: click to switch it */}
+        <Tappable onTap={toggleLamp} position={[2.4, 1.68, -0.6]} hintAt={[-0.45, 2.3, 0]} hintScale={HINT / 1.35}>
           <mesh position={[0, 0.06, 0]}>
             <cylinderGeometry args={[0.3, 0.34, 0.12, 16]} />
             <Toon color={C.coral} />
@@ -207,15 +263,28 @@ export function Remote() {
             <cylinderGeometry args={[0.04, 0.04, 1.4, 6]} />
             <Toon color={C.ink} outline={false} />
           </mesh>
-          <mesh position={[-0.55, 1.4, 0]} rotation={[0, 0, -2.2]}>
-            <coneGeometry args={[0.3, 0.45, 16, 1, true]} />
-            <Toon color={C.coral} />
+          <group ref={shade} position={[-0.55, 1.4, 0]}>
+            <mesh rotation={[0, 0, -2.2]}>
+              <coneGeometry args={[0.3, 0.45, 16, 1, true]} />
+              <Toon color={C.coral} />
+            </mesh>
+            <mesh position={[-0.1, -0.12, 0]}>
+              <sphereGeometry args={[0.12, 10, 8]} />
+              <meshBasicMaterial ref={lamp} color="#fff1c4" />
+            </mesh>
+          </group>
+          {/* the pool of light it throws on the desk */}
+          <mesh ref={beam} position={[-0.85, 0.66, 0]} rotation={[0, 0, -0.42]}>
+            <coneGeometry args={[0.55, 1.25, 20, 1, true]} />
+            <meshBasicMaterial color="#fff3b0" transparent opacity={0.1} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
           </mesh>
-          <mesh position={[-0.65, 1.28, 0]}>
-            <sphereGeometry args={[0.12, 10, 8]} />
-            <meshBasicMaterial ref={lamp} color="#fff1c4" />
+          {/* an easy target: the lamp is slim */}
+          <mesh position={[-0.3, 0.9, 0]} visible={false}>
+            <boxGeometry args={[1.1, 1.9, 0.8]} />
+            <meshBasicMaterial />
           </mesh>
-        </group>
+          <PopText kick={flip} text="CLICK" position={[-0.4, 2.0, 0.3]} size={0.32} />
+        </Tappable>
 
         {/* a mug and a short stack of papers */}
         <mesh position={[-2.4, 1.92, 0.5]}>
@@ -248,6 +317,7 @@ export function Remote() {
 
       </group>
       {/* the leaf, blown up above the desk: the thing the model learned to see */}
+      <Tappable onTap={detect} hintAt={[-0.6, 6.9, -1.6]} hintScale={HINT}>
       <group ref={holo} position={[-0.6, 5.2, -2]} rotation={[-0.4, 0, -0.14]} scale={1.45}>
         {/* ink rim, then the leaf */}
         <group scale={[2.48, 0.7, 1]}>
@@ -276,22 +346,36 @@ export function Remote() {
             <meshBasicMaterial color="#8a5a2b" />
           </mesh>
         ))}
-        <DetectionBox />
+        <DetectionBox rerun={rerun} />
+        <Ripple kick={lock} position={[0.32, 0.05, 0.04]} rotation={[0, 0, 0]} color={C.sun} from={0.3} to={1.6} width={0.16} dur={0.6} />
       </group>
+      </Tappable>
+      <PopText kick={rerun} text="SCANNING" position={[-2.9, 5.9, -1.4]} size={0.36} color={C.cobalt} rise={0.6} dur={1.6} />
+      <PopText kick={lock} text="BEEP" position={[1.9, 6.0, -1.4]} size={0.5} color={C.red} />
 
-      {/* the router, broadcasting */}
-      <group position={[4.6, 0.15, -2.6]}>
-        <RoundedBox args={[1, 0.35, 0.7]} radius={0.08} position={[0, 0.2, 0]} castShadow>
-          <Toon color={C.cream} />
-        </RoundedBox>
-        {[-0.3, 0.3].map((x) => (
-          <mesh key={x} position={[x, 0.65, -0.2]}>
-            <cylinderGeometry args={[0.03, 0.03, 0.6, 6]} />
-            <Toon color={C.ink} outline={false} />
-          </mesh>
+      {/* the router, broadcasting: click it for a big wave */}
+      <Tappable onTap={broadcast} position={[4.6, 0.15, -2.6]} hintAt={[0, 2.4, 0]} hintScale={HINT}>
+        <group ref={router}>
+          <RoundedBox args={[1, 0.35, 0.7]} radius={0.08} position={[0, 0.2, 0]} castShadow>
+            <Toon color={C.cream} />
+          </RoundedBox>
+          {[-0.3, 0.3].map((x) => (
+            <mesh key={x} position={[x, 0.65, -0.2]}>
+              <cylinderGeometry args={[0.03, 0.03, 0.6, 6]} />
+              <Toon color={C.ink} outline={false} />
+            </mesh>
+          ))}
+        </group>
+        <WifiArcs ping={ping} />
+        <mesh position={[0, 0.8, 0]} visible={false}>
+          <boxGeometry args={[1.6, 1.8, 1.2]} />
+          <meshBasicMaterial />
+        </mesh>
+        {[0, 0.18, 0.36].map((d) => (
+          <Ripple key={d} kick={ping} position={[0, 0.25, 0]} color={C.cobalt} from={0.4} to={6.5} width={0.05} dur={1.2} delay={d} />
         ))}
-        <WifiArcs />
-      </group>
+        <PopText kick={ping} text="PING" position={[0, 2.0, 0.4]} size={0.45} color={C.cobalt} />
+      </Tappable>
 
       {/* a plant and a shelf */}
       <group position={[-4.8, 0.15, -2.2]}>

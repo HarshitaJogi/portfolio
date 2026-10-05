@@ -54,10 +54,15 @@ export function useHoverCursor() {
 }
 
 /** A short synthesized bell, for the ghungroo and the approve button. */
+// one audio context for every chime on the site: browsers cap how many can exist
+let audioCtx: AudioContext | null = null;
+
 export function chime(base = 1320) {
   try {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new Ctx();
+    audioCtx ??= new Ctx();
+    const ctx = audioCtx;
+    if (ctx.state === "suspended") void ctx.resume();
     [1, 2.76, 5.4].forEach((m, i) => {
       const o = ctx.createOscillator();
       const g = ctx.createGain();

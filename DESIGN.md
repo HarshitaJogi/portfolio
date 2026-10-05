@@ -1,6 +1,39 @@
 # Harshita Jogi: Portfolio Design Doc
 
-## v5 "A map of the resume" (Oct 2026), current
+## v6 "Never stuck" (Oct 2026), current
+
+**Why:** scrolling drove the camera, so a fast scroll skipped whole steps and the next move was never obvious. The island was pretty but you could not pick a place on it. Bullets were long.
+
+**Navigation, rebuilt around one rule: there is always one big obvious next thing to press.**
+- **No scroll tour.** Every page shows one card at a time. Each card ends with the same footer: Back on the left, a big popping **Next** on the right that names where it goes ("Next: MSCI", "Finish Experience", "Continue to Projects"). Arrow keys, swipes, the rail dots and the URL hash (`/experience#nokia`) all move the same step. Trying to scroll makes the Next button wiggle.
+- **Camera:** each move is a timed flight, about 1.3 to 2.8 s with an ease in and out, so it can't race ahead.
+- **The hub is a map.** Drag to turn the island, which drifts when left alone. Every district has a big label. Tap a district or its label and the camera flies there, with a card summarising it and a big **ENTER**. ‹ › walk the districts. "See the island from above" shows the margam. On phones a strip of district buttons replaces the 3D labels.
+- **Buttons pop.** They are chunky and ink-outlined, press into the page with a hard shadow collapse, play a soft synthesized pop, and burst a few confetti dots.
+
+**Cards:** concise one-line highlights with a coloured tick and the numbers marked. The full bullets fold behind a dashed "Read the full details" button. Type is about 15% bigger throughout.
+
+**Travelers:** pick Bolt the robot, Mochi the cat, Pip the duckling, Gajju the baby elephant or Mayu the peacock. Mayu fans its tail and does a Bharatanatyam head slide when it cheers.
+- **In worlds:** it walks the bridges. In Experience it boards a little plane and flies city to city.
+- **On the hub:** it runs around the shore to the district you picked.
+- **Cheering:** it cheers on stamps, approvals and easter eggs. Click it and it says a line.
+
+**Passport:** finish a world and its stamp thuds down, dated. The nav shows 0/5 to 5/5. The hub's margam path fills with colour as worlds are stamped. All five stamps unlock a finale and the contact card.
+
+**Places:**
+- **Venues:** Bitgig is at UC Berkeley (a campanile with live Berkeley time and a bell tune), and TryBud is at Harvard Hack-o-Ween in Boston (brownstones and a live Boston clock).
+- **Universities:** University of Mumbai and Northeastern University are named on their buildings, with the city as a smaller label.
+
+**Interaction:** every islet and district has 2 to 4 things to click. Each one is marked with a bobbing hint until the first tap, and plays a sound, an animation and usually a pop-up word.
+
+**Performance:**
+- **Shared outline geometry:** ink outlines share one creased geometry per shape (`world/ink.tsx`).
+- **Shared rounded boxes:** rounded boxes share one geometry per size (`world/rounded.tsx`). Together these cut mount time sharply.
+- **Phones:** no shadow pass.
+- **Lighthouse (production build):** desktop is 100 in every category. Mobile performance is 75 to 89, with accessibility, best practices and SEO at 100.
+
+The v5 and earlier sections below are kept for the record.
+
+## v5 "A map of the resume" (Oct 2026), superseded
 
 **Why:** v4 looked right, but the island was a list of things she did in no particular order. A recruiter liked the look and could not get a clear picture. v5 keeps the island and gives it structure.
 

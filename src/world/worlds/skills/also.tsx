@@ -1,12 +1,15 @@
 "use client";
 
 import { Line } from "@react-three/drei";
-import { useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { C } from "../../palette";
 import { Label } from "../../bits";
 import type { DioramaProps } from "../Frame";
-import { Chalkboard, Crates, Market, Painted, paint, stack, type V3 } from "./kit";
+import { Chalkboard, Crates, Market, Painted, STALL_HINT, paint, stack, type V3 } from "./kit";
+import { Tappable } from "../../props/tappable";
+import { PopText, Ripple, hump, sfx, since, useKick, wiggle } from "@/world/fx";
 
 /*
  * Also familiar, and not yet shown in a role or project on this site. So the crates on
@@ -40,7 +43,13 @@ function cartGeometry() {
 }
 
 /** The legend, chalked on the board: a dashed swatch is a draft, a solid one is verified. */
-function Legend() {
+function Legend({ tap }: { tap: ReturnType<typeof useKick>[0] }) {
+  const solid = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    // the verified swatch swells and settles: solid is the goal
+    const w = wiggle(since(tap), 0.4, 16, 4);
+    solid.current?.scale.set(1 + w, 1 + w, 1);
+  });
   const sq = useMemo(() => [new THREE.Vector3(-0.2, -0.2, 0), new THREE.Vector3(0.2, -0.2, 0), new THREE.Vector3(0.2, 0.2, 0), new THREE.Vector3(-0.2, 0.2, 0), new THREE.Vector3(-0.2, -0.2, 0)], []);
   return (
     <group>
@@ -48,7 +57,7 @@ function Legend() {
       <Label size={0.28} color={C.cream} anchorX="left" position={[-0.5, -0.82, 0.08]}>
         DRAFT
       </Label>
-      <mesh position={[-0.88, -1.32, 0.08]}>
+      <mesh ref={solid} position={[-0.88, -1.32, 0.08]}>
         <planeGeometry args={[0.4, 0.4]} />
         <meshBasicMaterial color={C.green} />
       </mesh>
@@ -61,6 +70,17 @@ function Legend() {
 
 export default function Also({ step }: DioramaProps) {
   const cart = useMemo(() => cartGeometry(), []);
+  const rock = useRef<THREE.Group>(null);
+  const [bump, fireBump] = useKick();
+  const [tap, fireTap] = useKick();
+  useFrame(() => {
+    const s = since(bump);
+    const g = rock.current;
+    if (!g) return;
+    // rocked on its wheel: tips forward, bounces back, settles
+    g.rotation.z = wiggle(s, 0.12, 10, 3);
+    g.position.y = 0.62 + hump(s, 0.3) * 0.25;
+  });
   const crates = useMemo(() => {
     const names = step.chips ?? [];
     // the two long names along the bottom of each row, the short ones beside them
@@ -74,14 +94,44 @@ export default function Also({ step }: DioramaProps) {
       color={C.plum}
       title="ALSO FAMILIAR"
       board={
-        <Chalkboard heading="THE RULE" position={[-3.5, 0, 2.7] as V3} rotation={0.35}>
-          <Legend />
-        </Chalkboard>
+        // out on the left, but back from the front edge, where the traveler stands
+        <Tappable
+          onTap={() => {
+            fireTap();
+            sfx.arp(660, 2, 0.08, "sine");
+          }}
+          hintAt={[-4.6, 3.35, 2.0]}
+          hintScale={STALL_HINT}
+        >
+          <Chalkboard heading="THE RULE" position={[-4.6, 0, 2.0] as V3} rotation={0.45}>
+            <Legend tap={tap} />
+          </Chalkboard>
+          <PopText kick={tap} text="SOLID" position={[-4.4, 3.2, 2.5]} size={0.34} color={C.green} />
+        </Tappable>
       }
     >
       <group position={[-0.3, 0.15, 0.9]} scale={1.12}>
-        <Painted geometry={cart} castShadow thickness={1.6} />
-        <Crates items={crates} dashed />
+        {/* pivots on the axle */}
+        <group ref={rock} position={[0.7, 0.62, 0]}>
+          <group position={[-0.7, -0.62, 0]}>
+            {/* the cart: give it a shove */}
+            <Tappable
+              onTap={() => {
+                if (since(bump) < 0.6) return;
+                fireBump();
+                sfx.clank(0.5);
+                sfx.boop(0.5);
+              }}
+              hintAt={[-3.6, 1.6, 0]}
+              hintScale={STALL_HINT / 1.12}
+            >
+              <Painted geometry={cart} castShadow thickness={1.6} />
+            </Tappable>
+            <Crates items={crates} dashed />
+            <PopText kick={bump} text="BUMP" position={[-3.2, 1.6, 0.6]} size={0.34} color={C.plum} />
+          </group>
+        </group>
+        <Ripple kick={bump} position={[0.7, 0.03, 0]} color={C.cream} from={0.5} to={2.2} dur={0.6} />
       </group>
     </Market>
   );

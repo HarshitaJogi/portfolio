@@ -1,14 +1,17 @@
 "use client";
 
-import { Line, RoundedBox } from "@react-three/drei";
+import { Line } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { C } from "../../palette";
 import { Toon } from "../../toon";
 import { Label, chime, useHoverCursor } from "../../bits";
 import type { DioramaProps } from "../Frame";
-import { Crates, Market, paint, smooth, stack } from "./kit";
+import { Crates, Market, STALL_HINT, paint, smooth, stack } from "./kit";
+import { Tappable, TapHint } from "../../props/tappable";
+import { Burst, PopText, hump, sfx, since, squash, useKick, wiggle } from "@/world/fx";
 
 const LOOP = 8;
 
@@ -57,6 +60,13 @@ function Agent() {
   const draft = useRef<THREE.Group>(null);
   const solid = useRef<THREE.Group>(null);
   const { bind } = useHoverCursor();
+  const [grounded, fireGrounded] = useKick();
+  const [boop, fireBoop] = useKick();
+  const [clank, fireClank] = useKick();
+  const [seen, setSeen] = useState(false);
+  const box = useRef<THREE.Group>(null);
+  const tool = useRef<THREE.Mesh>(null);
+  const hop = useRef<THREE.Group>(null);
 
   const shape = useMemo(() => bubbleShape(2.5, 0.9), []);
   const outline = useMemo(() => shape.getPoints(6).map((p) => new THREE.Vector3(p.x, p.y, 0)), [shape]);
@@ -86,7 +96,20 @@ function Agent() {
       const pop = smooth((t - 3.4) / 0.25);
       solid.current.scale.setScalar(0.85 + 0.15 * pop + Math.sin(Math.min(1, (t - 3.4) / 0.5) * Math.PI) * 0.08);
     }
-    if (antenna.current) antenna.current.color.set(verified ? C.green : Math.sin(now * 6) > 0 ? C.sun : C.coral);
+    if (antenna.current) antenna.current.color.set(since(boop) < 0.8 ? C.rose : verified ? C.green : Math.sin(now * 6) > 0 ? C.sun : C.coral);
+    // a poke: the robot hops and spins once
+    const b = since(boop);
+    if (hop.current) {
+      hop.current.position.y = hump(b, 0.55) * 0.9;
+      hop.current.rotation.y = b < 0.55 ? (b / 0.55) * Math.PI * 2 : 0;
+    }
+    // the toolbox rattles and a tool jumps out and back
+    const c = since(clank);
+    if (box.current) squash(box.current, wiggle(c, 0.22));
+    if (tool.current) {
+      tool.current.position.y = 0.85 + hump(c, 0.6) * 1.1;
+      tool.current.rotation.z = 0.35 + (c < 0.6 ? c * 14 : 0);
+    }
   });
 
   // clicking jumps the loop to the moment the docs arrive (applied on the next frame, where the clock is)
@@ -99,13 +122,28 @@ function Agent() {
   const verify = (e: { stopPropagation: () => void }) => {
     e.stopPropagation();
     verifyNow.current = true;
+    setSeen(true);
+    fireGrounded();
     chime(990);
+    sfx.arp(990, 3, 0.06, "sine");
   };
 
   return (
     <group>
-      {/* the robot */}
-      <group ref={robot} position={[1.15, 0.15, -0.7]}>
+      {/* the robot: poke it */}
+      <Tappable
+        onTap={() => {
+          if (since(boop) < 0.6) return;
+          fireBoop();
+          sfx.boop(1.2);
+          setTimeout(() => sfx.beep(1), 160);
+        }}
+        position={[1.15, 0.15, -0.7]}
+        hintAt={[-0.75, 3.0, 0.3]}
+        hintScale={STALL_HINT / 1.15}
+      >
+      <group ref={hop}>
+      <group ref={robot}>
         <RoundedBox args={[1.35, 0.42, 0.95]} radius={0.16} position={[0, 0.23, 0]}>
           <Toon color={C.ink} />
         </RoundedBox>
@@ -151,9 +189,23 @@ function Agent() {
           </group>
         </group>
       </group>
+      </group>
+      <PopText kick={boop} text="BEEP BOOP" position={[-0.2, 3.5, 0.6]} size={0.34} color={C.coral} />
+      </Tappable>
 
-      {/* the toolbox it reaches into */}
-      <group position={[2.85, 0.15, 0.55]} rotation={[0, -0.25, 0]}>
+      {/* the toolbox it reaches into: give it a rattle */}
+      <Tappable
+        onTap={() => {
+          if (since(clank) < 0.5) return;
+          fireClank();
+          sfx.clank();
+        }}
+        position={[2.85, 0.15, 0.55]}
+        rotation={[0, -0.25, 0]}
+        hintAt={[0, 1.75, 0]}
+        hintScale={STALL_HINT / 1.15}
+      >
+        <group ref={box}>
         <mesh position={[0, 0.36, 0]} castShadow>
           <boxGeometry args={[1.35, 0.72, 0.8]} />
           <Toon color={C.red} />
@@ -166,14 +218,16 @@ function Agent() {
           <torusGeometry args={[0.32, 0.05, 6, 16, Math.PI]} />
           <Toon color={C.ink} outline={false} />
         </mesh>
-        <mesh position={[-0.38, 0.85, 0.12]} rotation={[0.1, 0, 0.35]}>
-          <cylinderGeometry args={[0.07, 0.07, 0.42, 8]} />
-          <Toon color={C.sun} outline={false} />
-        </mesh>
         <Label size={0.3} color={C.cream} position={[0, 0.34, 0.41]}>
           MCP
         </Label>
-      </group>
+        </group>
+        <mesh ref={tool} position={[-0.38, 0.85, 0.12]} rotation={[0.1, 0, 0.35]}>
+          <cylinderGeometry args={[0.07, 0.07, 0.42, 8]} />
+          <Toon color={C.sun} outline={false} />
+        </mesh>
+        <PopText kick={clank} text="CLANK" position={[0, 1.6, 0.5]} size={0.32} color={C.red} />
+      </Tappable>
 
       {/* the answer: dashed while it is a draft, solid once it is grounded */}
       <group position={[-0.35, 3.2, -0.4]} onClick={verify} {...bind}>
@@ -187,6 +241,7 @@ function Agent() {
             DRAFT
           </Label>
         </group>
+        {!seen && <TapHint position={[-1.65, 0.15, 0.2]} scale={STALL_HINT / 1.15} />}
         <group ref={solid} visible={false}>
           <mesh position={[0, 0, -0.07]}>
             <extrudeGeometry args={[shape, extrude]} />
@@ -196,6 +251,7 @@ function Agent() {
             VERIFIED
           </Label>
         </group>
+        <Burst kick={grounded} origin={[0, 0.2, 0.2]} count={14} colors={[C.green, C.sun, C.cream]} size={0.12} speed={2.2} up={2.2} dur={1} />
       </group>
     </group>
   );

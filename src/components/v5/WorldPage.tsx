@@ -1,28 +1,73 @@
 "use client";
 
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { worlds, type World, type WorldId, type WorldStep } from "@/content/profile";
 import { island, useIsland } from "@/world/state";
 import { chime } from "@/world/bits";
 import { findEgg } from "@/world/eggs";
-import { worldNav } from "@/world/nav";
+import { resetJourney, setJourney } from "@/world/scroll";
+import { travelerCheer } from "@/world/traveler";
 import { useReducedMotion } from "@/lib/device";
 import { cn } from "@/lib/utils";
-import { CardShell, Chips, colorOf, Hud, LinkRow, LocalTime, Rich } from "./cards";
-import { useStepProgress } from "./useStepProgress";
+import { CardShell, Chips, colorOf, Hud, LocalTime, Rich } from "./cards";
+import { PopButton } from "./PopButton";
+import { stamp } from "./passportStore";
+import { StampMoment } from "./Passport";
 
 const yearOf = (s: WorldStep) => /\b(20\d\d)\b/.exec(s.kicker)?.[1] ?? "";
-const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+const shortOf = (s: WorldStep) => s.short ?? s.title.replace(/\.$/, "");
 
-function Bullets({ items }: { items: string[] }) {
+/** One-line highlights, numbers marked, with a coloured tick. */
+function Highlights({ items, color }: { items: string[]; color: string }) {
   return (
-    <ul className="space-y-2.5 text-[0.9688rem] leading-relaxed md:text-[1.0313rem]">
-      {items.map((b) => (
-        <li key={b} className="relative pl-5 before:absolute before:top-[0.72em] before:left-0 before:h-[3px] before:w-2.5 before:rounded-full before:bg-ink">
-          <Rich text={b} />
+    <ul className="space-y-1.5">
+      {items.map((h) => (
+        <li key={h} className="flex items-center gap-3 text-[1.0625rem] leading-snug md:text-[1.1875rem]">
+          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border-[2.5px] border-ink" style={{ background: color }} aria-hidden="true">
+            <svg viewBox="0 0 12 12" className="h-3 w-3">
+              <path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#2b1e1a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <span>
+            <Rich text={h} />
+          </span>
         </li>
       ))}
     </ul>
+  );
+}
+
+/** The full bullets, folded away behind an obvious button. */
+function Details({ items, label }: { items: string[]; label: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="group inline-flex items-center gap-2.5 rounded-full border-[2.5px] border-dashed border-ink bg-white/60 px-4 py-2 text-[0.9375rem] font-semibold transition-colors hover:border-solid hover:bg-[#ffc93c]"
+      >
+        <span className={cn("grid h-6 w-6 place-items-center rounded-full border-2 border-ink bg-[#fff8ec] text-[0.875rem] leading-none transition-transform", open && "rotate-45")} aria-hidden="true">
+          +
+        </span>
+        {open ? "Hide the details" : label}
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
+            <ul className="space-y-2 pt-3">
+              {items.map((b) => (
+                <li key={b} className="relative pl-5 text-[0.9688rem] leading-relaxed before:absolute before:top-[0.7em] before:left-0 before:h-[3px] before:w-2.5 before:rounded-full before:bg-ink md:text-[1rem]">
+                  <Rich text={b} />
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -32,219 +77,192 @@ function Extra({ step }: { step: WorldStep }) {
   if (step.id === "nokia")
     return (
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
+        <PopButton
+          tone={approved ? "green" : "primary"}
+          size="md"
+          className={approved ? "" : "bg-[#c8102e]! text-[#fff8ec]!"}
           onClick={() => {
             island.set({ approved: !approved });
             if (!approved) {
               chime(880);
               findEgg("approve");
+              travelerCheer();
             }
           }}
-          className={cn(
-            "inline-flex h-12 items-center rounded-full border-[3px] border-ink px-6 font-display text-[1rem] shadow-[4px_4px_0_var(--ink)] transition-transform active:translate-y-0.5",
-            approved ? "bg-[#3bb273] text-ink" : "bg-[#c8102e] text-[#fff8ec]",
-          )}
-          aria-pressed={approved}
         >
           {approved ? "Approved ✓" : "APPROVE"}
-        </button>
-        <span className="font-mono text-[0.8125rem]">{approved ? "Verified. Thanks, human." : step.hint}</span>
+        </PopButton>
+        <span className="font-mono text-[0.875rem]">{approved ? "Verified. Thanks, human." : step.hint}</span>
       </div>
     );
   if (step.id === "dance")
     return (
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
+        <PopButton
+          tone="sun"
+          size="md"
           onClick={() => {
             chime(1500);
             setTimeout(() => chime(1850), 90);
             island.set({ bells: bells + 1 });
             findEgg("bells");
           }}
-          className="inline-flex h-12 items-center rounded-full border-[3px] border-ink bg-[#ffc93c] px-6 font-display text-[1rem] shadow-[4px_4px_0_var(--ink)] active:translate-y-0.5"
         >
           Ring the bells
-        </button>
-        {bells > 0 && <span className="font-mono text-[0.8125rem]">Rung {bells} {bells === 1 ? "time" : "times"}</span>}
+        </PopButton>
+        {bells > 0 && (
+          <span className="font-mono text-[0.875rem]">
+            Rung {bells} {bells === 1 ? "time" : "times"}
+          </span>
+        )}
       </div>
     );
   if (step.id === "trybud")
     return (
-      <p className="mt-5 font-mono text-[0.8125rem]" aria-live="polite">
+      <p className="mt-5 font-mono text-[0.875rem]" aria-live="polite">
         {pumpkins >= 5 ? "All five lit. Happy Hack-o-Ween." : `↳ ${step.hint} · ${pumpkins} of 5 lit`}
       </p>
     );
-  return step.hint ? <p className="mt-5 font-mono text-[0.8125rem]">↳ {step.hint}</p> : null;
+  return step.hint ? <p className="mt-5 font-mono text-[0.875rem]">↳ {step.hint}</p> : null;
 }
 
-function StepCard({ world, step, n, total }: { world: World; step: WorldStep; n: number; total: number }) {
-  const items = world.steps.filter((s) => s.kind === "item");
+function StepBody({ world, step, go, items }: { world: World; step: WorldStep; go: (i: number) => void; items: { s: WorldStep; i: number }[] }) {
+  const color = colorOf(world.margam);
 
   if (step.kind === "intro")
     return (
-      <CardShell className="p-7 md:p-10">
-        <Hud margam={world.margam}>{step.kicker}</Hud>
-        <h1 className="font-display mt-4 text-[clamp(2.8rem,6vw,5.75rem)] leading-[0.95] tracking-[-0.02em]">{step.title}</h1>
-        {step.lede && <p className="mt-4 text-[1.125rem] leading-snug font-semibold md:text-[1.375rem]">{step.lede}</p>}
-        <ol className="mt-6 space-y-1.5">
-          {items.map((s, i) => (
+      <>
+        <h1 className="font-display mt-4 text-[clamp(3rem,6.4vw,6.25rem)] leading-[0.95] tracking-[-0.02em]">{step.title}</h1>
+        {step.lede && <p className="mt-4 text-[1.1875rem] leading-snug font-semibold md:text-[1.5rem]">{step.lede}</p>}
+        <ol className="mt-6 grid gap-1.5">
+          {items.map(({ s, i }, n) => (
             <li key={s.id}>
-              <a
-                href={`#${s.id}`}
-                onClick={(e) => (e.preventDefault(), scrollTo(s.id))}
-                className="group flex items-baseline gap-3 rounded-lg py-1 text-[1rem] no-underline md:text-[1.0625rem]"
-              >
-                <span className="w-6 shrink-0 font-mono text-[0.8125rem] text-ink/80">{String(i + 1).padStart(2, "0")}</span>
-                <span className="font-semibold underline decoration-transparent decoration-2 underline-offset-4 transition-colors group-hover:decoration-ink">{s.title}</span>
-                {s.subtitle && world.id !== "skills" && <span className="hidden truncate text-ink/70 sm:inline">{s.subtitle}</span>}
-                {yearOf(s) && <span className="ml-auto shrink-0 font-mono text-[0.8125rem]">{yearOf(s)}</span>}
-              </a>
+              <button type="button" onClick={() => go(i)} className="group flex w-full items-center gap-3 rounded-2xl border-[2.5px] border-transparent px-2 py-1.5 text-left transition-colors hover:border-ink hover:bg-white/60">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-[2.5px] border-ink font-mono text-[0.8125rem] font-semibold" style={{ background: color }}>
+                  {n + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[1.0625rem] font-semibold md:text-[1.1875rem]">{s.title}</span>
+                  {s.subtitle && world.id !== "skills" && <span className="block truncate text-[0.875rem] text-ink/80">{s.subtitle}</span>}
+                </span>
+                {yearOf(s) && <span className="shrink-0 font-mono text-[0.875rem]">{yearOf(s)}</span>}
+                <span className="shrink-0 transition-transform group-hover:translate-x-1" aria-hidden="true">
+                  →
+                </span>
+              </button>
             </li>
           ))}
         </ol>
-        {step.hint && (
-          <p className="mt-6 flex items-center gap-2 font-mono text-[0.8125rem]">
-            <span aria-hidden="true" className="inline-block animate-bounce">
-              ↓
-            </span>
-            {step.hint}
-          </p>
-        )}
-      </CardShell>
+      </>
     );
 
   if (step.kind === "next")
     return (
-      <CardShell className="p-7 md:p-10">
-        <Hud margam={world.margam}>{step.kicker}</Hud>
-        <h2 id={`${step.id}-title`} className="font-display mt-4 text-[clamp(2.4rem,5vw,4.75rem)] leading-[0.96] tracking-[-0.02em]">
+      <>
+        <h2 id={`${step.id}-title`} className="font-display mt-4 text-[clamp(2.6rem,5vw,4.75rem)] leading-[0.96] tracking-[-0.02em]">
           {step.title}
         </h2>
-        {step.lede && <p className="mt-4 text-[1.0625rem] leading-snug md:text-[1.25rem]">{step.lede}</p>}
-        {step.links && <LinkRow links={step.links} className="mt-7" />}
-      </CardShell>
+        {step.lede && <p className="mt-4 text-[1.125rem] leading-snug md:text-[1.375rem]">{step.lede}</p>}
+      </>
     );
 
   return (
-    <CardShell className="p-6 md:p-8">
-      <Hud margam={world.margam} right={`${n} / ${total}`}>
-        {world.label}
-      </Hud>
+    <>
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <p className="font-mono text-[0.8125rem] font-medium md:text-[0.875rem]">{step.kicker}</p>
+        <p className="font-mono text-[0.875rem] font-medium md:text-[0.9375rem]">{step.kicker}</p>
         {step.place && <LocalTime place={step.place} />}
       </div>
-      <h2 id={`${step.id}-title`} className="font-display mt-3 text-[clamp(2rem,3.6vw,3.4rem)] leading-[0.98] tracking-[-0.015em]">
+      <h2 id={`${step.id}-title`} className="font-display mt-3 text-[clamp(2.3rem,4.2vw,4rem)] leading-[0.96] tracking-[-0.015em]">
         {step.title}
       </h2>
-      {step.subtitle && <p className="mt-2 text-[1.0625rem] leading-snug font-semibold md:text-[1.25rem]">{step.subtitle}</p>}
+      {step.subtitle && <p className="mt-2 text-[1.125rem] leading-snug font-semibold md:text-[1.375rem]">{step.subtitle}</p>}
 
       {step.facts && (
         <dl className="mt-4 flex flex-wrap gap-2.5">
           {step.facts.map((f) => (
-            <div key={f.label} className="rounded-2xl border-[3px] border-ink bg-[#ffc93c] px-3.5 py-1.5 shadow-[3px_3px_0_var(--ink)]">
-              <dt className="font-mono text-[0.6875rem] tracking-[0.06em] uppercase">{f.label}</dt>
-              <dd className="font-display text-[1.25rem] leading-tight md:text-[1.5rem]">{f.value}</dd>
+            <div key={f.label} className="rounded-2xl border-[3px] border-ink bg-[#ffc93c] px-4 py-1.5 shadow-[3px_3px_0_var(--ink)]">
+              <dt className="font-mono text-[0.75rem] tracking-[0.06em] uppercase">{f.label}</dt>
+              <dd className="font-display text-[1.375rem] leading-tight md:text-[1.625rem]">{f.value}</dd>
             </div>
           ))}
         </dl>
       )}
 
       {step.lede && (
-        <p className="mt-4 text-[1.0313rem] leading-snug md:text-[1.1875rem]">
+        <p className="mt-4 text-[1.0625rem] leading-snug text-ink/90 md:text-[1.1875rem]">
           <Rich text={step.lede} />
         </p>
       )}
 
-      {step.bullets && (
-        <>
-          <div className="mt-4 hidden md:block">
-            <Bullets items={step.bullets} />
-          </div>
-          <details className="group mt-4 md:hidden">
-            <summary className="inline-flex cursor-pointer list-none items-center gap-2 font-mono text-[0.8125rem] font-medium [&::-webkit-details-marker]:hidden">
-              <span className="grid h-6 w-6 place-items-center rounded-full border-2 border-ink text-[0.75rem] transition-transform group-open:rotate-45" aria-hidden="true">
-                +
-              </span>
-              {world.id === "experience" ? "What I did" : world.id === "education" ? "Awards" : "Details"}
-            </summary>
-            <div className="mt-3">
-              <Bullets items={step.bullets} />
-            </div>
-          </details>
-        </>
+      {step.highlights && (
+        <div className="mt-4">
+          <Highlights items={step.highlights} color={color} />
+        </div>
       )}
 
       {step.used && (
         <div className="mt-4">
-          <p className="font-mono text-[0.75rem] tracking-[0.06em] uppercase">Where I used it</p>
-          <ul className="mt-2 space-y-1.5 text-[0.9688rem] leading-snug md:text-[1.0313rem]">
-            {step.used.map((u) => (
-              <li key={u.where}>
-                {u.href ? (
-                  <a
-                    href={u.href}
-                    className="font-semibold underline decoration-2 underline-offset-4"
-                    onClick={(e) => {
-                      if (e.metaKey || e.ctrlKey) return;
-                      e.preventDefault();
-                      worldNav.go(u.href!);
-                    }}
-                  >
-                    {u.where}
-                  </a>
-                ) : (
-                  <span className="font-semibold">{u.where}</span>
-                )}
-                <span className="text-ink/80">: {u.what}</span>
-              </li>
-            ))}
-          </ul>
+          <p className="font-mono text-[0.8125rem] tracking-[0.06em] uppercase">Where I used it</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {step.used.map((u) =>
+              u.href ? (
+                <PopButton key={u.where} href={u.href} size="sm" tone="secondary" icon="↗">
+                  {u.where}
+                </PopButton>
+              ) : (
+                <span key={u.where} className="rounded-full border-2 border-ink px-3 py-1 font-semibold">
+                  {u.where}
+                </span>
+              ),
+            )}
+          </div>
         </div>
       )}
 
       {step.chips && <Chips items={step.chips} className="mt-4" />}
-      {step.links && <LinkRow links={step.links} className="mt-5" />}
+
+      {step.bullets && <Details items={step.bullets} label={step.highlights ? "Read the full details" : "Show the details"} />}
+      {step.used && <Details items={step.used.map((u) => `${u.where}: ${u.what}`)} label="How I used each one" />}
+
+      {step.links && (
+        <div className="mt-5 flex flex-wrap gap-3">
+          {step.links.map((l) => (
+            <PopButton key={l.href} href={l.href} size="md" tone={l.primary ? "sun" : "secondary"}>
+              {l.label}
+            </PopButton>
+          ))}
+        </div>
+      )}
       <Extra step={step} />
-    </CardShell>
+    </>
   );
 }
 
-/** The path, as a list: where you are, what is next. Click any stop to go there. */
-function Rail({ world, active }: { world: World; active: number }) {
+/** The path as dots on a dashed line, on the right. Click any stop to fly there. */
+function Rail({ world, active, go }: { world: World; active: number; go: (i: number) => void }) {
   const color = colorOf(world.margam);
   return (
     <>
       <nav aria-label={`${world.label}, steps`} className="fixed top-1/2 right-4 z-40 hidden -translate-y-1/2 lg:block">
         <ol className="relative flex flex-col items-end gap-1">
-          {/* the path line behind the dots */}
           <span aria-hidden="true" className="absolute top-3 right-[13px] bottom-3 w-0 border-r-[3px] border-dashed border-ink/60" />
           {world.steps.map((s, i) => {
             const on = i === active;
-            const label = s.kind === "intro" ? "Start" : s.kind === "next" ? "Next" : s.title;
-            const year = yearOf(s);
+            const label = s.kind === "intro" ? "Start" : s.kind === "next" ? "Next world" : shortOf(s);
             return (
               <li key={s.id} className="relative">
-                <button
-                  type="button"
-                  onClick={() => scrollTo(s.id)}
-                  aria-current={on ? "step" : undefined}
-                  aria-label={label}
-                  className="group flex items-center gap-2 py-0.5"
-                >
+                <button type="button" onClick={() => go(i)} aria-current={on ? "step" : undefined} aria-label={label} className="group flex items-center gap-2 py-0.5">
                   <span
                     className={cn(
-                      "rounded-full border-[3px] border-ink px-2.5 py-0.5 font-mono text-[0.75rem] whitespace-nowrap shadow-[2px_2px_0_var(--ink)] transition-all",
+                      "rounded-full border-[3px] border-ink px-2.5 py-0.5 font-mono text-[0.8125rem] whitespace-nowrap shadow-[2px_2px_0_var(--ink)] transition-all",
                       on ? "bg-ink text-[#fff8ec]" : "bg-[#fff8ec] text-ink opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
                     )}
                   >
-                    {on ? label : year || label}
+                    {label}
                   </span>
                   <span
-                    className={cn("relative h-[29px] w-[29px] shrink-0 rounded-full border-[3px] border-ink transition-transform", on ? "scale-100" : "scale-[0.62] bg-[#fff8ec]")}
-                    style={on ? { background: color } : undefined}
+                    className={cn("relative h-[29px] w-[29px] shrink-0 rounded-full border-[3px] border-ink transition-transform", on ? "scale-100" : i < active ? "scale-[0.62]" : "scale-[0.62] bg-[#fff8ec]")}
+                    style={on || i < active ? { background: color } : undefined}
                     aria-hidden="true"
                   />
                 </button>
@@ -253,51 +271,185 @@ function Rail({ world, active }: { world: World; active: number }) {
           })}
         </ol>
       </nav>
-      {/* phones: a thin segmented strip under the nav */}
-      <div aria-hidden="true" className="fixed inset-x-[var(--gutter)] top-[4.25rem] z-40 flex gap-1 lg:hidden">
+      {/* phones: a segmented strip under the nav, each segment a stop */}
+      <div className="fixed inset-x-[var(--gutter)] top-[4.25rem] z-40 flex gap-1 lg:hidden">
         {world.steps.map((s, i) => (
-          <span key={s.id} className={cn("h-1.5 flex-1 rounded-full border border-ink transition-colors", i <= active ? "" : "bg-[#fff8ec]/80")} style={i <= active ? { background: color } : undefined} />
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => go(i)}
+            aria-label={s.kind === "intro" ? "Start" : s.kind === "next" ? "Next world" : shortOf(s)}
+            className={cn("h-2.5 flex-1 rounded-full border-2 border-ink transition-colors", i <= active ? "" : "bg-[#fff8ec]/90")}
+            style={i <= active ? { background: color } : undefined}
+          />
         ))}
       </div>
     </>
   );
 }
 
-/** A world: an intro, one card per entry in time order, and the way on. */
+/**
+ * A world, one step at a time. Big Next and Back buttons, arrow keys, swipes, the rail,
+ * and the URL hash all move the same step. Nothing depends on scrolling.
+ */
 export function WorldPage({ id }: { id: WorldId }) {
   const world = worlds[id];
-  const { bind, active } = useStepProgress();
+  const steps = world.steps;
+  const [active, setActive] = useState(0);
+  const [nudge, setNudge] = useState(false);
+  const [stamped, setStamped] = useState(false);
+  const [moved, setMoved] = useState(false);
   const reduced = useReducedMotion();
-  const total = world.steps.filter((s) => s.kind === "item").length;
-  let n = 0;
+  const activeRef = useRef(0);
+  const items = steps.map((s, i) => ({ s, i })).filter(({ s }) => s.kind === "item");
+  const total = items.length;
+
+  const go = useCallback(
+    (i: number) => {
+      const n = Math.min(Math.max(i, 0), steps.length - 1);
+      if (n === activeRef.current) return;
+      activeRef.current = n;
+      setActive(n);
+      setMoved(true);
+      setJourney(n);
+      const s = steps[n];
+      history.replaceState(null, "", n === 0 ? window.location.pathname : `#${s.id}`);
+      if (s.kind === "next" && stamp(world.id)) {
+        setStamped(true);
+        travelerCheer();
+      }
+    },
+    [steps, world.id],
+  );
+
+  // Start where the hash says (/experience#nokia), with no flight to get there.
+  useEffect(() => {
+    const i = steps.findIndex((s) => `#${s.id}` === window.location.hash);
+    const start = i > 0 ? i : 0;
+    activeRef.current = start;
+    resetJourney(start);
+    if (start) {
+      const r = requestAnimationFrame(() => setActive(start));
+      return () => cancelAnimationFrame(r);
+    }
+  }, [steps]);
+
+  // Keys, swipes, and a nudge toward the Next button for anyone who tries to scroll.
+  useEffect(() => {
+    let nudgeOff = 0;
+    let lastWheel = 0;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.closest("input, textarea, [contenteditable], dialog, [cmdk-root]")) return;
+      if (["ArrowRight", "ArrowDown", "PageDown"].includes(e.key)) {
+        e.preventDefault();
+        go(activeRef.current + 1);
+      }
+      if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) {
+        e.preventDefault();
+        go(activeRef.current - 1);
+      }
+      if (e.key === "Home") go(0);
+      if (e.key === "End") go(steps.length - 1);
+    };
+    let sx = 0;
+    let sy = 0;
+    const onStart = (e: TouchEvent) => {
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+    };
+    const onEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 70 && Math.abs(dy) < 60) go(activeRef.current + (dx < 0 ? 1 : -1));
+    };
+    const onWheel = (e: WheelEvent) => {
+      if ((e.target as HTMLElement).closest(".card-scroll")) return;
+      const now = performance.now();
+      if (Math.abs(e.deltaY) < 20 || now - lastWheel < 1200) return;
+      lastWheel = now;
+      setNudge(true);
+      window.clearTimeout(nudgeOff);
+      nudgeOff = window.setTimeout(() => setNudge(false), 1600);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchend", onEnd, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: true });
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchend", onEnd);
+      window.removeEventListener("wheel", onWheel);
+      window.clearTimeout(nudgeOff);
+    };
+  }, [go, steps.length]);
+
+  const step = steps[active];
+  const nextStep = steps[active + 1];
+  const nItem = items.findIndex((x) => x.i === active) + 1;
+  const nextLink = step.kind === "next" ? step.links?.find((l) => l.primary) : undefined;
+
   return (
     <>
-      <main id="main" className="relative">
-        {world.steps.map((s, i) => {
-          if (s.kind === "item") n++;
-          return (
-            <section
-              key={s.id}
-              id={s.id}
-              ref={bind(i)}
-              aria-labelledby={s.kind === "intro" ? undefined : `${s.id}-title`}
-              className="pointer-events-none relative flex min-h-[100svh] snap-center items-end px-[var(--gutter)] pt-24 pb-6 md:items-center md:pb-0"
-            >
-              <motion.div
-                className="pointer-events-auto w-full md:w-[min(46vw,42rem)]"
-                initial={i === 0 || reduced ? false : { y: 70, rotate: i % 2 ? 2 : -2, scale: 0.95 }}
-                whileInView={{ y: 0, rotate: 0, scale: 1 }}
-                viewport={{ amount: 0.3 }}
-                transition={{ type: "spring", stiffness: 170, damping: 18 }}
-              >
-                <StepCard world={world} step={s} n={n} total={total} />
-              </motion.div>
+      <main id="main" className="pointer-events-none fixed inset-0 z-10 flex items-end px-[var(--gutter)] pt-24 pb-3 md:items-center md:pb-0">
+        <div className="pointer-events-auto w-full md:w-[min(47vw,44rem)]">
+          {steps.map((s, i) => (
+            <section key={s.id} id={s.id} hidden={i !== active} aria-labelledby={s.kind === "intro" ? undefined : `${s.id}-title`}>
+              {i === active ? (
+                <motion.div
+                  key={s.id}
+                  // the first card is there at once (it is the LCP); later ones spring in
+                  initial={reduced || !moved ? false : { opacity: 0, y: 40, rotate: i % 2 ? 1.5 : -1.5, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 220, damping: 20 }}
+                >
+                  <CardShell className="flex max-h-[min(62svh,40rem)] flex-col md:max-h-[calc(100svh-8.5rem)]">
+                    <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-6 pb-4 md:p-9 md:pb-5">
+                      <Hud margam={world.margam} right={s.kind === "item" ? `${nItem} / ${total}` : undefined}>
+                        {s.kind === "intro" || s.kind === "next" ? s.kicker : world.label}
+                      </Hud>
+                      <StepBody world={world} step={s} go={go} items={items} />
+                    </div>
+                    {/* the way forward, always in the same place */}
+                    <div className="flex items-center gap-3 border-t-[3px] border-dashed border-ink/40 px-5 py-4 md:px-9 md:py-5">
+                      {active === 0 || step.kind === "next" ? (
+                        <PopButton href="/" tone="secondary" size="md" back iconLeft="←">
+                          Island
+                        </PopButton>
+                      ) : (
+                        <PopButton onClick={() => go(active - 1)} tone="secondary" size="md" back iconLeft="←" label="Back">
+                          <span className="hidden sm:inline">Back</span>
+                        </PopButton>
+                      )}
+                      <div className="ml-auto flex items-center gap-3">
+                        {nudge && <span className="hidden font-mono text-[0.8125rem] sm:inline">Use Next →</span>}
+                        {step.kind === "next" && nextLink ? (
+                          <PopButton href={nextLink.href} size="xl" icon="→" wiggle={nudge}>
+                            {nextLink.label.replace(/ →$/, "")}
+                          </PopButton>
+                        ) : (
+                          <PopButton onClick={() => go(active + 1)} size="xl" icon="→" wiggle={nudge}>
+                            {step.kind === "intro" ? "Start" : nextStep?.kind === "next" ? `Finish ${world.label}` : `Next: ${shortOf(nextStep)}`}
+                          </PopButton>
+                        )}
+                      </div>
+                    </div>
+                  </CardShell>
+                </motion.div>
+              ) : (
+                <CardShell>
+                  <div className="p-6">
+                    <StepBody world={world} step={s} go={go} items={items} />
+                  </div>
+                </CardShell>
+              )}
             </section>
-          );
-        })}
+          ))}
+        </div>
       </main>
-      <Rail world={world} active={active} />
+      <Rail world={world} active={active} go={go} />
+      {stamped && <StampMoment id={world.id} onDone={() => setStamped(false)} />}
     </>
   );
 }
-

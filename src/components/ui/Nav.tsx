@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { media, person } from "@/content/profile";
 import { Monogram } from "./Monogram";
 import { CommandTrigger } from "./CommandTrigger";
+import { PassportPill } from "@/components/v5/Passport";
 
 const links = [
   { href: "/education", label: "Education" },
@@ -67,8 +68,9 @@ export function Nav() {
               </Link>
             </li>
           </ul>
+          <PassportPill />
           <CommandTrigger />
-          <a href={media.resumePdf} target="_blank" rel="noopener" className="pill h-10 border-[3px] border-ink bg-[#ff6b4a] font-display text-ink no-underline shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5">
+          <a href={media.resumePdf} target="_blank" rel="noopener" className="pill h-10 border-[3px] border-ink bg-[#ff6b4a] font-display max-sm:hidden! text-ink no-underline shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5">
             Resume <span aria-hidden="true">↓</span>
             <span className="sr-only">, PDF, opens in a new tab</span>
           </a>

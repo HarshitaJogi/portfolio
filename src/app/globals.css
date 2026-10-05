@@ -146,7 +146,6 @@ html {
   -webkit-text-size-adjust: 100%;
   overflow-x: clip;
   scroll-behavior: smooth;
-  scroll-snap-type: y proximity;
 }
 body {
   background-color: var(--cream);
@@ -332,3 +331,18 @@ html:not(.js) .verified-line {
     --muted: #333333;
   }
 }
+
+/* v5: a nudge for the Next button when someone tries to scroll instead */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-4deg) scale(1.06); }
+  75% { transform: rotate(4deg) scale(1.06); }
+}
+@keyframes stamp-in {
+  0% { transform: translate(-50%, -50%) scale(2.4) rotate(-18deg); opacity: 0; }
+  55% { transform: translate(-50%, -50%) scale(0.92) rotate(-8deg); opacity: 1; }
+  70% { transform: translate(-50%, -50%) scale(1.04) rotate(-9deg); }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(-9deg); opacity: 1; }
+}
+/* thin, tidy scrollbars inside cards */
+.card-scroll { scrollbar-width: thin; scrollbar-color: var(--ink) transparent; }

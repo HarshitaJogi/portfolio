@@ -1,8 +1,9 @@
 "use client";
 
-import { Edges, Outlines, RoundedBox, Text } from "@react-three/drei";
+import { Edges, Outlines, Text } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -13,6 +14,11 @@ import { FONT, Label, chime, useHoverCursor } from "../../bits";
 import { atmo } from "../../atmosphere";
 import { Islet } from "../../props/basics";
 import { SPACING, anchor } from "../Frame";
+import { TapHint } from "../../props/tappable";
+import { HINT } from "@/world/fx";
+
+/** Hint size in stall space (the stall is built at SCALE). */
+export const STALL_HINT = HINT / 1.35;
 
 export type V3 = [number, number, number];
 
@@ -401,7 +407,7 @@ const crateGeo = new RoundedBoxGeometry(1, 1, 1, 2, 0.07);
  * Labelled crates, one instanced draw for all the bodies and one for the label plates.
  * `dashed` draws them as dashed outlines instead: familiar, not yet shown in a role.
  */
-export function Crates({ items, dashed = false }: { items: CrateSpec[]; dashed?: boolean }) {
+export function Crates({ items, dashed = false, hint = true }: { items: CrateSpec[]; dashed?: boolean; hint?: boolean }) {
   const bodies = useRef<THREE.InstancedMesh>(null);
   const plates = useRef<THREE.InstancedMesh>(null);
   const groups = useRef<(THREE.Group | null)[]>([]);
@@ -414,6 +420,9 @@ export function Crates({ items, dashed = false }: { items: CrateSpec[]; dashed?:
     return { crate, plate };
   }, []);
   const { bind } = useHoverCursor();
+  const [seen, setSeen] = useState(false);
+  // the hint floats over the topmost crate until one is clicked
+  const top = useMemo(() => items.reduce<CrateSpec | null>((a, b) => (!a || b.p[1] > a.p[1] + 0.01 ? b : a), null), [items]);
 
   useLayoutEffect(() => {
     const c = new THREE.Color();
@@ -455,6 +464,7 @@ export function Crates({ items, dashed = false }: { items: CrateSpec[]; dashed?:
     if (i === undefined || (hops.current[i] ?? 0) > 0.4) return;
     hops.current[i] = 1;
     chime(NOTES[i % NOTES.length]);
+    setSeen(true);
   };
 
   return (
@@ -470,6 +480,7 @@ export function Crates({ items, dashed = false }: { items: CrateSpec[]; dashed?:
           </instancedMesh>
         </>
       )}
+      {hint && !seen && top && <TapHint position={[top.p[0], top.p[1] + 1.0, top.p[2]]} scale={STALL_HINT} />}
       {items.map((it, i) => (
         <group
           key={it.t}

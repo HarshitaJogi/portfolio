@@ -1,6 +1,6 @@
 "use client";
 
-import { Outlines } from "@react-three/drei";
+import { InkOutline } from "./ink";
 import { useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 import { C } from "./palette";
@@ -79,7 +79,7 @@ export function Toon({ color, outline = true, thickness = 2.2, emissive }: { col
     <>
       <meshToonMaterial color={color} gradientMap={map} emissive={emissive ?? "#000000"} emissiveIntensity={emissive ? 0.6 : 0} />
       {/* drei bug: its shader branches are inverted, so the default (no `screenspace`) is the pixel-sized outline. */}
-      {outline && <Outlines thickness={thickness} color={C.ink} />}
+      {outline && <InkOutline thickness={thickness} color={C.ink} />}
     </>
   );
 }

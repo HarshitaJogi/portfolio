@@ -1,13 +1,15 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { C } from "../../palette";
 import { Toon, ToonInstances, type Instance } from "../../toon";
-import { Label } from "../../bits";
+import { Label, chime } from "../../bits";
 import { Islet } from "../../props/basics";
+import { Tappable } from "../../props/tappable";
+import { Burst, HINT, PopText, hump, sfx, since, useKick } from "@/world/fx";
 import { Boxes, Cyls, Glows, Moving, frameGeometry, hash, type V3 } from "./kit";
 
 /*
@@ -17,6 +19,7 @@ import { Boxes, Cyls, Glows, Moving, frameGeometry, hash, type V3 } from "./kit"
  * a bounding box per plant, green for healthy, red for blight. Behind the field the NDVI
  * board fills in tile by tile as the field is scanned, then rings the region of interest.
  * In front, the research tent and the $25,000 grant flag.
+ * Click the drone (a barrel roll), the grant flag (a spin) and the altitude pole.
  */
 
 const ROWS = 4;
@@ -183,8 +186,10 @@ function Field({ plants }: { plants: Plant[] }) {
 /** The drone: a cream body with a Jetson-style green board on its back and a camera underneath. */
 function Drone({ plants }: { plants: Plant[] }) {
   const g = useRef<THREE.Group>(null);
+  const roll = useRef<THREE.Group>(null);
   const beam = useRef<THREE.Mesh>(null);
   const led = useRef<THREE.MeshBasicMaterial>(null);
+  const [kick, fire] = useKick();
   const pos = useMemo(() => new THREE.Vector3(), []);
   const motors = useMemo<Instance[]>(
     () =>
@@ -202,6 +207,13 @@ function Drone({ plants }: { plants: Plant[] }) {
     if (g.current) {
       g.current.position.set(pos.x, pos.y + bob, pos.z);
       g.current.rotation.z += (-dir * (u < SCAN ? 0.14 : 0.05) - g.current.rotation.z) * 0.08;
+    }
+    if (roll.current) {
+      // a barrel roll: one full turn about the direction of flight, with a little hop
+      const s = since(kick);
+      const k = s < 0.9 ? s / 0.9 : 1;
+      roll.current.rotation.x = k * k * (3 - 2 * k) * Math.PI * 2;
+      roll.current.position.y = hump(s, 0.9) * 0.35;
     }
     if (beam.current) {
       beam.current.position.set(pos.x, (pos.y + 1.9) / 2, pos.z);
@@ -221,50 +233,68 @@ function Drone({ plants }: { plants: Plant[] }) {
         <meshBasicMaterial color={C.sun} transparent opacity={0.22} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       <group ref={g} scale={1.45}>
-        <RoundedBox args={[1.05, 0.32, 0.78]} radius={0.1} castShadow>
-          <Toon color={C.cream} />
-        </RoundedBox>
-        {/* the Jetson-style compute board: green PCB, silver heat sink, copper pads */}
-        <mesh position={[0, 0.2, 0]}>
-          <boxGeometry args={[0.66, 0.06, 0.5]} />
-          <Toon color={C.pcb} outline={false} />
-        </mesh>
-        <mesh position={[-0.06, 0.29, 0]}>
-          <boxGeometry args={[0.32, 0.12, 0.32]} />
-          <Toon color={C.silver} thickness={1} />
-        </mesh>
-        <mesh position={[0.24, 0.25, 0.14]}>
-          <boxGeometry args={[0.1, 0.04, 0.14]} />
-          <meshBasicMaterial color={C.copper} />
-        </mesh>
-        {[0.785, -0.785].map((a) => (
-          <mesh key={a} rotation={[0, a, 0]} position={[0, 0.02, 0]}>
-            <boxGeometry args={[1.95, 0.07, 0.1]} />
-            <Toon color={C.ink} outline={false} />
-          </mesh>
-        ))}
-        <ToonInstances items={motors} outline={false}>
-          <cylinderGeometry args={[0.5, 0.5, 1, 10]} />
-        </ToonInstances>
-        <Moving
-          count={4}
-          basic
-          color={C.ink}
-          onFrame={(put, t) => {
-            MOTORS.forEach(([x, z], i) => put(i, x, 0.16, z, 1, 1, 1, 0, t * 38 * (i % 2 ? 1 : -1), 0));
+        <PopText kick={kick} text="WHEE" position={[0, 0.8, 0.3]} size={0.3} rise={0.6} />
+        <Tappable
+          onTap={() => {
+            fire();
+            sfx.whee();
+            setTimeout(() => chime(1320), 450);
           }}
+          hintAt={[0, 0.8, 0]}
+          hintScale={HINT / 1.45}
         >
-          <boxGeometry args={[0.72, 0.02, 0.09]} />
-        </Moving>
-        {/* camera gimbal, looking down */}
-        <mesh position={[0, -0.24, 0.12]}>
-          <sphereGeometry args={[0.13, 12, 10]} />
-          <Toon color={C.ink} outline={false} />
-        </mesh>
-        <mesh position={[0.4, 0.02, 0.4]}>
-          <sphereGeometry args={[0.06, 8, 6]} />
-          <meshBasicMaterial ref={led} color={C.green} />
-        </mesh>
+          <group ref={roll}>
+            {/* a roomier target than the drone itself, which is small and on the move */}
+            <mesh visible={false}>
+              <boxGeometry args={[2.1, 0.7, 1.7]} />
+              <meshBasicMaterial />
+            </mesh>
+            <RoundedBox args={[1.05, 0.32, 0.78]} radius={0.1} castShadow>
+              <Toon color={C.cream} />
+            </RoundedBox>
+            {/* the Jetson-style compute board: green PCB, silver heat sink, copper pads */}
+            <mesh position={[0, 0.2, 0]}>
+              <boxGeometry args={[0.66, 0.06, 0.5]} />
+              <Toon color={C.pcb} outline={false} />
+            </mesh>
+            <mesh position={[-0.06, 0.29, 0]}>
+              <boxGeometry args={[0.32, 0.12, 0.32]} />
+              <Toon color={C.silver} thickness={1} />
+            </mesh>
+            <mesh position={[0.24, 0.25, 0.14]}>
+              <boxGeometry args={[0.1, 0.04, 0.14]} />
+              <meshBasicMaterial color={C.copper} />
+            </mesh>
+            {[0.785, -0.785].map((a) => (
+              <mesh key={a} rotation={[0, a, 0]} position={[0, 0.02, 0]}>
+                <boxGeometry args={[1.95, 0.07, 0.1]} />
+                <Toon color={C.ink} outline={false} />
+              </mesh>
+            ))}
+            <ToonInstances items={motors} outline={false}>
+              <cylinderGeometry args={[0.5, 0.5, 1, 10]} />
+            </ToonInstances>
+            <Moving
+              count={4}
+              basic
+              color={C.ink}
+              onFrame={(put, t) => {
+                MOTORS.forEach(([x, z], i) => put(i, x, 0.16, z, 1, 1, 1, 0, t * 38 * (i % 2 ? 1 : -1), 0));
+              }}
+            >
+              <boxGeometry args={[0.72, 0.02, 0.09]} />
+            </Moving>
+            {/* camera gimbal, looking down */}
+            <mesh position={[0, -0.24, 0.12]}>
+              <sphereGeometry args={[0.13, 12, 10]} />
+              <Toon color={C.ink} outline={false} />
+            </mesh>
+            <mesh position={[0.4, 0.02, 0.4]}>
+              <sphereGeometry args={[0.06, 8, 6]} />
+              <meshBasicMaterial ref={led} color={C.green} />
+            </mesh>
+          </group>
+        </Tappable>
       </group>
     </>
   );
@@ -384,7 +414,13 @@ function Readout({ plants }: { plants: Plant[] }) {
   );
 }
 
+/** The altitude pole. Click it: the marker races up to the top and drops back to 15 M. */
 function Pole() {
+  const marker = useRef<THREE.Group>(null);
+  const [kick, fire] = useKick();
+  useFrame(() => {
+    if (marker.current) marker.current.position.y = hump(since(kick), 1.1) * 1.4;
+  });
   const stripes = useMemo<Instance[]>(
     () =>
       Array.from({ length: 5 }, (_, i) => ({
@@ -396,15 +432,33 @@ function Pole() {
   );
   return (
     <group position={[5.9, 0.15, -0.6]}>
-      <Cyls items={stripes} />
+      <Tappable
+        onTap={() => {
+          fire();
+          sfx.whirr();
+          setTimeout(() => sfx.boop(1.2), 700);
+        }}
+        hintAt={[0, ALT + 1.35, 0]}
+        hintScale={HINT}
+      >
+        <Cyls items={stripes} />
+        {/* a roomier target than the thin pole */}
+        <mesh position={[0, ALT / 2 + 0.3, 0]} visible={false}>
+          <boxGeometry args={[1.2, ALT + 1.2, 1.2]} />
+          <meshBasicMaterial />
+        </mesh>
+      </Tappable>
       {/* the marker at the drone's height */}
-      <mesh position={[-0.32, ALT - 0.15, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <coneGeometry args={[0.2, 0.42, 3]} />
-        <Toon color={C.sun} thickness={1.4} />
-      </mesh>
+      <group ref={marker}>
+        <mesh position={[-0.32, ALT - 0.15, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <coneGeometry args={[0.2, 0.42, 3]} />
+          <Toon color={C.sun} thickness={1.4} />
+        </mesh>
+      </group>
       <Label size={0.42} position={[0, ALT + 0.55, 0.05]} outline={C.cream}>
         15 M
       </Label>
+      <PopText kick={kick} text="ZOOM" position={[-0.9, ALT + 1.2, 0.3]} size={0.36} />
     </group>
   );
 }
@@ -427,8 +481,14 @@ function useTentGeometry() {
 function Camp() {
   const flag = useRef<THREE.Group>(null);
   const tent = useTentGeometry();
+  const [flagKick, fireFlag] = useKick();
   useFrame(({ clock }) => {
-    if (flag.current) flag.current.rotation.y = Math.sin(clock.elapsedTime * 1.6) * 0.1;
+    if (flag.current) {
+      // a full turn round the pole when clicked, then back to its breeze
+      const s = since(flagKick);
+      const k = s < 1.1 ? s / 1.1 : 1;
+      flag.current.rotation.y = Math.sin(clock.elapsedTime * 1.6) * 0.1 + (k < 1 ? k * k * (3 - 2 * k) * Math.PI * 2 : 0);
+    }
   });
   const parts = useMemo<Instance[]>(
     () => [
@@ -511,18 +571,30 @@ function Camp() {
       >
         <planeGeometry args={[1, 1]} />
       </Glows>
-      <group ref={flag} position={[-1.45, 3.65, -0.9]}>
-        <mesh position={[1.25, 0, 0]} castShadow>
-          <boxGeometry args={[2.5, 1.15, 0.05]} />
-          <Toon color={C.sun} thickness={1.6} />
-        </mesh>
-        <Label size={0.4} position={[1.25, 0.15, 0.04]}>
-          $25,000
-        </Label>
-        <Label size={0.25} position={[1.25, -0.3, 0.04]}>
-          GRANT
-        </Label>
-      </group>
+      <Tappable
+        onTap={() => {
+          fireFlag();
+          sfx.whoosh(1.2);
+          sfx.arp(784, 4, 0.08);
+        }}
+        hintAt={[-0.2, 4.45, -0.6]}
+        hintScale={HINT}
+      >
+        <group ref={flag} position={[-1.45, 3.65, -0.9]}>
+          <mesh position={[1.25, 0, 0]} castShadow>
+            <boxGeometry args={[2.5, 1.15, 0.05]} />
+            <Toon color={C.sun} thickness={1.6} />
+          </mesh>
+          <Label size={0.4} position={[1.25, 0.15, 0.04]}>
+            $25,000
+          </Label>
+          <Label size={0.25} position={[1.25, -0.3, 0.04]}>
+            GRANT
+          </Label>
+        </group>
+      </Tappable>
+      <Burst kick={flagKick} origin={[-0.2, 3.7, -0.9]} colors={[C.sun, C.gold, C.cream]} count={14} size={0.15} />
+      <PopText kick={flagKick} text="FUNDED" position={[-0.2, 4.6, -0.5]} size={0.4} />
     </group>
   );
 }

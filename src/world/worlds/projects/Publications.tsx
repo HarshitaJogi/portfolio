@@ -1,13 +1,15 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
-import { useFrame, useThree } from "@react-three/fiber";
+import { RoundedBox } from "@/world/rounded";
+import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 import { C } from "../../palette";
 import { Toon, ToonInstances, type Instance } from "../../toon";
-import { Label, chime, useHoverCursor } from "../../bits";
+import { Label, chime } from "../../bits";
 import { Islet } from "../../props/basics";
+import { Tappable } from "../../props/tappable";
+import { Burst, HINT, PopText, sfx, since, useKick, type Kick } from "@/world/fx";
 import { Boxes, Cyls, Glows, Moving, frameGeometry, hash, type V3 } from "./kit";
 
 /*
@@ -16,12 +18,23 @@ import { Boxes, Cyls, Glows, Moving, frameGeometry, hash, type V3 } from "./kit"
  * open now and then. Each carries its subject: a maize cob (leaf blight), a drone (UAV
  * crop health). In front, a lectern with the patent scroll, sealed in wax and stamped
  * FILED. Click the seal to stamp it again. Confetti, because it is a celebration.
+ * Click the books and they fall open with their pages fluttering, click the banner for
+ * a burst of confetti.
  */
 
 const BW = 2.3;
 const BH = 3.2;
 const BD = 0.6;
 const STAGE_Y = 0.6;
+/** The whole stage is drawn at this scale, so hints come out the same size everywhere. */
+const S = 1.25;
+const PAGES = 6;
+/** A page: a thin card hinged on its left edge, at the spine. */
+const PAGE = new THREE.BoxGeometry(1, 1, 0.025).translate(0.5, 0, 0);
+const ease = (x: number) => x * x * (3 - 2 * x);
+const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1);
+/** How far a clicked book is open, 0 to 1: swings wide, holds, closes. */
+const clickOpen = (s: number) => (s < 0 ? 0 : s < 0.45 ? ease(s / 0.45) : s < 2.9 ? 1 : s < 3.5 ? 1 - ease((s - 2.9) / 0.6) : 0);
 
 function Book({
   position,
@@ -29,6 +42,8 @@ function Book({
   color,
   lines,
   phase,
+  kick,
+  delay,
   children,
 }: {
   position: V3;
@@ -36,17 +51,43 @@ function Book({
   color: string;
   lines: [string, string];
   phase: number;
+  kick: Kick;
+  delay: number;
   children: ReactNode;
 }) {
   const cover = useRef<THREE.Group>(null);
+  const open = useRef(0);
   useFrame(({ clock }) => {
-    // mostly closed; every so often the cover swings open to show the pages, then shuts
+    // mostly closed; every so often the cover swings open to show the pages, then shuts.
+    // Clicked, it falls wide open and the pages flutter over after it.
     const t = (clock.elapsedTime * 0.22 + phase) % 1;
-    const open = t < 0.35 ? Math.sin((t / 0.35) * Math.PI) : 0;
-    if (cover.current) cover.current.rotation.y = -0.08 - open * 0.55;
+    const idle = t < 0.35 ? Math.sin((t / 0.35) * Math.PI) * 0.55 : 0;
+    const wide = clickOpen(since(kick) - delay) * 2.5;
+    open.current = Math.max(idle, wide);
+    if (cover.current) cover.current.rotation.y = -0.08 - open.current;
   });
   return (
     <group position={position} rotation={[0, rotation, 0]}>
+      <Moving
+        count={PAGES}
+        color="#fffaf0"
+        thickness={1}
+        margin={3.6}
+        onFrame={(put, _t, _dt, m) => {
+          const s = since(kick) - delay;
+          const on = s > 0.2 && s < 3.6;
+          if (m.visible !== on) m.visible = on;
+          if (!on) return;
+          for (let i = 0; i < PAGES; i++) {
+            // each page flips over in turn, then rides back with the cover as it closes
+            const flip = ease(clamp01((s - 0.45 - i * 0.24) / 0.32)) * 2.45;
+            const a = Math.min(flip, open.current - 0.06);
+            put(i, -BW / 2 + 0.02, BH / 2, BD / 2 - 0.12 - i * 0.005, BW - 0.16, BH - 0.3, 1, 0, -0.06 - Math.max(a, 0), 0);
+          }
+        }}
+      >
+        <primitive object={PAGE} attach="geometry" />
+      </Moving>
       <group ref={cover} position={[-BW / 2, BH / 2, BD / 2 - 0.05]}>
         <mesh position={[BW / 2, 0, 0]} castShadow>
           <boxGeometry args={[BW, BH, 0.1]} />
@@ -154,14 +195,12 @@ function Rosettes() {
 /** The patent: a scroll on a lectern, a wax seal, and a FILED stamp. Click the seal. */
 function Patent() {
   const stamp = useRef<THREE.Group>(null);
-  const hit = useRef(-10);
-  const { bind } = useHoverCursor();
-  const clock = useThree((st) => st.clock);
+  const [kick, fire] = useKick();
   const stampGeo = useMemo(() => frameGeometry(1.1, 0.42, 0.05), []);
   useFrame(() => {
     const g = stamp.current;
     if (!g) return;
-    const a = clock.elapsedTime - hit.current;
+    const a = since(kick);
     // thump: comes down big, settles at its size
     const k = a < 0.35 ? 1 + (1 - a / 0.35) * 0.6 : 1;
     g.scale.setScalar(k);
@@ -203,25 +242,30 @@ function Patent() {
             </Label>
           </group>
           {/* the wax seal */}
-          <group
+          <Tappable
             position={[0.62, -0.28, 0.06]}
-            onClick={(e) => {
-              e.stopPropagation();
-              hit.current = clock.elapsedTime;
+            onTap={() => {
+              fire();
               chime(660);
+              sfx.clank(0.55);
             }}
-            {...bind}
+            hintAt={[0, 0.5, 0]}
+            hintScale={HINT / S}
+            rotation={[Math.PI / 2, 0, 0]}
           >
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.2, 0.22, 0.08, 14]} />
-              <Toon color={C.red} thickness={1.4} />
-            </mesh>
-            <Glows items={[-1, 1].map((k) => ({ p: [k * 0.08, -0.26, -0.02] as V3, s: [0.1, 0.32, 1] as V3, r: [0, 0, k * 0.3] as V3, color: C.brickDark }))}>
-              <planeGeometry args={[1, 1]} />
-            </Glows>
-          </group>
+            <group rotation={[-Math.PI / 2, 0, 0]}>
+              <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[0.2, 0.22, 0.08, 14]} />
+                <Toon color={C.red} thickness={1.4} />
+              </mesh>
+              <Glows items={[-1, 1].map((k) => ({ p: [k * 0.08, -0.26, -0.02] as V3, s: [0.1, 0.32, 1] as V3, r: [0, 0, k * 0.3] as V3, color: C.brickDark }))}>
+                <planeGeometry args={[1, 1]} />
+              </Glows>
+            </group>
+          </Tappable>
         </group>
       </group>
+      <PopText kick={kick} text="STAMP" position={[0.5, 2.2, 0.4]} size={0.36} color={C.red} />
     </group>
   );
 }
@@ -230,6 +274,8 @@ const CONFETTI = 40;
 const CONFETTI_COLORS = [C.coral, C.sun, C.cobalt, C.green, C.rose, C.teal];
 
 export function Publications() {
+  const [books, openBooks] = useKick();
+  const [party, throwConfetti] = useKick();
   const confetti = useMemo(
     () =>
       Array.from({ length: CONFETTI }, (_, i) => ({
@@ -306,7 +352,7 @@ export function Publications() {
     <group>
       <Islet r={11} top={C.sand} />
       {/* everything on the stage, scaled up as one so the books read from the camera */}
-      <group position={[0.4, 0, 0.2]} scale={1.25}>
+      <group position={[0.4, 0, 0.2]} scale={S}>
         <group position={[-0.4, 0, 0.9]}>
           <mesh position={[0.4, 0.3, -0.9]} receiveShadow castShadow>
             <cylinderGeometry args={[5.1, 5.1, 0.32, 48]} />
@@ -321,19 +367,54 @@ export function Publications() {
           <ToonInstances items={pennants} thickness={1.2}>
             <coneGeometry args={[0.5, 1, 3]} />
           </ToonInstances>
+          {/* the banner: click it for confetti */}
+          <Tappable
+            onTap={() => {
+              throwConfetti();
+              sfx.arp(523, 6, 0.08);
+              setTimeout(() => sfx.applause(), 200);
+            }}
+            hintAt={[3.2, 5.6, -3.1]}
+            hintScale={HINT / S}
+          >
+            <mesh position={[0.4, 5.75, -3.8]} visible={false}>
+              <boxGeometry args={[7.9, 1.4, 0.4]} />
+              <meshBasicMaterial />
+            </mesh>
+          </Tappable>
           <Label size={0.52} color={C.cream} position={[0.4, 5.92, -3.69]}>
             IEEE SPACE
           </Label>
           <Label size={0.3} color={C.sun} position={[0.4, 5.43, -3.69]}>
             2024
           </Label>
+          <Burst kick={party} origin={[0.4, 5.2, -3.2]} colors={CONFETTI_COLORS} count={40} size={0.16} speed={3.4} up={2.6} gravity={5} dur={2.2} />
+          <PopText kick={party} text="HOORAY" position={[0.4, 6.9, -3.4]} size={0.5} />
 
-          <Book position={[-1.55, STAGE_Y, -1.7]} rotation={0.16} color={C.cobalt} lines={["MAIZE", "BLIGHT"]} phase={0}>
-            <CobEmblem />
-          </Book>
-          <Book position={[2.25, STAGE_Y, -1.7]} rotation={-0.12} color={C.coral} lines={["UAV CROP", "HEALTH"]} phase={0.5}>
-            <DroneEmblem />
-          </Book>
+          {/* the books: click either and both fall open */}
+          <Tappable
+            onTap={() => {
+              openBooks();
+              sfx.flutter();
+              chime(784);
+              setTimeout(() => sfx.flutter(), 300);
+              setTimeout(() => chime(988), 300);
+            }}
+            hintAt={[0.35, STAGE_Y + BH + 0.55, -1.4]}
+            hintScale={HINT / S}
+          >
+            <Book position={[-1.55, STAGE_Y, -1.7]} rotation={0.16} color={C.cobalt} lines={["MAIZE", "BLIGHT"]} phase={0} kick={books} delay={0}>
+              <CobEmblem />
+            </Book>
+            <Book position={[2.25, STAGE_Y, -1.7]} rotation={-0.12} color={C.coral} lines={["UAV CROP", "HEALTH"]} phase={0.5} kick={books} delay={0.3}>
+              <DroneEmblem />
+            </Book>
+            {/* the closed books' page blocks and back covers are static: a target over them both */}
+            <mesh position={[0.35, STAGE_Y + BH / 2, -1.7]} visible={false}>
+              <boxGeometry args={[4.9, BH, 0.9]} />
+              <meshBasicMaterial />
+            </mesh>
+          </Tappable>
           <Rosettes />
 
           <Patent />

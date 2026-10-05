@@ -1,6 +1,6 @@
 "use client";
 
-import { RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@/world/rounded";
 import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
