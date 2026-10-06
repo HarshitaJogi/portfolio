@@ -1,8 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef } from "react";
-import { chooserCopy, hubStops, margamParts, person, type HubStop } from "@/content/profile";
+import { useEffect, useRef, useState } from "react";
+import { chooserCopy, hero, hubStops, margamParts, media, person, type HubStop } from "@/content/profile";
 import { island, useIsland } from "@/world/state";
 import { chime } from "@/world/bits";
 import { findEgg } from "@/world/eggs";
@@ -17,6 +17,7 @@ import { PopButton } from "./PopButton";
 import { BigCTA } from "./BigCTA";
 import { AvatarIcon } from "./avatarIcons";
 import { arrive } from "./sfx";
+import { PassportStrip } from "./Passport";
 
 const DISTRICTS = hubStops.slice(1, 7); // education .. contact, indexes 1..6 on the ring
 const indexOf = (id: string) => hubStops.findIndex((s) => s.id === id);
@@ -52,7 +53,7 @@ function TravelerChip() {
         <AvatarIcon kind={kind} className="h-10 w-10" />
       </span>
       <span>
-        <span className="block font-mono text-[0.75rem] font-bold tracking-[0.08em] uppercase">{picked ? `Traveling with ${me.name}` : "Pick a traveler"}</span>
+        <span className="block font-mono text-[0.875rem] font-bold tracking-[0.08em] uppercase">{picked ? `Traveling with ${me.name}` : "Pick a traveler"}</span>
         <span className="block font-display text-[0.9375rem] underline decoration-2 underline-offset-2">{chooserCopy.change}</span>
       </span>
     </button>
@@ -78,7 +79,102 @@ function WelcomeCard({ stop }: { stop: HubStop }) {
         </p>
         <TravelerChip />
       </div>
-      <p className="mt-5 hidden font-mono text-[0.875rem] font-bold md:block">Drag to turn the island. Tap any place to visit it.</p>
+      <PassportStrip />
+      <p className="mt-4 hidden font-mono text-[1rem] font-bold md:block">Drag to turn the island. Tap any place to visit it.</p>
+    </div>
+  );
+}
+
+/** The back of the name card: a photo, who she is in one line, and every way to reach her. */
+function WelcomeBack() {
+  return (
+    <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-6 md:p-9">
+      <div className="flex items-center gap-5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={media.headshot.src} alt={media.headshot.alt} width={120} height={180} className="h-28 w-28 shrink-0 rounded-full border-[4px] border-ink object-cover object-top shadow-[5px_5px_0_var(--ink)] md:h-36 md:w-36" />
+        <div>
+          <p className="font-mono text-[0.9375rem] font-bold tracking-[0.08em] uppercase">Hello, I&apos;m</p>
+          <p className="font-display text-[clamp(2.2rem,4vw,3.4rem)] leading-[0.95]">{person.name}</p>
+        </div>
+      </div>
+      <p className="mt-5 text-[1.1875rem] leading-snug font-bold md:text-[1.4375rem]">{hero.subline}</p>
+      <dl className="mt-5 grid gap-2.5 sm:grid-cols-3">
+        {hero.meta.map((m) => (
+          <div key={m.label} className="rounded-2xl border-[3px] border-ink bg-[#ffc93c] px-3.5 py-2 shadow-[3px_3px_0_var(--ink)]">
+            <dt className="font-mono text-[0.875rem] font-bold tracking-[0.06em] uppercase">{m.label}</dt>
+            <dd className="font-display text-[1.0625rem] leading-tight">{m.text}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-6 flex flex-wrap gap-2.5">
+        <PopButton href={media.resumePdf} size="md" tone="sun">
+          Resume ↓
+        </PopButton>
+        <PopButton href={person.links.linkedin} size="md" tone="secondary">
+          LinkedIn ↗
+        </PopButton>
+        <PopButton href={person.links.github} size="md" tone="secondary">
+          GitHub ↗
+        </PopButton>
+        <PopButton href={`mailto:${person.email}`} size="md" tone="secondary">
+          Email
+        </PopButton>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The name card flips. Tap it (anywhere that is not a button) and it turns over to the
+ * photo and the links, with a whoosh. A sticker in the corner says so.
+ */
+function FlipWelcome({ stop }: { stop: HubStop }) {
+  const [back, setBack] = useState(false);
+  const reduced = useReducedMotion();
+  const flip = (e: React.MouseEvent | React.KeyboardEvent) => {
+    if ((e.target as HTMLElement).closest("button, a") && !(e.target as HTMLElement).closest("[data-flip]")) return;
+    ui.flip();
+    setBack((b) => !b);
+  };
+  const face = "col-start-1 row-start-1 [backface-visibility:hidden] [-webkit-backface-visibility:hidden]";
+  return (
+    <div className="[perspective:1600px]">
+      <motion.div
+        className="grid [transform-style:preserve-3d]"
+        animate={{ rotateY: back ? 180 : 0 }}
+        transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 16 }}
+      >
+        <div
+          role="button"
+          tabIndex={back ? -1 : 0}
+          aria-label="Flip the card for a photo and links"
+          onClick={flip}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), flip(e))}
+          className={cn(face, "cursor-pointer", back && "pointer-events-none")}
+        >
+          <CardShell className="flex max-h-[min(54svh,46rem)] flex-col transition-transform hover:-translate-y-1 md:max-h-[calc(100svh-15rem)]">
+            <span data-flip aria-hidden="true" className="absolute -top-4 -right-4 z-10 flex rotate-6 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#ff4f8b] px-3.5 py-1.5 font-display text-[1rem] text-ink shadow-[3px_3px_0_var(--ink)] motion-safe:animate-[cta-nudge_3s_ease-in-out_2s_infinite]">
+              ↻ Tap to flip
+            </span>
+            <WelcomeCard stop={stop} />
+          </CardShell>
+        </div>
+        <div
+          role="button"
+          tabIndex={back ? 0 : -1}
+          aria-label="Flip the card back"
+          onClick={flip}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), flip(e))}
+          className={cn(face, "cursor-pointer [transform:rotateY(180deg)]", !back && "pointer-events-none")}
+        >
+          <CardShell className="flex max-h-[min(54svh,46rem)] flex-col md:max-h-[calc(100svh-15rem)]">
+            <span data-flip aria-hidden="true" className="absolute -top-4 -right-4 z-10 flex -rotate-6 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#3bb273] px-3.5 py-1.5 font-display text-[1rem] text-ink shadow-[3px_3px_0_var(--ink)]">
+              ↻ Flip back
+            </span>
+            <WelcomeBack />
+          </CardShell>
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -126,7 +222,7 @@ function DistrictCard({ stop }: { stop: HubStop }) {
         </div>
       )}
       <div className="mt-6 flex flex-wrap items-center gap-2.5 border-t-[3px] border-dashed border-ink/40 pt-4">
-        <span className="font-mono text-[0.8125rem] font-bold uppercase">Other places</span>
+        <span className="font-mono text-[0.9375rem] font-bold uppercase">Other places</span>
         <PopButton onClick={() => hubView.focus(indexOf(prev.id))} size="sm" tone="secondary" back iconLeft="‹">
           {SHORT[prev.id]}
         </PopButton>
@@ -210,7 +306,7 @@ export function HubPage() {
       ? { kicker: "Start here", label: "Start the tour", href: "/education" }
       : stop.id === "contact" && enter
         ? { kicker: "Say hello", label: "Email me", href: enter.href }
-        : { kicker: "Enter the world", label: SHORT[stop.id] ?? stop.headline, href: enter?.href ?? "/" };
+        : { kicker: "Go inside", label: "Enter", href: enter?.href ?? "/" };
   const back = focus === -1 ? undefined : { label: "Map", onClick: () => hubView.focus(-1) };
 
   return (
@@ -228,9 +324,11 @@ export function HubPage() {
                 if (moved && typeof def === "object" && "opacity" in def && (def as { opacity: number }).opacity === 1) arrive();
               }}
             >
-              <CardShell className="flex max-h-[min(54svh,44rem)] flex-col md:max-h-[calc(100svh-15rem)]">
-                {focus === -1 ? <WelcomeCard stop={stop} /> : focus === ABOVE ? <AboveCard stop={stop} /> : <DistrictCard stop={stop} />}
-              </CardShell>
+              {focus === -1 ? (
+                <FlipWelcome stop={stop} />
+              ) : (
+                <CardShell className="flex max-h-[min(54svh,44rem)] flex-col md:max-h-[calc(100svh-15rem)]">{focus === ABOVE ? <AboveCard stop={stop} /> : <DistrictCard stop={stop} />}</CardShell>
+              )}
             </motion.div>
           </AnimatePresence>
           {focus === -1 && (
@@ -251,7 +349,7 @@ export function HubPage() {
                 type="button"
                 onClick={() => (ui.pop(), hubView.focus(i))}
                 aria-current={focus === i ? "true" : undefined}
-                className={cn("shrink-0 rounded-full border-[3px] border-ink px-3 py-1 font-display text-[0.875rem] shadow-[2px_2px_0_var(--ink)]", focus === i ? "bg-ink text-[#fff8ec]" : "bg-[#fff8ec] text-ink")}
+                className={cn("shrink-0 rounded-full border-[3px] border-ink px-3 py-1 font-display text-[1rem] shadow-[2px_2px_0_var(--ink)]", focus === i ? "bg-ink text-[#fff8ec]" : "bg-[#fff8ec] text-ink")}
               >
                 {SHORT[d.id]}
               </button>

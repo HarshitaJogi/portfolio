@@ -13,8 +13,8 @@ import { useReducedMotion } from "@/lib/device";
 import { cn } from "@/lib/utils";
 import { CardShell, Chips, colorOf, Hud, LocalTime, Rich } from "./cards";
 import { PopButton } from "./PopButton";
-import { stamp } from "./passportStore";
-import { StampMoment } from "./Passport";
+import { getStamps, stamp, usePassport } from "./passportStore";
+import { passportUI, StampArt, StampMoment, StampWaiting } from "./Passport";
 import { BigCTA } from "./BigCTA";
 import { arrive } from "./sfx";
 
@@ -55,7 +55,7 @@ function Details({ items, label }: { items: string[]; label: string }) {
         aria-expanded={open}
         className="group inline-flex items-center gap-2.5 rounded-full border-[3px] border-dashed border-ink bg-white px-4 py-2 text-[1rem] font-extrabold shadow-[3px_3px_0_var(--ink)] transition-colors hover:border-solid hover:bg-[#ffc93c] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
       >
-        <span className={cn("grid h-6 w-6 place-items-center rounded-full border-2 border-ink bg-[#fff8ec] text-[0.875rem] leading-none transition-transform", open && "rotate-45")} aria-hidden="true">
+        <span className={cn("grid h-6 w-6 place-items-center rounded-full border-2 border-ink bg-[#fff8ec] text-[1rem] leading-none transition-transform", open && "rotate-45")} aria-hidden="true">
           +
         </span>
         {open ? "Hide the details" : label}
@@ -98,7 +98,7 @@ function Extra({ step }: { step: WorldStep }) {
         >
           {approved ? "Approved ✓" : "APPROVE"}
         </PopButton>
-        <span className="font-mono text-[0.875rem]">{approved ? "Verified. Thanks, human." : step.hint}</span>
+        <span className="font-mono text-[1rem]">{approved ? "Verified. Thanks, human." : step.hint}</span>
       </div>
     );
   if (step.id === "dance")
@@ -117,7 +117,7 @@ function Extra({ step }: { step: WorldStep }) {
           Ring the bells
         </PopButton>
         {bells > 0 && (
-          <span className="font-mono text-[0.875rem]">
+          <span className="font-mono text-[1rem]">
             Rung {bells} {bells === 1 ? "time" : "times"}
           </span>
         )}
@@ -125,11 +125,11 @@ function Extra({ step }: { step: WorldStep }) {
     );
   if (step.id === "trybud")
     return (
-      <p className="mt-5 font-mono text-[0.875rem]" aria-live="polite">
+      <p className="mt-5 font-mono text-[1rem]" aria-live="polite">
         {pumpkins >= 5 ? "All five lit. Happy Hack-o-Ween." : `↳ ${step.hint} · ${pumpkins} of 5 lit`}
       </p>
     );
-  return step.hint ? <p className="mt-5 font-mono text-[0.875rem]">↳ {step.hint}</p> : null;
+  return step.hint ? <p className="mt-5 font-mono text-[1rem]">↳ {step.hint}</p> : null;
 }
 
 function StepBody({ world, step, go, items, copy }: { world: World; step: WorldStep; go: (i: number) => void; items: { s: WorldStep; i: number }[]; copy?: boolean }) {
@@ -141,18 +141,19 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
       <>
         <h1 className="font-display mt-4 text-[clamp(3rem,6.4vw,6.25rem)] leading-[0.95] tracking-[-0.02em]">{step.title}</h1>
         {step.lede && <p className="mt-4 text-[1.25rem] leading-snug font-bold md:text-[1.625rem]">{step.lede}</p>}
+        <StampSlot world={world} />
         <ol className="mt-6 grid gap-1.5">
           {items.map(({ s, i }, n) => (
             <li key={s.id}>
               <button type="button" onClick={() => (ui.pop(), go(i))} className="group flex w-full items-center gap-3 rounded-2xl border-[2.5px] border-transparent px-2 py-1.5 text-left transition-colors hover:border-ink hover:bg-white/60">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-[2.5px] border-ink font-mono text-[0.8125rem] font-semibold" style={{ background: color }}>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-[2.5px] border-ink font-mono text-[0.9375rem] font-semibold" style={{ background: color }}>
                   {n + 1}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[1.125rem] font-extrabold md:text-[1.3125rem]">{s.title}</span>
                   {s.subtitle && world.id !== "skills" && <span className="block truncate text-[0.9375rem] font-semibold">{s.subtitle}</span>}
                 </span>
-                {yearOf(s) && <span className="shrink-0 font-mono text-[0.875rem]">{yearOf(s)}</span>}
+                {yearOf(s) && <span className="shrink-0 font-mono text-[1rem]">{yearOf(s)}</span>}
                 <span className="shrink-0 transition-transform group-hover:translate-x-1" aria-hidden="true">
                   →
                 </span>
@@ -176,7 +177,7 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
   return (
     <>
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <p className="font-mono text-[0.9375rem] font-bold md:text-[1rem]">{step.kicker}</p>
+        {step.kicker !== world.label && <p className="font-mono text-[1rem] font-bold md:text-[1.0625rem]">{step.kicker}</p>}
         {step.place && <LocalTime place={step.place} />}
       </div>
       <h2 id={hid} className="font-display mt-3 text-[clamp(2.3rem,4.2vw,4rem)] leading-[0.96] tracking-[-0.015em]">
@@ -188,7 +189,7 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
         <dl className="mt-4 flex flex-wrap gap-2.5">
           {step.facts.map((f) => (
             <div key={f.label} className="rounded-2xl border-[3px] border-ink bg-[#ffc93c] px-4 py-1.5 shadow-[3px_3px_0_var(--ink)]">
-              <dt className="font-mono text-[0.75rem] tracking-[0.06em] uppercase">{f.label}</dt>
+              <dt className="font-mono text-[0.875rem] tracking-[0.06em] uppercase">{f.label}</dt>
               <dd className="font-display text-[1.375rem] leading-tight md:text-[1.625rem]">{f.value}</dd>
             </div>
           ))}
@@ -209,7 +210,7 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
 
       {step.used && (
         <div className="mt-4">
-          <p className="font-mono text-[0.8125rem] tracking-[0.06em] uppercase">Where I used it</p>
+          <p className="font-mono text-[0.9375rem] tracking-[0.06em] uppercase">Where I used it</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {step.used.map((u) =>
               u.href ? (
@@ -245,6 +246,33 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
   );
 }
 
+/** The stamp this world gives: waiting (dashed) until the last step, then earned. */
+function StampSlot({ world }: { world: World }) {
+  const stamps = usePassport();
+  const got = stamps.find((x) => x.id === world.id);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        ui.pop();
+        passportUI.open();
+      }}
+      className={cn(
+        "mt-5 flex w-full items-center gap-4 rounded-[22px] border-[3px] border-ink p-3 text-left shadow-[5px_5px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none",
+        got ? "bg-[#3bb273]" : "border-dashed bg-[#fff3d6]",
+      )}
+    >
+      <span className={cn("shrink-0 rounded-full bg-[#fff8ec]", got && "-rotate-6")}>
+        <StampArt id={world.id} on={got?.on} size={76} faded={!got} />
+      </span>
+      <span>
+        <span className="block font-mono text-[0.875rem] font-bold tracking-[0.08em] uppercase">Passport stamp</span>
+        <span className="block font-display text-[1.125rem] leading-tight md:text-[1.3125rem]">{got ? `Stamped ${got.on}` : `Finish ${world.label} to earn it`}</span>
+      </span>
+    </button>
+  );
+}
+
 /** The path as dots on a dashed line, on the right. Click any stop to fly there. */
 function Rail({ world, active, go }: { world: World; active: number; go: (i: number) => void }) {
   const color = colorOf(world.margam);
@@ -261,7 +289,7 @@ function Rail({ world, active, go }: { world: World; active: number; go: (i: num
                 <button type="button" onClick={() => go(i)} aria-current={on ? "step" : undefined} aria-label={label} className="group flex items-center gap-2 py-0.5">
                   <span
                     className={cn(
-                      "rounded-full border-[3px] border-ink px-2.5 py-0.5 font-mono text-[0.8125rem] font-bold whitespace-nowrap shadow-[2px_2px_0_var(--ink)] transition-all",
+                      "rounded-full border-[3px] border-ink px-2.5 py-0.5 font-mono text-[0.9375rem] font-bold whitespace-nowrap shadow-[2px_2px_0_var(--ink)] transition-all",
                       on ? "bg-ink text-[#fff8ec]" : "bg-[#fff8ec] text-ink opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
                     )}
                   >
@@ -306,6 +334,7 @@ export function WorldPage({ id }: { id: WorldId }) {
   const [nudge, setNudge] = useState(false);
   const [stamped, setStamped] = useState(false);
   const [moved, setMoved] = useState(false);
+  const [waiting, setWaiting] = useState(false);
   const reduced = useReducedMotion();
   const activeRef = useRef(0);
   const items = steps.map((s, i) => ({ s, i })).filter(({ s }) => s.kind === "item");
@@ -340,6 +369,28 @@ export function WorldPage({ id }: { id: WorldId }) {
       return () => cancelAnimationFrame(r);
     }
   }, [steps]);
+
+  // First time in a world without its stamp: say there is one to collect, once the door opens.
+  useEffect(() => {
+    const key = `hj-seen-${world.id}`;
+    let seen = false;
+    try {
+      seen = localStorage.getItem(key) === "1";
+    } catch {
+      /* fine */
+    }
+    if (seen || getStamps().some((x) => x.id === world.id)) return;
+    const t = window.setTimeout(() => {
+      try {
+        localStorage.setItem(key, "1");
+      } catch {
+        /* fine */
+      }
+      setWaiting(true);
+      ui.sparkle();
+    }, 1900);
+    return () => window.clearTimeout(t);
+  }, [world.id]);
 
   // Keys, swipes, and a nudge toward the Next button for anyone who tries to scroll.
   useEffect(() => {
@@ -397,13 +448,15 @@ export function WorldPage({ id }: { id: WorldId }) {
   const nItem = items.findIndex((x) => x.i === active) + 1;
   const nextLink = step.kind === "next" ? step.links?.find((l) => l.primary) : undefined;
 
-  // what the big button says and does, at every step
+  // what the big button says and does, at every step: one word, never the next section's name
   const cta =
     step.kind === "intro"
-      ? { kicker: "Start the path", label: shortOf(steps[1]), onClick: () => go(1) }
+      ? { kicker: `${total} stops ahead`, label: "Start", onClick: () => go(1) }
       : step.kind === "next" && nextLink
-        ? { kicker: nextLink.href === "/#contact" ? "Last stop" : "Next world", label: nextLink.href === "/#contact" ? "Get in touch" : nextLink.label.replace(/^Continue to /, "").replace(/ →$/, ""), href: nextLink.href }
-        : { kicker: nextStep?.kind === "next" ? "Done here" : `Next · ${nItem + 1} of ${total}`, label: nextStep?.kind === "next" ? `Finish ${world.label}` : shortOf(nextStep), onClick: () => go(active + 1) };
+        ? { kicker: nextLink.href === "/#contact" ? "Tour complete" : "Next world", label: nextLink.href === "/#contact" ? "Say hello" : "Continue", href: nextLink.href }
+        : nextStep?.kind === "next"
+          ? { kicker: `Stop ${nItem} of ${total}`, label: "Finish", onClick: () => go(active + 1) }
+          : { kicker: `Stop ${nItem} of ${total}`, label: "Next", onClick: () => go(active + 1) };
   const back = active === 0 ? { label: "Island", href: "/" } : { label: "Back", onClick: () => go(active - 1) };
 
   return (
@@ -444,6 +497,15 @@ export function WorldPage({ id }: { id: WorldId }) {
       <BigCTA {...cta} back={back} idleKey={step.id} nudge={nudge} />
       <Rail world={world} active={active} go={go} />
       {stamped && <StampMoment id={world.id} onDone={() => setStamped(false)} />}
+      {waiting && (
+        <StampWaiting
+          id={world.id}
+          onClose={() => {
+            ui.pop();
+            setWaiting(false);
+          }}
+        />
+      )}
     </>
   );
 }

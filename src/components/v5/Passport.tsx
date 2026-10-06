@@ -7,6 +7,7 @@ import { colorOf } from "./cards";
 import { PopButton } from "./PopButton";
 import { usePassport } from "./passportStore";
 import { fanfare, thud } from "./sfx";
+import { ui } from "@/lib/audio";
 import { burst, confettiRain, shake } from "./juice";
 
 /** A small glyph for each world, drawn in the stamp's centre. */
@@ -60,7 +61,7 @@ export function StampArt({ id, on, size = 120, faded }: { id: WorldId; on?: stri
   const label = worlds[id].label.toUpperCase();
   const pathId = `stamp-arc-${id}`;
   return (
-    <svg viewBox="0 0 100 100" width={size} height={size} className={cn(faded && "opacity-30")} style={{ color }} aria-hidden="true">
+    <svg viewBox="0 0 100 100" width={size} height={size} className={cn(faded && "opacity-75 saturate-[.55]")} style={{ color }} aria-hidden="true">
       <defs>
         <path id={pathId} d="M 50 50 m -36 0 a 36 36 0 1 1 72 0 a 36 36 0 1 1 -72 0" />
       </defs>
@@ -119,10 +120,73 @@ export function StampMoment({ id, onDone }: { id: WorldId; onDone: () => void })
   );
 }
 
+// the passport dialog can be opened from anywhere: the nav, the home card, a world
+let openPassport: () => void = () => {};
+export const passportUI = { open: () => openPassport() };
+
+/** All five stamp slots in a row: earned ones in colour, the rest dashed. Opens the passport. */
+export function PassportStrip({ compact }: { compact?: boolean }) {
+  const stamps = usePassport();
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        ui.pop();
+        passportUI.open();
+      }}
+      className="group mt-5 flex w-full items-center gap-4 rounded-[22px] border-[3px] border-ink bg-[#fff3d6] p-3 pr-4 text-left shadow-[5px_5px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+    >
+      <span className="flex shrink-0 -space-x-3">
+        {worldOrder.map((w, i) => {
+          const got = stamps.find((x) => x.id === w);
+          return (
+            <span key={w} className={cn("rounded-full bg-[#fff8ec] transition-transform group-hover:-translate-y-1", got && "-rotate-6")} style={{ transitionDelay: `${i * 40}ms` }}>
+              <StampArt id={w} on={got?.on} size={compact ? 44 : 54} faded={!got} />
+            </span>
+          );
+        })}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-mono text-[0.875rem] font-bold tracking-[0.08em] uppercase">Your passport · {stamps.length} of {worldOrder.length}</span>
+        <span className="block font-display text-[1.0625rem] leading-tight md:text-[1.1875rem]">{stamps.length >= worldOrder.length ? "Every world stamped" : "Finish a world to earn its stamp"}</span>
+      </span>
+    </button>
+  );
+}
+
+/** The first time you walk into a world: there is a stamp here for you. */
+export function StampWaiting({ id, onClose }: { id: WorldId; onClose: () => void }) {
+  return (
+    <div className="pointer-events-auto fixed inset-0 z-[66] grid place-items-center bg-ink/40 px-4 motion-safe:animate-[overlay-in_0.25s_ease-out_both]" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="stamp-waiting">
+      <div className="w-full max-w-[30rem] rounded-[30px] border-[4px] border-ink bg-[#fff3d6] p-7 text-center text-ink shadow-[10px_10px_0_var(--ink)] motion-safe:animate-[pop-in_0.5s_cubic-bezier(.2,.9,.3,1.3)_both]" onClick={(e) => e.stopPropagation()}>
+        <p className="font-mono text-[0.9375rem] font-bold tracking-[0.12em] uppercase">Your passport</p>
+        <div className="mt-4 flex justify-center motion-safe:animate-[cta-nudge_1.8s_ease-in-out_0.6s_infinite]">
+          <StampArt id={id} size={170} faded />
+        </div>
+        <h2 id="stamp-waiting" className="font-display mt-4 text-[2rem] leading-tight md:text-[2.4rem]">
+          A stamp to collect
+        </h2>
+        <p className="mt-2 text-[1.125rem] font-bold md:text-[1.25rem]">Walk {worlds[id].label} to the end and this stamp is yours. Collect all five.</p>
+        <div className="mt-6 flex justify-center">
+          <PopButton size="lg" icon="→" onClick={onClose}>
+            Let&apos;s go
+          </PopButton>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** The passport pill in the nav, and the passport itself when opened. */
 export function PassportPill() {
   const stamps = usePassport();
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    openPassport = () => setOpen(true);
+    return () => {
+      openPassport = () => {};
+    };
+  }, []);
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = dialog.current;
@@ -136,7 +200,7 @@ export function PassportPill() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex h-10 items-center gap-2 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3 font-display text-[0.875rem] text-ink shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+        className="inline-flex h-10 items-center gap-2 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3 font-display text-[1rem] text-ink shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
         aria-haspopup="dialog"
       >
         <span className="flex -space-x-1.5" aria-hidden="true">
@@ -146,7 +210,7 @@ export function PassportPill() {
           })}
         </span>
         <span className="hidden sm:inline">Passport</span>
-        <span className="font-mono text-[0.75rem]">
+        <span className="font-mono text-[0.875rem]">
           {stamps.length}/{worldOrder.length}
         </span>
       </button>
@@ -157,7 +221,7 @@ export function PassportPill() {
         className="m-auto w-[min(94vw,40rem)] rounded-[28px] border-[3px] border-ink bg-[#fff3d6] p-0 text-ink shadow-[8px_8px_0_var(--ink)] backdrop:bg-ink/40"
       >
         <div className="p-6 md:p-8">
-          <p className="font-mono text-[0.8125rem] tracking-[0.06em] uppercase">Your passport</p>
+          <p className="font-mono text-[0.9375rem] tracking-[0.06em] uppercase">Your passport</p>
           <h2 className="font-display mt-2 text-[2rem] leading-tight md:text-[2.5rem]">{all ? "Every world, stamped." : "Collect a stamp in every world."}</h2>
           <p className="mt-2 text-[1.0625rem]">{all ? "You have seen the whole resume. Thank you for walking it." : "Walk a world to its end and it gets stamped here."}</p>
           <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">

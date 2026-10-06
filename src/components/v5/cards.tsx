@@ -15,7 +15,7 @@ export function CardShell({ children, className }: { children: ReactNode; classN
 
 export function Hud({ margam, children, right }: { margam: MargamId; children: ReactNode; right?: ReactNode }) {
   return (
-    <p className="flex items-center gap-2.5 font-mono text-[0.8125rem] font-bold tracking-[0.08em] uppercase md:text-[0.875rem]">
+    <p className="flex items-center gap-2.5 font-mono text-[0.9375rem] font-bold tracking-[0.08em] uppercase md:text-[1rem]">
       <span className="h-4 w-4 shrink-0 rounded-full border-[3px] border-ink" style={{ background: colorOf(margam) }} aria-hidden="true" />
       <span className="min-w-0 flex-1">{children}</span>
       {right && <span className="shrink-0 rounded-full border-[2.5px] border-ink bg-[#ffc93c] px-2.5 py-0.5">{right}</span>}
@@ -88,7 +88,7 @@ export function LocalTime({ place }: { place: PlaceId }) {
     return () => window.clearInterval(id);
   }, [tz]);
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink bg-white/70 px-2.5 py-0.5 font-mono text-[0.75rem]" title={`Local time in ${city}`}>
+    <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink bg-white/70 px-2.5 py-0.5 font-mono text-[0.875rem]" title={`Local time in ${city}`}>
       <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true">
         <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
         <path d="M8 4.5V8l2.4 1.6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -103,7 +103,7 @@ export function Chips({ items, className }: { items: string[]; className?: strin
   return (
     <ul className={cn("flex flex-wrap gap-1.5", className)}>
       {items.map((c) => (
-        <li key={c} className="rounded-full border-[2.5px] border-ink bg-white px-3 py-0.5 text-[0.875rem] font-bold md:text-[0.9375rem]">
+        <li key={c} className="rounded-full border-[2.5px] border-ink bg-white px-3 py-0.5 text-[1rem] font-bold md:text-[0.9375rem]">
           {c}
         </li>
       ))}

@@ -192,6 +192,18 @@ export const ui = {
     tone(116, 270, 1.1, "sawtooth", 0.07);
     noise(1.2, { from: 300, to: 1800, q: 0.8, vol: 0.3 });
   },
+  /** A card flipping over. */
+  flip: () => {
+    noise(0.22, { from: 900, to: 3200, q: 1.4, vol: 0.32 });
+    tone(440, 880, 0.14, "triangle", 0.14, 0.12);
+  },
+  /** Going through a door: a swoop down and a soft knock. */
+  door: () => {
+    noise(0.55, { from: 2600, to: 300, q: 0.9, vol: 0.4 });
+    tone(520, 220, 0.4, "triangle", 0.2);
+  },
+  /** Arriving somewhere new: a bright rising chord. */
+  arrive: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.5, "triangle", 0.16, i * 0.06)),
   /** A whoosh for clouds and big moves. */
   whoosh: () => noise(0.6, { from: 250, to: 2400, q: 0.9, vol: 0.42 }),
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { setMuted, ui, useMuted } from "@/lib/audio";
+import { music } from "@/lib/music";
 
 /** Sound on or off for the whole site. Remembered in this browser. */
 export function SoundToggle() {
@@ -10,10 +11,15 @@ export function SoundToggle() {
       type="button"
       onClick={() => {
         setMuted(!muted);
-        if (muted) setTimeout(() => ui.pop(), 0);
+        if (muted) {
+          setTimeout(() => {
+            ui.pop();
+            music.start();
+          }, 0);
+        } else music.stop();
       }}
       aria-pressed={!muted}
-      aria-label={muted ? "Turn sound on" : "Turn sound off"}
+      aria-label={muted ? "Turn sound and music on" : "Turn sound and music off"}
       className="grid h-10 w-10 place-items-center rounded-full border-[3px] border-ink bg-[#fff8ec] text-ink shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">

@@ -84,7 +84,7 @@ export function Chooser() {
     >
       <div className={cn("w-full max-w-[64rem] transition-transform duration-300", leaving && "scale-105")}>
         <div className="text-center motion-safe:animate-[pop-in_0.55s_cubic-bezier(.2,.9,.3,1.3)_0.3s_both]">
-          <p className="inline-block rounded-full border-[3px] border-ink bg-[#ffc93c] px-4 py-1 font-mono text-[0.8125rem] font-bold tracking-[0.12em] text-ink uppercase shadow-[3px_3px_0_var(--ink)]">{chooserCopy.kicker}</p>
+          <p className="inline-block rounded-full border-[3px] border-ink bg-[#ffc93c] px-4 py-1 font-mono text-[0.9375rem] font-bold tracking-[0.12em] text-ink uppercase shadow-[3px_3px_0_var(--ink)]">{chooserCopy.kicker}</p>
           <h2 id="chooser-title" className="font-display mt-3 text-[clamp(2.1rem,6vw,5rem)] md:mt-4 leading-[0.95] text-[#fff8ec] [text-shadow:4px_4px_0_#2b1e1a,-2px_-2px_0_#2b1e1a,2px_-2px_0_#2b1e1a,-2px_2px_0_#2b1e1a]">
             {chooserCopy.title}
           </h2>
@@ -126,8 +126,8 @@ export function Chooser() {
                   <AvatarIcon kind={a.id} className="h-13 w-13 sm:h-20 sm:w-20 md:h-24 md:w-24" />
                 </span>
                 <span className="font-display mt-2 text-[1.125rem] leading-none sm:text-[1.5rem] md:mt-3 md:text-[1.75rem]">{a.name}</span>
-                <span className="mt-1 font-mono text-[0.625rem] font-bold tracking-[0.06em] uppercase sm:text-[0.75rem]">{a.species}</span>
-                <span className="mt-2 hidden text-[0.875rem] leading-snug font-medium sm:block md:text-[0.9375rem]">{a.line}</span>
+                <span className="mt-1 font-mono text-[0.8125rem] font-bold tracking-[0.06em] uppercase sm:text-[0.875rem]">{a.species}</span>
+                <span className="mt-2 hidden text-[1rem] leading-snug font-medium sm:block md:text-[0.9375rem]">{a.line}</span>
               </button>
             );
           })}
@@ -141,7 +141,7 @@ export function Chooser() {
           ) : (
             <p className="rounded-full border-[3px] border-ink bg-[#fff8ec] px-5 py-2 font-display text-[1.0625rem] text-ink shadow-[4px_4px_0_var(--ink)]">Tap one to pick</p>
           )}
-          <button type="button" onClick={() => close(false)} className="font-mono text-[0.875rem] font-bold text-[#fff8ec] underline decoration-2 underline-offset-4">
+          <button type="button" onClick={() => close(false)} className="font-mono text-[1rem] font-bold text-[#fff8ec] underline decoration-2 underline-offset-4">
             {chooserCopy.skip}
           </button>
         </div>

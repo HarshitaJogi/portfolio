@@ -37,23 +37,6 @@ function useIdle(ms: number, key: string) {
   return idle;
 }
 
-/** A pointing hand, tapping toward the button. */
-function Hand() {
-  return (
-    <span aria-hidden="true" className="pointer-events-none absolute -top-14 -left-10 hidden animate-[hand-tap_0.9s_ease-in-out_infinite] md:block">
-      <svg viewBox="0 0 64 64" className="h-16 w-16 drop-shadow-[3px_3px_0_#2b1e1a]">
-        <path
-          d="M26 8c3 0 5 2 5 5v17l3-1c3-1 5 0 6 2l1 1c3-1 5 0 6 2 3-1 6 1 6 4v9c0 9-6 14-14 14h-6c-5 0-8-2-11-6l-9-12c-2-3-1-6 2-7 2-1 4 0 6 2l1 2V13c0-3 2-5 4-5z"
-          fill="#fff8ec"
-          stroke="#2b1e1a"
-          strokeWidth="3.5"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </span>
-  );
-}
-
 /**
  * The one obvious thing to do next. Big, chunky, with a thick base it presses down into,
  * a pulsing ring, and a two-line label: what it is ("Next") and where it goes ("MSCI").
@@ -93,8 +76,8 @@ export function BigCTA({ kicker, label, back, tone = "#ff6b4a", idleKey = "", in
             {/* gloss */}
             <span aria-hidden="true" className="absolute inset-x-4 top-1.5 h-[38%] rounded-full bg-white/30" />
             <span className="relative min-w-0 flex-1">
-              <span className="block font-mono text-[0.8125rem] font-bold tracking-[0.14em] uppercase md:text-[0.875rem]">{kicker}</span>
-              <span className="font-display block truncate text-[1.5rem] leading-[1.05] sm:text-[1.75rem] md:text-[2.5rem]">{label}</span>
+              <span className="block font-mono text-[0.9375rem] font-bold tracking-[0.12em] uppercase md:text-[1rem]">{kicker}</span>
+              <span className="font-display block truncate text-[1.875rem] leading-[1.05] md:text-[2.75rem]">{label}</span>
             </span>
             <span aria-hidden="true" className="relative grid h-14 w-14 shrink-0 place-items-center rounded-full border-[4px] border-ink bg-[#fff8ec] md:h-16 md:w-16">
               <svg viewBox="0 0 24 24" className="h-8 w-8 motion-safe:animate-[arrow-shimmy_0.9s_ease-in-out_infinite]">
@@ -103,7 +86,6 @@ export function BigCTA({ kicker, label, back, tone = "#ff6b4a", idleKey = "", in
             </span>
           </span>
         </Tag>
-        {idle && <Hand />}
       </div>
     </div>
   );
@@ -128,7 +110,7 @@ function BackButton({ label, ...a }: Action & { label: string }) {
         <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
           <path d="M20 12H6M12 5l-7 7 7 7" fill="none" stroke="#2b1e1a" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <span className="font-mono text-[0.6875rem] font-bold tracking-[0.1em] uppercase" aria-hidden="true">
+        <span className="font-mono text-[1rem] font-bold tracking-[0.08em] uppercase" aria-hidden="true">
           {label.length > 8 ? "Back" : label}
         </span>
       </span>

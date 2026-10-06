@@ -3,13 +3,13 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * The cloud wipe between scenes.
- * idle → cover (clouds close, then the route changes) → reveal (the new scene is built, clouds part) → idle.
+ * The scene transition: idle → cover (a solid circle grows from where you clicked, the
+ * route changes underneath) → reveal (the new scene is built, the circle closes away) → idle.
  */
 export type Phase = "idle" | "cover" | "reveal";
-type State = { phase: Phase; to: string };
+type State = { phase: Phase; to: string; target: string; x: number; y: number };
 
-let state: State = { phase: "idle", to: "" };
+let state: State = { phase: "idle", to: "", target: "hub", x: 0, y: 0 };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -29,4 +29,17 @@ export const wipe = {
 
 export function useWipe() {
   return useSyncExternalStore(wipe.subscribe, wipe.get, wipe.get);
+}
+
+/** Where the last press happened, so the circle grows from the thing you clicked. */
+export const lastPress = { x: -1, y: -1 };
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "pointerdown",
+    (e) => {
+      lastPress.x = e.clientX;
+      lastPress.y = e.clientY;
+    },
+    { passive: true, capture: true },
+  );
 }

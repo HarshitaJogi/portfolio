@@ -45,12 +45,12 @@ export function CommandTrigger() {
           setLoaded(true);
           setOpen(true);
         }}
-        className="inline-flex h-10 items-center gap-1 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3 font-mono text-[0.8125rem] font-medium text-ink shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5"
+        className="inline-flex h-10 items-center gap-1 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3 font-mono text-[0.9375rem] font-medium text-ink shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5"
         aria-label={mac ? "Menu, ⌘ K" : "Menu, Ctrl K"}
         aria-keyshortcuts={mac ? "Meta+K" : "Control+K"}
       >
         {/* phones get a word, keyboards get the shortcut */}
-        <span className="font-display text-[0.875rem] lg:hidden">Menu</span>
+        <span className="font-display text-[1rem] lg:hidden">Menu</span>
         <kbd className="hidden font-mono lg:inline">{mac ? "⌘" : "Ctrl"}</kbd>
         <kbd className="hidden font-mono lg:inline">K</kbd>
       </button>

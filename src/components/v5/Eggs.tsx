@@ -110,9 +110,9 @@ export function Eggs() {
             toast && (
               <>
                 <EggIcon filled />
-                <span className="font-mono text-[0.75rem] tracking-[0.06em] uppercase">{eggCopy.toast}</span>
+                <span className="font-mono text-[0.875rem] tracking-[0.06em] uppercase">{eggCopy.toast}</span>
                 <span className="font-display text-[0.9375rem]">{EGGS[toast]}</span>
-                <span className="font-mono text-[0.75rem]">
+                <span className="font-mono text-[0.875rem]">
                   {found.length}/{ALL.length}
                 </span>
               </>
@@ -126,10 +126,10 @@ export function Eggs() {
         <div className="fixed bottom-5 left-5 z-40 hidden lg:block">
           {open && (
             <div id="egg-list" className="mb-3 w-[19rem] rounded-[20px] border-[3px] border-ink bg-[#fff8ec] p-4 text-ink shadow-[5px_5px_0_var(--ink)]">
-              <p className="font-mono text-[0.75rem] tracking-[0.06em] uppercase">
+              <p className="font-mono text-[0.875rem] tracking-[0.06em] uppercase">
                 {eggCopy.label} · {found.length} of {ALL.length}
               </p>
-              <ul className="mt-3 space-y-1.5 text-[0.875rem] leading-snug">
+              <ul className="mt-3 space-y-1.5 text-[1rem] leading-snug">
                 {ALL.map((id) => {
                   const got = found.includes(id);
                   return (
@@ -149,7 +149,7 @@ export function Eggs() {
             onClick={() => setOpen((o) => !o)}
             aria-expanded={open}
             aria-controls="egg-list"
-            className="inline-flex h-10 items-center gap-2 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3.5 font-mono text-[0.8125rem] text-ink shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5"
+            className="inline-flex h-10 items-center gap-2 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3.5 font-mono text-[0.9375rem] text-ink shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5"
           >
             <EggIcon filled />
             {found.length}/{ALL.length}
@@ -166,7 +166,7 @@ export function Eggs() {
         className="m-auto w-[min(92vw,30rem)] rounded-[24px] border-[3px] border-ink bg-[#fff3d6] p-0 text-ink shadow-[8px_8px_0_var(--ink)] backdrop:bg-ink/40"
       >
         <div className="p-7">
-          <p className="font-mono text-[0.75rem] tracking-[0.06em] uppercase">{eggCopy.bottle.title}</p>
+          <p className="font-mono text-[0.875rem] tracking-[0.06em] uppercase">{eggCopy.bottle.title}</p>
           <div className="mt-4 space-y-3 text-[1.0625rem] leading-relaxed">
             {eggCopy.bottle.lines.map((l) => (
               <p key={l}>{l}</p>
