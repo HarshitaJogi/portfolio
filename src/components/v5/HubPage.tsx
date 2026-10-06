@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { chooserCopy, hubStops, margamParts, media, person, type HubStop } from "@/content/profile";
+import { chooserCopy, hubStops, MEDIA_DIR, margamParts, media, person, type HubStop } from "@/content/profile";
 import { island, useIsland } from "@/world/state";
 import { chime } from "@/world/bits";
 import { findEgg } from "@/world/eggs";
@@ -88,29 +88,34 @@ function WelcomeCard({ stop }: { stop: HubStop }) {
 /** The back of the name card: the resume itself, right there, and a big way to keep it. */
 function WelcomeBack({ shown }: { shown: boolean }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col p-5 md:p-7">
+    <div className="card-scroll flex min-h-0 flex-1 flex-col overflow-y-auto p-5 md:p-7">
       <div className="flex items-center gap-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={media.headshot.src} alt={media.headshot.alt} width={80} height={120} className="h-16 w-16 shrink-0 rounded-full border-[3px] border-ink object-cover object-top shadow-[3px_3px_0_var(--ink)] md:h-20 md:w-20" />
         <div className="min-w-0">
           <p className="font-mono text-[0.9375rem] font-bold tracking-[0.08em] uppercase">My resume</p>
-          <p className="font-display truncate text-[1.75rem] leading-[1] md:text-[2.25rem]">{person.name}</p>
+          <p className="font-display text-[1.6rem] leading-[1] md:text-[2.25rem]">{person.name}</p>
         </div>
       </div>
-      {/* the PDF, live in the card; only loaded once the card is turned over */}
-      <div className="mt-4 min-h-[16rem] flex-1 overflow-hidden rounded-[18px] border-[3px] border-ink bg-white shadow-[4px_4px_0_var(--ink)] md:min-h-[20rem]">
+      {/* the first page, as an image, so it looks the same in every browser; tap it for the PDF */}
+      <a
+        href={media.resumePdf}
+        target="_blank"
+        rel="noopener"
+        className="group relative mt-4 block h-[15rem] shrink-0 overflow-hidden rounded-[18px] border-[3px] border-ink bg-white shadow-[4px_4px_0_var(--ink)] md:h-[22rem]"
+        aria-label="Open the resume PDF in a new tab"
+      >
         {shown ? (
-          <iframe src={`${media.resumePdf}#view=FitH&toolbar=0&navpanes=0`} title={`${person.name}, resume (PDF)`} className="h-full min-h-[16rem] w-full md:min-h-[20rem]" />
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`${MEDIA_DIR}/resume-preview.png`} alt={`First page of ${person.name}'s resume`} className="block h-auto w-full transition-transform duration-500 group-hover:-translate-y-[8%]" />
         ) : (
           <div className="grid h-full place-items-center font-mono text-[1rem] font-bold">Resume</div>
         )}
-      </div>
+        <span className="absolute right-3 bottom-3 rounded-full border-[3px] border-ink bg-[#ffc93c] px-3 py-1 font-display text-[0.9375rem] shadow-[3px_3px_0_var(--ink)]">Open full size ↗</span>
+      </a>
       <div className="mt-4 flex flex-wrap gap-2.5">
         <PopButton href={media.resumePdf} download="Harshita_Jogi_Resume.pdf" size="lg" tone="primary" icon="↓">
           Download PDF
-        </PopButton>
-        <PopButton href={media.resumePdf} size="md" tone="sun">
-          Open full size ↗
         </PopButton>
         <PopButton href={person.links.linkedin} size="md" tone="secondary">
           LinkedIn ↗
@@ -133,17 +138,37 @@ function WelcomeBack({ shown }: { shown: boolean }) {
 function FlipWelcome({ stop }: { stop: HubStop }) {
   const [back, setBack] = useState(false);
   const reduced = useReducedMotion();
+  const frontRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLDivElement>(null);
+  // whatever the animation does, each face ends up in the right state
+  useEffect(() => {
+    const t = window.setTimeout(
+      () => {
+        if (frontRef.current) frontRef.current.style.visibility = back ? "hidden" : "visible";
+        if (backRef.current) backRef.current.style.visibility = back ? "visible" : "hidden";
+      },
+      reduced ? 0 : 900,
+    );
+    return () => window.clearTimeout(t);
+  }, [back, reduced]);
   const flip = (e: React.MouseEvent | React.KeyboardEvent) => {
     if ((e.target as HTMLElement).closest("button, a") && !(e.target as HTMLElement).closest("[data-flip]")) return;
     ui.flip();
     setBack((b) => !b);
   };
-  const face = "col-start-1 row-start-1 [backface-visibility:hidden] [-webkit-backface-visibility:hidden]";
+  const face = "col-start-1 row-start-1 min-w-0 [backface-visibility:hidden] [-webkit-backface-visibility:hidden]";
   return (
     <div className="[perspective:1600px]">
       <motion.div
-        className="grid [transform-style:preserve-3d]"
+        className="grid grid-cols-[minmax(0,1fr)] [transform-style:preserve-3d]"
         animate={{ rotateY: back ? 180 : 0 }}
+        // Safari does not reliably hide the back of a 3D flip: show each face only while it faces us
+        onUpdate={(v) => {
+          const r = (((Number(v.rotateY) || 0) % 360) + 360) % 360;
+          const frontOn = r < 90 || r > 270;
+          if (frontRef.current) frontRef.current.style.visibility = frontOn ? "visible" : "hidden";
+          if (backRef.current) backRef.current.style.visibility = frontOn ? "hidden" : "visible";
+        }}
         transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 16 }}
       >
         <div
@@ -152,6 +177,8 @@ function FlipWelcome({ stop }: { stop: HubStop }) {
           aria-label="Flip the card to see the resume"
           onClick={flip}
           onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), flip(e))}
+          ref={frontRef}
+          style={{ transform: "rotateY(0deg)" }}
           className={cn(face, "cursor-pointer", back && "pointer-events-none")}
         >
           <CardShell className="flex max-h-[min(54svh,46rem)] flex-col transition-transform hover:-translate-y-1 md:max-h-[calc(100svh-15rem)]">
@@ -167,6 +194,8 @@ function FlipWelcome({ stop }: { stop: HubStop }) {
           aria-label="Flip the card back"
           onClick={flip}
           onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), flip(e))}
+          ref={backRef}
+          style={{ visibility: "hidden" }}
           className={cn(face, "cursor-pointer [transform:rotateY(180deg)]", !back && "pointer-events-none")}
         >
           <CardShell className="flex max-h-[min(54svh,46rem)] flex-col md:max-h-[calc(100svh-15rem)]">
