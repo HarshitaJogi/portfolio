@@ -175,6 +175,7 @@ export default function Data({ step }: DioramaProps) {
             { t: "MODELING", c: C.coral },
             { t: "PANDAS", c: C.sun },
           ],
+          [{ t: "POSTGRESQL", c: C.cream }],
         ],
         [-3.2, 0.15, 0.0],
         0.08,

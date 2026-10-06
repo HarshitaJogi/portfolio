@@ -251,7 +251,11 @@ export default function Cloud({ step }: DioramaProps) {
             { t: "STORAGE", c: C.sun },
             { t: "AZURE", c: C.cream },
           ],
-          [{ t: "VERCEL", c: C.cream }],
+          [
+            { t: "VERCEL", c: C.cream },
+            { t: "AWS", c: C.sun },
+          ],
+          [{ t: "GIT", c: C.coral }],
         ],
         [-2.7, 0.15, -0.2],
         0.08,

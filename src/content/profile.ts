@@ -17,16 +17,19 @@
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://harshitajogi.com").replace(/\/$/, "");
 
 /** Where swappable photos live. Replace files in place, same names. See README. */
-export const MEDIA_DIR = "/placeholders";
+export const MEDIA_DIR = "/media";
 
 export const media = {
   headshot: { src: `${MEDIA_DIR}/headshot.jpg`, alt: "Portrait of Harshita Jogi", width: 1197, height: 1800 },
-  dance: [1, 2, 3, 4, 5].map((n) => ({
-    src: `${MEDIA_DIR}/dance-${n}.jpg`,
-    alt: "Bharatanatyam performance",
-  })),
+  /** Photos from her arangetram, in the order the gallery shows them. */
+  dance: [
+    { src: `${MEDIA_DIR}/dance-1.jpg`, alt: "Harshita in a Bharatanatyam pose at her arangetram, in gold and magenta silk" },
+    { src: `${MEDIA_DIR}/dance-2.jpg`, alt: "Harshita performing an expressive Bharatanatyam piece, adjusting her earring" },
+    { src: `${MEDIA_DIR}/dance-3.jpg`, alt: "Harshita mid-movement in a Bharatanatyam performance" },
+    { src: `${MEDIA_DIR}/dance-4.jpg`, alt: "Harshita in a standing Bharatanatyam pose" },
+    { src: `${MEDIA_DIR}/dance-5.jpg`, alt: "Harshita with her parents at her arangetram" },
+  ],
   bitgig: { src: `${MEDIA_DIR}/bitgig.jpg`, alt: "Bitgig landing page: Gemini drafts, experts decide", width: 1440, height: 900 },
-  drone: { src: `${MEDIA_DIR}/drone.jpg`, alt: "Aerial view of crop fields" },
   resumePdf: "/Harshita_Jogi_Resume.pdf",
 } as const;
 
@@ -44,7 +47,6 @@ export const person = {
   links: {
     linkedin: "https://www.linkedin.com/in/harshita-jogi-563227215/",
     github: "https://github.com/HarshitaJogi",
-    /** TODO(Harshita): set the real repo URL once this site is pushed. */
     source: "https://github.com/HarshitaJogi/portfolio",
   },
   availability: "Open to full-time roles starting 2027",
@@ -237,7 +239,7 @@ export const education = {
       start: "Aug 2020",
       end: "May 2024",
       gpa: "GPA 9.04/10",
-      details: [],
+      details: ["Data Structures", "Operating Systems", "Computer Networking", "Machine Learning", "Cloud Computing"],
       awards: [],
     },
   ],
@@ -254,8 +256,7 @@ export const bitgig = {
   date: "Sep 2026",
   tagline: "Expert annotation for lab and medical video. AI drafts, verified experts correct.",
   live: "https://bitgig-smoky.vercel.app/",
-  /** TODO(Harshita): repo URL, or leave null for no link. */
-  repo: null as string | null,
+  repo: "https://github.com/ZERO34802/BITGIG" as string | null,
   /** TODO(Harshita): teammates. When set, rendered as a credit line. */
   team: null as string | null,
   stages: [
@@ -393,7 +394,7 @@ export const toolkit = {
     {
       id: "ml",
       title: "Machine learning",
-      skills: ["SciBERT", "NER", "TensorFlow", "YOLOv9", "Model quantization", "NVIDIA Jetson", "Prodigy"],
+      skills: ["SciBERT", "NER", "PyTorch", "TensorFlow", "YOLOv9", "Model quantization", "NVIDIA Jetson", "Prodigy"],
       used: [
         { where: "NSI", what: "SciBERT NER at 97% F1, Prodigy in the annotation pipeline" },
         { where: "IIT Patna", what: "Modified YOLOv9, quantized for Jetson" },
@@ -403,7 +404,7 @@ export const toolkit = {
     {
       id: "data",
       title: "Data",
-      skills: ["Databricks", "PySpark", "Pandas", "BigQuery", "OracleDB", "ETL", "Data modeling"],
+      skills: ["Databricks", "PySpark", "Pandas", "BigQuery", "OracleDB", "PostgreSQL", "ETL", "Data modeling"],
       used: [{ where: "MSCI", what: "Databricks ETL in PySpark and Pandas, data modeling for the pipelines, 5TB from OracleDB to BigQuery" }],
     },
     {
@@ -415,7 +416,7 @@ export const toolkit = {
     {
       id: "cloud",
       title: "Cloud & DevOps",
-      skills: ["GCP", "Cloud Run", "Cloud Storage", "Azure", "Docker", "Kubernetes", "CI/CD", "SonarQube", "Vercel"],
+      skills: ["GCP", "Cloud Run", "Cloud Storage", "Azure", "AWS", "Docker", "Kubernetes", "CI/CD", "SonarQube", "Vercel", "Git"],
       used: [
         { where: "MSCI", what: "15+ APIs from Azure to GCP on Kubernetes and Docker, CI/CD with SonarQube" },
         { where: "Bitgig", what: "Cloud Run, Cloud Storage, Vercel" },
@@ -424,7 +425,7 @@ export const toolkit = {
     {
       id: "lang",
       title: "Languages & web",
-      skills: ["Python", "Java", "TypeScript", "React", "Next.js"],
+      skills: ["Python", "Java", "C++", "TypeScript", "JavaScript", "SQL", "React", "Next.js"],
       used: [
         { where: "Nokia", what: "Python, a 50K+ line test framework" },
         { where: "MSCI", what: "Java and Spring Boot" },
@@ -434,7 +435,7 @@ export const toolkit = {
     },
   ],
   /** Skills without a confirmed "where". Shown as plain text, never on a card. */
-  alsoFamiliar: ["C++", "SQL", "JavaScript", "PostgreSQL", "AWS", "Git"],
+  alsoFamiliar: [] as string[],
   alsoLabel: "Also familiar with",
 };
 
@@ -630,7 +631,7 @@ export const stack: { group: string; items: StackItem[] }[] = [
 export const about = {
   title: "Off the clock",
   lines: [
-    "Kovida degree in Bharatanatyam, Nalanda Dance Research Center",
+    "Kovida degree in Bharatanatyam, Nalanda Dance Research Center, Mumbai",
     "Communication Skills Grade 5, Distinction, Trinity College London",
   ],
   quote: "The hard work stays invisible. What reaches people feels effortless.",
@@ -975,16 +976,6 @@ export const worlds: Record<WorldId, World> = {
       skillStep("backend", SKY.sunnyvale),
       skillStep("cloud", SKY.boston),
       skillStep("lang", SKY.day),
-      {
-        id: "also",
-        kind: "item",
-        kicker: "Skills",
-        title: toolkit.alsoLabel,
-        short: "Also familiar",
-        lede: "Familiar, and not yet shown in a role or project here.",
-        chips: [...toolkit.alsoFamiliar],
-        sky: SKY.dusk,
-      },
       nextStep("experience", "Experience.", "Four roles across three cities, from edge ML research to LLM agents."),
     ],
   },
@@ -1101,7 +1092,7 @@ export const worlds: Record<WorldId, World> = {
         highlights: ["Gemini drafts SOP steps from video", "Experts correct, consensus QC agrees", "Cloud Run pipeline, Next.js review app"],
         bullets: bitgig.bullets,
         chips: [...bitgig.stack],
-        links: [{ label: "Try the live demo ↗", href: bitgig.live, primary: true }],
+        links: [{ label: "Try the live demo ↗", href: bitgig.live, primary: true }, ...(bitgig.repo ? [{ label: "Code on GitHub ↗", href: bitgig.repo }] : [])],
         sky: SKY.night,
         night: true,
       },
@@ -1123,7 +1114,7 @@ export const worlds: Record<WorldId, World> = {
         kicker: "Bharatanatyam",
         title: "Kovida degree.",
         short: "Bharatanatyam",
-        subtitle: "Nalanda Dance Research Center",
+        subtitle: "Nalanda Dance Research Center, Mumbai",
         lede: `${about.quote} ${about.quoteNote}`,
         hint: "Ring the bells",
         sky: SKY.stage,

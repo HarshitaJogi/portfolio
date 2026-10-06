@@ -56,7 +56,7 @@ export function Nav() {
                     href={l.href}
                     onClick={fly(l.href)}
                     aria-current={on ? "page" : undefined}
-                    className={cn("rounded-full px-3.5 py-1.5 text-[1.125rem] font-extrabold no-underline transition-colors", on ? "bg-ink text-[#fff8ec]" : "text-ink hover:bg-ink/10")}
+                    className={cn("rounded-full px-2.5 py-1.5 text-[1.0625rem] font-extrabold whitespace-nowrap no-underline transition-colors 2xl:px-3.5 2xl:text-[1.125rem]", on ? "bg-ink text-[#fff8ec]" : "text-ink hover:bg-ink/10")}
                   >
                     {l.label}
                   </Link>
@@ -64,7 +64,7 @@ export function Nav() {
               );
             })}
             <li>
-              <Link href="/skim" className="rounded-full px-3.5 py-1.5 text-[1.125rem] font-extrabold text-ink no-underline transition-colors hover:bg-ink/10">
+              <Link href="/skim" className="rounded-full px-2.5 py-1.5 text-[1.0625rem] font-extrabold whitespace-nowrap text-ink no-underline transition-colors hover:bg-ink/10 2xl:px-3.5 2xl:text-[1.125rem]">
                 Text version
               </Link>
             </li>

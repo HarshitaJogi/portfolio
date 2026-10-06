@@ -181,9 +181,11 @@ export default function ResumePage() {
                 <b>{c.title}:</b> {c.skills.join(", ")}
               </li>
             ))}
-            <li>
-              <b>{toolkit.alsoLabel}:</b> {toolkit.alsoFamiliar.join(", ")}
-            </li>
+            {toolkit.alsoFamiliar.length > 0 && (
+              <li>
+                <b>{toolkit.alsoLabel}:</b> {toolkit.alsoFamiliar.join(", ")}
+              </li>
+            )}
           </ul>
         </section>
 

@@ -266,7 +266,10 @@ export default function Ml({ step }: DioramaProps) {
             { t: "QUANTIZE", c: C.cream },
             { t: "YOLOV9", c: C.sun },
           ],
-          [{ t: "JETSON", c: C.green }],
+          [
+            { t: "JETSON", c: C.green },
+            { t: "PYTORCH", c: C.coral },
+          ],
         ],
         [-2.65, 0.15, -0.2],
         0.08,

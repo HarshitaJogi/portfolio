@@ -64,9 +64,11 @@ export function SkimView() {
                 <span className="font-medium">{c.title}:</span> {c.skills.join(", ")}
               </li>
             ))}
-            <li>
-              <span className="font-medium">{toolkit.alsoLabel}:</span> {toolkit.alsoFamiliar.join(", ")}
-            </li>
+            {toolkit.alsoFamiliar.length > 0 && (
+              <li>
+                <span className="font-medium">{toolkit.alsoLabel}:</span> {toolkit.alsoFamiliar.join(", ")}
+              </li>
+            )}
           </ul>
         </div>
 

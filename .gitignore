@@ -43,3 +43,7 @@ next-env.d.ts
 # local tooling
 .claude/settings.local.json
 /scratch/
+
+# originals of the photos and resume (the site uses the processed copies in /public)
+/pics
+/resume

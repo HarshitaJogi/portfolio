@@ -276,6 +276,11 @@ export default function Lang({ step }: DioramaProps) {
             { t: "REACT", c: C.cobalt },
             { t: "NEXT.JS", c: C.cream },
           ],
+          [
+            { t: "C++", c: C.sun },
+            { t: "JAVASCRIPT", c: C.coral },
+          ],
+          [{ t: "SQL", c: C.cream }],
         ],
         [2.2, 0.15, 2.35],
         0.1,
