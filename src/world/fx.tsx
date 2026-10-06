@@ -3,6 +3,7 @@
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as THREE from "three";
+import { noise as baseNoise, tone as baseTone } from "@/lib/audio";
 import { C } from "./palette";
 import { Label } from "./bits";
 import { TapHint } from "./props/tappable";
@@ -60,61 +61,14 @@ export const seeded = (i: number, k = 0) => {
 /* sound: one shared audio context, a few synthesized voices            */
 /* ------------------------------------------------------------------ */
 
-let ctx: AudioContext | null = null;
-let noiseBuf: AudioBuffer | null = null;
-
-function audio() {
-  if (typeof window === "undefined") return null;
-  try {
-    ctx ??= new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    if (ctx.state === "suspended") void ctx.resume();
-    return ctx;
-  } catch {
-    return null;
-  }
-}
-
+// every island sound goes through the site's audio engine (one bus, one mute switch),
+// about twice as loud as before so a tap is unmistakable
+const LOUD = 2;
 function tone(freq: number, to: number, dur: number, type: OscillatorType = "sine", vol = 0.12, delay = 0) {
-  const a = audio();
-  if (!a) return;
-  const t = a.currentTime + delay;
-  const o = a.createOscillator();
-  const g = a.createGain();
-  o.type = type;
-  o.frequency.setValueAtTime(freq, t);
-  o.frequency.exponentialRampToValueAtTime(Math.max(to, 1), t + dur);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(a.destination);
-  o.start(t);
-  o.stop(t + dur + 0.03);
+  baseTone(freq, to, dur, type, Math.min(vol * LOUD, 0.6), delay);
 }
-
-function noise(dur: number, { type = "bandpass", from = 1200, to = from, q = 1, vol = 0.2, delay = 0 }: { type?: BiquadFilterType; from?: number; to?: number; q?: number; vol?: number; delay?: number } = {}) {
-  const a = audio();
-  if (!a) return;
-  if (!noiseBuf) {
-    noiseBuf = a.createBuffer(1, a.sampleRate, a.sampleRate);
-    const d = noiseBuf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  }
-  const t = a.currentTime + delay;
-  const src = a.createBufferSource();
-  src.buffer = noiseBuf;
-  src.loop = true;
-  const f = a.createBiquadFilter();
-  f.type = type;
-  f.Q.value = q;
-  f.frequency.setValueAtTime(from, t);
-  f.frequency.exponentialRampToValueAtTime(Math.max(to, 1), t + dur);
-  const g = a.createGain();
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.04, dur * 0.2));
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(f).connect(g).connect(a.destination);
-  src.start(t, Math.random() * 0.5);
-  src.stop(t + dur + 0.05);
+function noise(dur: number, o: { type?: BiquadFilterType; from?: number; to?: number; q?: number; vol?: number; delay?: number } = {}) {
+  baseNoise(dur, { ...o, vol: Math.min((o.vol ?? 0.2) * LOUD, 0.8) });
 }
 
 /** Toy sound effects. `p` scales the pitch. */
@@ -186,9 +140,91 @@ export const sfx = {
 /* a word that pops up and floats away                                 */
 /* ------------------------------------------------------------------ */
 
-/** "BEEP", "DING": a chunky word that pops out, rises, and shrinks away after a kick. */
-export function PopText({ kick, text, position, color = C.ink, outline = C.cream, size = 0.5, rise = 1.3, dur = 1.15, rotation }: { kick: Kick; text: string; position: V3; color?: string; outline?: string; size?: number; rise?: number; dur?: number; rotation?: V3 }) {
+// a five-point star, shared by every burst
+const starGeo = (() => {
+  const sh = new THREE.Shape();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 ? 0.42 : 1;
+    const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
+    if (i) sh.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    else sh.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+  }
+  return new THREE.ShapeGeometry(sh);
+})();
+const ringGeo = new THREE.RingGeometry(0.82, 1, 40);
+const STAR_COLORS = ["#ffc93c", "#ff6b4a", "#ff4f8b", "#3bb273", "#2f5dff", "#fff8ec"];
+const starMats = STAR_COLORS.map((c) => new THREE.MeshBasicMaterial({ color: c, toneMapped: false, fog: false, side: THREE.DoubleSide, transparent: true }));
+const inkStarMat = new THREE.MeshBasicMaterial({ color: C.ink, toneMapped: false, fog: false, side: THREE.DoubleSide, transparent: true });
+
+/**
+ * The candy burst behind every pop: stars flying out with an ink shadow, a white flash, and a
+ * shockwave ring, all facing the camera. Driven by the same kick as the word and the sound.
+ */
+export function StarPop({ kick, position, size = 1, dur = 0.85 }: { kick: Kick; position: V3; size?: number; dur?: number }) {
+  const root = useRef<THREE.Group>(null);
+  const stars = useRef<(THREE.Group | null)[]>([]);
+  const ring = useRef<THREE.Mesh>(null);
+  const flash = useRef<THREE.Mesh>(null);
+
+  const N = 9;
+  useFrame(({ camera }) => {
+    const g = root.current;
+    if (!g) return;
+    const s = since(kick);
+    const on = s >= 0 && s < dur;
+    if (g.visible !== on) g.visible = on;
+    if (!on) return;
+    g.quaternion.copy(camera.quaternion);
+    const f = s / dur;
+    const out = 1 - (1 - f) ** 3;
+    stars.current.forEach((st, i) => {
+      if (!st) return;
+      const a = (i / N) * Math.PI * 2 + seeded(i, 3) * 0.5;
+      const r = (1.1 + seeded(i, 5) * 0.9) * out * size * 1.6;
+      st.position.set(Math.cos(a) * r, Math.sin(a) * r - f * f * 0.6 * size, 0);
+      const sc = size * (0.22 + seeded(i, 9) * 0.16) * (f < 0.15 ? f / 0.15 : 1 - (f - 0.15) / 0.85);
+      st.scale.setScalar(Math.max(sc, 0.001));
+      st.rotation.z = s * (4 + seeded(i, 1) * 6) * (i % 2 ? 1 : -1);
+    });
+    if (ring.current) {
+      ring.current.scale.setScalar(size * (0.4 + out * 2.2));
+      (ring.current.material as THREE.MeshBasicMaterial).opacity = 0.9 * (1 - f);
+    }
+    if (flash.current) {
+      flash.current.scale.setScalar(size * (0.6 + f * 1.4));
+      (flash.current.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.85 * (1 - f * 4));
+    }
+  });
+  return (
+    <group ref={root} position={position} visible={false} renderOrder={10}>
+      <mesh ref={flash} geometry={starGeo}>
+        <meshBasicMaterial color="#fff3b0" toneMapped={false} fog={false} transparent side={THREE.DoubleSide} />
+      </mesh>
+      <mesh ref={ring} geometry={ringGeo}>
+        <meshBasicMaterial color="#fff8ec" toneMapped={false} fog={false} transparent side={THREE.DoubleSide} />
+      </mesh>
+      {Array.from({ length: N }, (_, i) => (
+        <group
+          key={i}
+          ref={(g) => {
+            stars.current[i] = g;
+          }}
+        >
+          <mesh geometry={starGeo} material={inkStarMat} position={[0.09, -0.09, -0.01]} scale={1.18} />
+          <mesh geometry={starGeo} material={starMats[i % starMats.length]} />
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/**
+ * "BEEP", "DING": a chunky word that pops out with an overshoot, rises, and shrinks away
+ * after a kick, with a candy burst of stars behind it.
+ */
+export function PopText({ kick, text, position, color = C.ink, outline = C.cream, size = 0.5, rise = 1.4, dur = 1.25, rotation }: { kick: Kick; text: string; position: V3; color?: string; outline?: string; size?: number; rise?: number; dur?: number; rotation?: V3 }) {
   const ref = useRef<THREE.Group>(null);
+  const big = size * 1.55;
   useFrame(() => {
     const g = ref.current;
     if (!g) return;
@@ -196,16 +232,19 @@ export function PopText({ kick, text, position, color = C.ink, outline = C.cream
     const on = s >= 0 && s < dur;
     if (g.visible !== on) g.visible = on;
     if (!on) return;
-    const grow = s < 0.2 ? backOut(s / 0.2) : 1;
+    const grow = s < 0.22 ? backOut(s / 0.22) : 1;
     const shrink = s > dur - 0.25 ? Math.max(0, (dur - s) / 0.25) : 1;
-    g.scale.setScalar(Math.max(grow * shrink, 0.001));
+    // a punchy pop: big overshoot, then a little settle
+    const punch = 1 + 0.18 * Math.sin(Math.min(s / 0.35, 1) * Math.PI) * (s < 0.35 ? 1 : 0);
+    g.scale.setScalar(Math.max(grow * shrink * punch, 0.001));
     g.position.set(position[0], position[1] + rise * (1 - Math.exp(-s * 3)), position[2]);
-    g.rotation.z = Math.sin(s * 14) * 0.12 * Math.exp(-s * 3);
+    g.rotation.z = Math.sin(s * 14) * 0.14 * Math.exp(-s * 3);
   });
   return (
     <group rotation={rotation}>
+      <StarPop kick={kick} position={position} size={big * 1.4} />
       <group ref={ref} position={position} visible={false}>
-        <Label size={size} color={color} outline={outline}>
+        <Label size={big} color={color} outline={outline}>
           {text}
         </Label>
       </group>

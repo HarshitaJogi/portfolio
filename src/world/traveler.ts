@@ -70,3 +70,51 @@ export function useTraveler() {
 }
 const SERVER = { kind: "robot" as TravelerKind, picked: false };
 export const travelerKinds = KINDS;
+
+/* ---------- the chooser, and what the traveler says ---------- */
+
+let chooserOpen = false;
+const chooserListeners = new Set<() => void>();
+export const chooser = {
+  open() {
+    chooserOpen = true;
+    chooserListeners.forEach((l) => l());
+  },
+  close() {
+    chooserOpen = false;
+    chooserListeners.forEach((l) => l());
+  },
+};
+export function useChooser() {
+  return useSyncExternalStore(
+    (cb) => {
+      chooserListeners.add(cb);
+      return () => chooserListeners.delete(cb);
+    },
+    () => chooserOpen,
+    () => false,
+  );
+}
+
+/** A line for the traveler's speech bubble, shown until `until` (performance.now ms). */
+export const speech = { text: "", until: 0 };
+const speechListeners = new Set<() => void>();
+export function travelerSay(text: string, ms = 5000) {
+  speech.text = text;
+  speech.until = performance.now() + ms;
+  speechListeners.forEach((l) => l());
+}
+let speechSnap = { text: "", until: 0 };
+export function useSpeech() {
+  return useSyncExternalStore(
+    (cb) => {
+      speechListeners.add(cb);
+      return () => speechListeners.delete(cb);
+    },
+    () => {
+      if (speechSnap.text !== speech.text || speechSnap.until !== speech.until) speechSnap = { ...speech };
+      return speechSnap;
+    },
+    () => speechSnap,
+  );
+}

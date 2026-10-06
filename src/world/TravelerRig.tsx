@@ -2,13 +2,14 @@
 
 import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { World } from "@/content/profile";
 import { Avatar, AVATARS, restMotion } from "./avatars";
-import { chime, useHoverCursor } from "./bits";
+import { useHoverCursor } from "./bits";
 import { journey } from "./scroll";
-import { cheer, travelerCheer, useTraveler } from "./traveler";
+import { cheer, travelerCheer, travelerSay, useSpeech, useTraveler } from "./traveler";
+import { ui, voices } from "@/lib/audio";
 import { Plane } from "./props/vehicles";
 import { RING_R, stopAngle } from "./palette";
 import { hubView, ABOVE } from "./hub/view";
@@ -48,7 +49,7 @@ class Path {
 function Bubble({ text }: { text: string }) {
   return (
     <Html position={[0, 3.2, 0]} center zIndexRange={[35, 0]} style={{ pointerEvents: "none" }}>
-      <div className="relative max-w-[15rem] rounded-2xl border-[3px] border-ink bg-[#fff8ec] px-3.5 py-2 text-center font-display text-[0.875rem] leading-snug whitespace-normal text-ink shadow-[3px_3px_0_var(--ink)] md:w-max md:max-w-[17rem]">
+      <div className="relative w-max max-w-[14rem] max-md:-translate-x-[30%] md:max-w-[19rem] rounded-2xl border-[4px] border-ink bg-[#fff8ec] px-4 py-2.5 text-center font-display text-[1rem] leading-snug whitespace-normal text-ink shadow-[4px_4px_0_var(--ink)] motion-safe:animate-[pop-in_0.35s_cubic-bezier(.2,.9,.3,1.4)_both] md:text-[1.125rem]">
         {text}
         <span className="absolute -bottom-[9px] left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-r-[3px] border-b-[3px] border-ink bg-[#fff8ec]" />
       </div>
@@ -59,26 +60,30 @@ function Bubble({ text }: { text: string }) {
 /** Shared body: the avatar, its click (a cheer, a chime, a line), and the bubble. */
 function Body({ motion, scale = 1 }: { motion: React.RefObject<ReturnType<typeof restMotion>>; scale?: number }) {
   const { kind } = useTraveler();
-  const [say, setSay] = useState<string | null>(null);
-  const timer = useRef(0);
+  const sp = useSpeech();
+  // the `until` of the last line that has run out
+  const [expired, setExpired] = useState(0);
   const { bind } = useHoverCursor();
   const me = AVATARS.find((a) => a.id === kind) ?? AVATARS[0];
+  // re-render once the line has run its time, so the bubble goes away
+  useEffect(() => {
+    const t = window.setTimeout(() => setExpired(sp.until), Math.max(0, sp.until - performance.now()));
+    return () => window.clearTimeout(t);
+  }, [sp]);
+  const showing = Boolean(sp.text) && expired !== sp.until;
   return (
     <group
       scale={scale}
       onClick={(e) => {
         e.stopPropagation();
         travelerCheer();
-        chime(1046);
-        setTimeout(() => chime(1318), 110);
-        setSay(`I'm ${me.name}. ${me.line}`);
-        window.clearTimeout(timer.current);
-        timer.current = window.setTimeout(() => setSay(null), 2600);
+        voices[kind]();
+        travelerSay(`I'm ${me.name}. ${me.line}`, 2800);
       }}
       {...bind}
     >
       <Avatar kind={kind} motion={motion} />
-      {say && <Bubble text={say} />}
+      {showing && <Bubble text={sp.text} />}
     </group>
   );
 }
@@ -95,7 +100,7 @@ export function WorldTraveler({ world, plane }: { world: World; plane?: boolean 
   const body = useRef<THREE.Group>(null);
   const craft = useRef<THREE.Group>(null);
   const motion = useRef(restMotion());
-  const scratch = useRef({ pos: v(), dir: v(), face: v(), a: v(), b: v(), lastQ: 0, arrived: 1 });
+  const scratch = useRef({ pos: v(), dir: v(), face: v(), a: v(), b: v(), lastQ: 0, arrived: 1, lastStep: 0, flying: false });
 
   // where the traveler stands at each step, and the walk between consecutive steps
   const { spots, paths } = useMemo(() => {
@@ -140,6 +145,11 @@ export function WorldTraveler({ world, plane }: { world: World; plane?: boolean 
       c.rotation.set(0, yaw, 0, "YXZ");
       c.rotateZ(Math.cos(f * Math.PI) * 0.25 * (moving ? 1 : 0));
       if (!moving && f < 0.5) c.rotation.set(0, 0, 0);
+      if (moving && f > 0.08 && !S.flying) {
+        S.flying = true;
+        ui.takeoff();
+      }
+      if (!moving) S.flying = false;
       if (moving && f > 0.1 && f < 0.9) {
         // riding on the plane's back
         S.pos.copy(c.position).add(SEAT);
@@ -158,7 +168,13 @@ export function WorldTraveler({ world, plane }: { world: World; plane?: boolean 
     } else {
       paths[i].at(moving ? f : f < 0.5 ? 0 : 1, S.pos, S.dir);
       // little hops as it walks
-      const hop = moving ? Math.abs(Math.sin(f * paths[i].length * 1.4)) * 0.28 : 0;
+      const phase = f * paths[i].length * 1.4;
+      const hop = moving ? Math.abs(Math.sin(phase)) * 0.28 : 0;
+      const n = Math.floor(phase / Math.PI);
+      if (moving && n !== S.lastStep) {
+        S.lastStep = n;
+        ui.step();
+      }
       g.position.set(S.pos.x, S.pos.y + hop, S.pos.z);
       walk = moving ? 1 : 0;
       if (moving) g.rotation.y = Math.atan2(S.dir.x, S.dir.z);
@@ -208,7 +224,7 @@ const SHORE = RING_R + 5.4;
 export function HubTraveler() {
   const body = useRef<THREE.Group>(null);
   const motion = useRef(restMotion());
-  const st = useRef({ angle: stopAngle(0) - 0.2, face: v() });
+  const st = useRef({ angle: stopAngle(0) - 0.2, face: v(), lastStep: 0 });
   useFrame((state, dt) => {
     const g = body.current;
     if (!g) return;
@@ -223,6 +239,11 @@ export function HubTraveler() {
     const x = Math.cos(s.angle) * SHORE;
     const z = Math.sin(s.angle) * SHORE;
     const hop = moving ? Math.abs(Math.sin(state.clock.elapsedTime * 9)) * 0.25 : 0;
+    const n = Math.floor((state.clock.elapsedTime * 9) / Math.PI);
+    if (moving && n !== s.lastStep) {
+      s.lastStep = n;
+      ui.step();
+    }
     g.position.set(x, 0.16 + hop, z);
     if (moving) {
       // face along the shore, in the direction of travel

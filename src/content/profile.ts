@@ -1182,3 +1182,14 @@ export const eggCopy = {
   },
   konami: "Cheat code accepted. The island dances.",
 };
+
+/** The traveler chooser that opens the first visit, and the traveler's first words. */
+export const chooserCopy = {
+  kicker: "Before we start",
+  title: "Who's coming with you?",
+  sub: "Pick a travel buddy. They walk the whole island with you, and cheer when you find things.",
+  go: "Let's go with",
+  skip: "Skip for now",
+  change: "Change traveler",
+  hello: (name: string) => `Hi, I'm ${name}. Press Start the tour and I'll show you around.`,
+};

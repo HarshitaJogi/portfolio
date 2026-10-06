@@ -8,6 +8,7 @@ import { media, person } from "@/content/profile";
 import { Monogram } from "./Monogram";
 import { CommandTrigger } from "./CommandTrigger";
 import { PassportPill } from "@/components/v5/Passport";
+import { SoundToggle } from "@/components/v5/SoundToggle";
 
 const links = [
   { href: "/education", label: "Education" },
@@ -55,7 +56,7 @@ export function Nav() {
                     href={l.href}
                     onClick={fly(l.href)}
                     aria-current={on ? "page" : undefined}
-                    className={cn("rounded-full px-3 py-1 text-[0.9375rem] font-semibold no-underline transition-colors", on ? "bg-ink text-[#fff8ec]" : "text-ink hover:bg-ink/10")}
+                    className={cn("rounded-full px-3 py-1 text-[0.9375rem] font-extrabold no-underline transition-colors", on ? "bg-ink text-[#fff8ec]" : "text-ink hover:bg-ink/10")}
                   >
                     {l.label}
                   </Link>
@@ -63,11 +64,12 @@ export function Nav() {
               );
             })}
             <li>
-              <Link href="/skim" className="rounded-full px-3 py-1 text-[0.9375rem] font-semibold text-ink no-underline transition-colors hover:bg-ink/10">
+              <Link href="/skim" className="rounded-full px-3 py-1 text-[0.9375rem] font-extrabold text-ink no-underline transition-colors hover:bg-ink/10">
                 Text version
               </Link>
             </li>
           </ul>
+          <SoundToggle />
           <PassportPill />
           <CommandTrigger />
           <a href={media.resumePdf} target="_blank" rel="noopener" className="pill h-10 border-[3px] border-ink bg-[#ff6b4a] font-display max-sm:hidden! text-ink no-underline shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5">

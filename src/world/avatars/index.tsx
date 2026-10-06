@@ -1,11 +1,10 @@
 "use client";
 
 import type { JSX } from "react";
-import { C } from "../palette";
-import { Cat, GINGER } from "./Cat";
-import { Duck, DUCK } from "./Duck";
-import { Elephant, ELEPHANT } from "./Elephant";
-import { Peacock, PEACOCK } from "./Peacock";
+import { Cat } from "./Cat";
+import { Duck } from "./Duck";
+import { Elephant } from "./Elephant";
+import { Peacock } from "./Peacock";
 import { Robot } from "./Robot";
 import type { AvatarMotion } from "./rig";
 
@@ -13,14 +12,7 @@ export type { AvatarMotion } from "./rig";
 
 export type AvatarKind = "robot" | "cat" | "duck" | "elephant" | "peacock";
 
-/** The five travelers, in chooser order. `color` is the main body colour, for UI accents. */
-export const AVATARS: { id: AvatarKind; name: string; species: string; line: string; color: string }[] = [
-  { id: "robot", name: "Bolt", species: "robot", line: "Beeps when it finds a bug.", color: C.cream },
-  { id: "cat", name: "Mochi", species: "cat", line: "Naps on warm keyboards, ships anyway.", color: GINGER },
-  { id: "duck", name: "Pip", species: "duckling", line: "Explains every bug to itself, out loud.", color: DUCK },
-  { id: "elephant", name: "Gajju", species: "baby elephant", line: "Never forgets where the bridge was.", color: ELEPHANT },
-  { id: "peacock", name: "Mayu", species: "peacock", line: "Dances a little at every finish line.", color: PEACOCK },
-];
+export { AVATARS } from "./meta";
 
 /** A fresh motion record, all at rest. Handy for `useRef(restMotion())`. */
 export const restMotion = (): AvatarMotion => ({ walk: 0, air: 0, cheer: 0, ride: 0 });

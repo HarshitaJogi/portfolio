@@ -7,6 +7,7 @@ import { colorOf } from "./cards";
 import { PopButton } from "./PopButton";
 import { usePassport } from "./passportStore";
 import { fanfare, thud } from "./sfx";
+import { burst, confettiRain, shake } from "./juice";
 
 /** A small glyph for each world, drawn in the stamp's centre. */
 function Glyph({ id }: { id: WorldId }) {
@@ -88,7 +89,16 @@ export function StampMoment({ id, onDone }: { id: WorldId; onDone: () => void })
   const all = stamps.length >= worldOrder.length;
   const on = stamps.find((s) => s.id === id)?.on;
   useEffect(() => {
-    const a = window.setTimeout(() => (thud(), all && window.setTimeout(fanfare, 300)), 330);
+    // the stamp lands at 330 ms: sound, rays, shake and confetti all on that beat
+    const a = window.setTimeout(() => {
+      thud();
+      burst(window.innerWidth / 2, window.innerHeight / 2, 2.8);
+      shake(1.4);
+      if (all) {
+        window.setTimeout(fanfare, 250);
+        confettiRain(110);
+      }
+    }, 330);
     const b = window.setTimeout(onDone, all ? 2600 : 1900);
     return () => {
       window.clearTimeout(a);
@@ -96,12 +106,12 @@ export function StampMoment({ id, onDone }: { id: WorldId; onDone: () => void })
     };
   }, [onDone, all]);
   return (
-    <div className="pointer-events-auto fixed inset-0 z-[65] cursor-pointer" onClick={onDone} role="status" aria-live="polite">
+    <div className="pointer-events-auto fixed inset-0 z-[65] cursor-pointer bg-ink/35 motion-safe:animate-[overlay-in_0.25s_ease-out_both]" onClick={onDone} role="status" aria-live="polite">
       <div className="absolute top-1/2 left-1/2 flex flex-col items-center" style={{ animation: "stamp-in 0.55s cubic-bezier(.2,.9,.3,1.2) both" }}>
         <div className="rounded-full shadow-[8px_8px_0_var(--ink)]">
-          <StampArt id={id} on={on} size={220} />
+          <StampArt id={id} on={on} size={280} />
         </div>
-        <p className="mt-5 rounded-full border-[3px] border-ink bg-[#fff8ec] px-5 py-2 font-display text-[1.125rem] shadow-[4px_4px_0_var(--ink)]">
+        <p className="mt-6 rounded-full border-[4px] border-ink bg-[#ffc93c] px-6 py-2.5 font-display text-[1.375rem] shadow-[5px_5px_0_var(--ink)]">
           {all ? "Passport complete" : `${worlds[id].label} stamped · ${stamps.length} of ${worldOrder.length}`}
         </p>
       </div>

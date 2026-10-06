@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { ui } from "@/lib/audio";
 
 /**
  * What the hub camera is doing: the whole island (focus -1, turnable by dragging),
@@ -19,6 +20,8 @@ export const hubView = {
   get: () => view,
   focus(i: number) {
     if (view.focus === i) return;
+    // the camera is about to fly: let it be heard
+    if (view.n > 0) ui.whoosh();
     view = { focus: i, n: view.n + 1 };
     listeners.forEach((l) => l());
   },

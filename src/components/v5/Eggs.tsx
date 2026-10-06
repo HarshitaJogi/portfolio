@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { eggCopy } from "@/content/profile";
 import { EGGS, findEgg, useEggs, type EggId } from "@/world/eggs";
 import { startParty } from "@/world/party";
-import { chime } from "@/world/bits";
+import { ui } from "@/lib/audio";
+import { burst, confettiRain } from "./juice";
 import { cn } from "@/lib/utils";
 
 const ALL = Object.keys(EGGS) as EggId[];
@@ -41,7 +42,12 @@ export function Eggs() {
     if (found.length > seen.current) {
       seen.current = found.length;
       const id = found[found.length - 1];
-      const show = window.setTimeout(() => setToast(id), 0);
+      const show = window.setTimeout(() => {
+        setToast(id);
+        ui.coin();
+        ui.sparkle();
+        burst(window.innerWidth / 2, 110, 1.6);
+      }, 0);
       const hide = window.setTimeout(() => setToast(null), 3600);
       return () => {
         window.clearTimeout(show);
@@ -73,7 +79,8 @@ export function Eggs() {
       if (i === KONAMI.length) {
         i = 0;
         startParty();
-        [523, 659, 784, 1046].forEach((f, n) => setTimeout(() => chime(f), n * 110));
+        ui.fanfare();
+        confettiRain(90);
         findEgg("konami");
         setParty(true);
         window.clearTimeout(off);
@@ -93,7 +100,7 @@ export function Eggs() {
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 top-20 z-[60] flex justify-center px-4">
         <div
           className={cn(
-            "flex items-center gap-3 rounded-full border-[3px] border-ink bg-[#fff8ec] px-4 py-2 text-ink shadow-[4px_4px_0_var(--ink)] transition-all duration-300",
+            "flex items-center gap-3 rounded-full border-[4px] border-ink bg-[#ffc93c] px-5 py-2.5 text-ink shadow-[5px_5px_0_var(--ink)] transition-all duration-300",
             toast || party ? "translate-y-0 opacity-100" : "-translate-y-3 opacity-0",
           )}
         >

@@ -10,15 +10,15 @@ export const colorOf = (m: MargamId) => margamColor.get(m) ?? "#ff6b4a";
 
 /** The cream card with a hard ink shadow. Everything readable on the island sits in one. */
 export function CardShell({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("relative w-full rounded-[28px] border-[3px] border-ink bg-[#fff8ec] text-ink shadow-[8px_8px_0_var(--ink)]", className)}>{children}</div>;
+  return <div className={cn("relative w-full rounded-[30px] border-[4px] border-ink bg-[#fff8ec] text-ink shadow-[10px_10px_0_var(--ink)]", className)}>{children}</div>;
 }
 
 export function Hud({ margam, children, right }: { margam: MargamId; children: ReactNode; right?: ReactNode }) {
   return (
-    <p className="flex items-center gap-2.5 font-mono text-[0.75rem] font-medium tracking-[0.06em] uppercase md:text-[0.8125rem]">
-      <span className="h-3 w-3 shrink-0 rounded-full border-2 border-ink" style={{ background: colorOf(margam) }} aria-hidden="true" />
+    <p className="flex items-center gap-2.5 font-mono text-[0.8125rem] font-bold tracking-[0.08em] uppercase md:text-[0.875rem]">
+      <span className="h-4 w-4 shrink-0 rounded-full border-[3px] border-ink" style={{ background: colorOf(margam) }} aria-hidden="true" />
       <span className="min-w-0 flex-1">{children}</span>
-      {right && <span className="shrink-0 text-ink/70">{right}</span>}
+      {right && <span className="shrink-0 rounded-full border-[2.5px] border-ink bg-[#ffc93c] px-2.5 py-0.5">{right}</span>}
     </p>
   );
 }
@@ -65,7 +65,7 @@ export function Rich({ text }: { text: string }) {
     <>
       {parts.map((p, i) =>
         i % 2 ? (
-          <strong key={i} className="font-bold [background:linear-gradient(transparent_62%,#ffc93c_62%)]">
+          <strong key={i} className="font-extrabold [background:linear-gradient(transparent_55%,#ffc93c_55%)] px-0.5">
             {p}
           </strong>
         ) : (
@@ -103,7 +103,7 @@ export function Chips({ items, className }: { items: string[]; className?: strin
   return (
     <ul className={cn("flex flex-wrap gap-1.5", className)}>
       {items.map((c) => (
-        <li key={c} className="rounded-full border-2 border-ink bg-white/60 px-2.5 py-0.5 text-[0.8125rem] font-medium md:text-[0.875rem]">
+        <li key={c} className="rounded-full border-[2.5px] border-ink bg-white px-3 py-0.5 text-[0.875rem] font-bold md:text-[0.9375rem]">
           {c}
         </li>
       ))}

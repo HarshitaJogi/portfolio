@@ -1,6 +1,29 @@
 # Harshita Jogi: Portfolio Design Doc
 
-## v6 "Never stuck" (Oct 2026), current
+## v7 "Bold and loud" (Oct 2026), current
+
+**Why:** v6 had every piece, but a stranger still could not see what to press next. Sounds were too quiet to notice, the type looked timid, and the traveler picker hid inside a card.
+
+- **The big CTA.** One button per state, in its own corner and never inside the card.
+  - It has a thick 3D base it presses into, a glossy face, a pulsing ring, a shimmying arrow, and two lines: what it is ("NEXT · 2 OF 4", "ENTER THE WORLD") and where it goes ("MSCI", "Education").
+  - If the visitor goes quiet for 4.5 s, or tries to scroll, it jumps and a hand taps at it. Back is a smaller button of the same build, beside it.
+- **Traveler chooser.** The first visit to the hub opens a full-screen chooser.
+  - The title pops in, then five cards fly in one by one. Each character speaks in its own voice on hover or focus: a robot beep, a cat meow, a duckling quack, an elephant trumpet, a peacock call.
+  - Picking one bursts stars. "Let's go with ___" rains confetti, plays a fanfare, and the traveler greets the visitor on the island and says what to press.
+  - It reopens from "Change traveler".
+- **One audio engine** (`lib/audio.ts`). Every sound goes through one master bus with a compressor, with a mute toggle in the nav. Sounds land on the same frame as their visuals:
+  - **Buttons:** a fat pop, plus a hover tick on big buttons.
+  - **Moving between cards:** a rush forward when the card leaves, and a two-note landing when the next one arrives.
+  - **The traveler:** footsteps on every hop, an engine whoosh at plane takeoff, a whoosh as the camera flies to a district, and a whoosh on the cloud wipe.
+  - **Moments:** a coin and sparkle for eggs, a thud with a shake for stamps, and a fanfare when the passport is complete. Island sounds are about twice as loud as before.
+- **Juice.**
+  - **Buttons:** clicking one bursts stars, dots, a ray flash and a shockwave ring (`components/v5/juice.ts`).
+  - **Cards:** they squash and fly out, and the next one springs in.
+  - **Stamps:** they land with rays and a screen shake on a dimmed backdrop, plus confetti rain when the passport is complete.
+  - **On the island:** every pop-up word is 1.5× bigger, with a candy burst of ink-shadowed stars, a flash and a shockwave behind it, timed with its sound.
+- **Bolder type:** cards have 4px borders and 10px shadows. Body copy uses heavier weights in full ink, highlights are larger and extra-bold, and kickers and labels are bold mono.
+
+## v6 "Never stuck" (Oct 2026), superseded
 
 **Why:** scrolling drove the camera, so a fast scroll skipped whole steps and the next move was never obvious. The island was pretty but you could not pick a place on it. Bullets were long.
 

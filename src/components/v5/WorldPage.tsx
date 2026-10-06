@@ -7,6 +7,7 @@ import { island, useIsland } from "@/world/state";
 import { chime } from "@/world/bits";
 import { findEgg } from "@/world/eggs";
 import { resetJourney, setJourney } from "@/world/scroll";
+import { ui } from "@/lib/audio";
 import { travelerCheer } from "@/world/traveler";
 import { useReducedMotion } from "@/lib/device";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,8 @@ import { CardShell, Chips, colorOf, Hud, LocalTime, Rich } from "./cards";
 import { PopButton } from "./PopButton";
 import { stamp } from "./passportStore";
 import { StampMoment } from "./Passport";
+import { BigCTA } from "./BigCTA";
+import { arrive } from "./sfx";
 
 const yearOf = (s: WorldStep) => /\b(20\d\d)\b/.exec(s.kicker)?.[1] ?? "";
 const shortOf = (s: WorldStep) => s.short ?? s.title.replace(/\.$/, "");
@@ -23,8 +26,8 @@ function Highlights({ items, color }: { items: string[]; color: string }) {
   return (
     <ul className="space-y-1.5">
       {items.map((h) => (
-        <li key={h} className="flex items-center gap-3 text-[1.0625rem] leading-snug md:text-[1.1875rem]">
-          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border-[2.5px] border-ink" style={{ background: color }} aria-hidden="true">
+        <li key={h} className="flex items-center gap-3 text-[1.125rem] leading-snug font-bold md:text-[1.3125rem]">
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-[3px] border-ink" style={{ background: color }} aria-hidden="true">
             <svg viewBox="0 0 12 12" className="h-3 w-3">
               <path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#2b1e1a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -45,9 +48,12 @@ function Details({ items, label }: { items: string[]; label: string }) {
     <div className="mt-4">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          setOpen((o) => !o);
+          ui.pop();
+        }}
         aria-expanded={open}
-        className="group inline-flex items-center gap-2.5 rounded-full border-[2.5px] border-dashed border-ink bg-white/60 px-4 py-2 text-[0.9375rem] font-semibold transition-colors hover:border-solid hover:bg-[#ffc93c]"
+        className="group inline-flex items-center gap-2.5 rounded-full border-[3px] border-dashed border-ink bg-white px-4 py-2 text-[1rem] font-extrabold shadow-[3px_3px_0_var(--ink)] transition-colors hover:border-solid hover:bg-[#ffc93c] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
       >
         <span className={cn("grid h-6 w-6 place-items-center rounded-full border-2 border-ink bg-[#fff8ec] text-[0.875rem] leading-none transition-transform", open && "rotate-45")} aria-hidden="true">
           +
@@ -59,7 +65,7 @@ function Details({ items, label }: { items: string[]; label: string }) {
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
             <ul className="space-y-2 pt-3">
               {items.map((b) => (
-                <li key={b} className="relative pl-5 text-[0.9688rem] leading-relaxed before:absolute before:top-[0.7em] before:left-0 before:h-[3px] before:w-2.5 before:rounded-full before:bg-ink md:text-[1rem]">
+                <li key={b} className="relative pl-5 text-[1rem] leading-relaxed font-medium before:absolute before:top-[0.7em] before:left-0 before:h-[3px] before:w-2.5 before:rounded-full before:bg-ink md:text-[1.0625rem]">
                   <Rich text={b} />
                 </li>
               ))}
@@ -126,24 +132,25 @@ function Extra({ step }: { step: WorldStep }) {
   return step.hint ? <p className="mt-5 font-mono text-[0.875rem]">↳ {step.hint}</p> : null;
 }
 
-function StepBody({ world, step, go, items }: { world: World; step: WorldStep; go: (i: number) => void; items: { s: WorldStep; i: number }[] }) {
+function StepBody({ world, step, go, items, copy }: { world: World; step: WorldStep; go: (i: number) => void; items: { s: WorldStep; i: number }[]; copy?: boolean }) {
   const color = colorOf(world.margam);
+  const hid = copy ? undefined : `${step.id}-title`;
 
   if (step.kind === "intro")
     return (
       <>
         <h1 className="font-display mt-4 text-[clamp(3rem,6.4vw,6.25rem)] leading-[0.95] tracking-[-0.02em]">{step.title}</h1>
-        {step.lede && <p className="mt-4 text-[1.1875rem] leading-snug font-semibold md:text-[1.5rem]">{step.lede}</p>}
+        {step.lede && <p className="mt-4 text-[1.25rem] leading-snug font-bold md:text-[1.625rem]">{step.lede}</p>}
         <ol className="mt-6 grid gap-1.5">
           {items.map(({ s, i }, n) => (
             <li key={s.id}>
-              <button type="button" onClick={() => go(i)} className="group flex w-full items-center gap-3 rounded-2xl border-[2.5px] border-transparent px-2 py-1.5 text-left transition-colors hover:border-ink hover:bg-white/60">
+              <button type="button" onClick={() => (ui.pop(), go(i))} className="group flex w-full items-center gap-3 rounded-2xl border-[2.5px] border-transparent px-2 py-1.5 text-left transition-colors hover:border-ink hover:bg-white/60">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-[2.5px] border-ink font-mono text-[0.8125rem] font-semibold" style={{ background: color }}>
                   {n + 1}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[1.0625rem] font-semibold md:text-[1.1875rem]">{s.title}</span>
-                  {s.subtitle && world.id !== "skills" && <span className="block truncate text-[0.875rem] text-ink/80">{s.subtitle}</span>}
+                  <span className="block truncate text-[1.125rem] font-extrabold md:text-[1.3125rem]">{s.title}</span>
+                  {s.subtitle && world.id !== "skills" && <span className="block truncate text-[0.9375rem] font-semibold">{s.subtitle}</span>}
                 </span>
                 {yearOf(s) && <span className="shrink-0 font-mono text-[0.875rem]">{yearOf(s)}</span>}
                 <span className="shrink-0 transition-transform group-hover:translate-x-1" aria-hidden="true">
@@ -159,23 +166,23 @@ function StepBody({ world, step, go, items }: { world: World; step: WorldStep; g
   if (step.kind === "next")
     return (
       <>
-        <h2 id={`${step.id}-title`} className="font-display mt-4 text-[clamp(2.6rem,5vw,4.75rem)] leading-[0.96] tracking-[-0.02em]">
+        <h2 id={hid} className="font-display mt-4 text-[clamp(2.6rem,5vw,4.75rem)] leading-[0.96] tracking-[-0.02em]">
           {step.title}
         </h2>
-        {step.lede && <p className="mt-4 text-[1.125rem] leading-snug md:text-[1.375rem]">{step.lede}</p>}
+        {step.lede && <p className="mt-4 text-[1.1875rem] leading-snug font-semibold md:text-[1.5rem]">{step.lede}</p>}
       </>
     );
 
   return (
     <>
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <p className="font-mono text-[0.875rem] font-medium md:text-[0.9375rem]">{step.kicker}</p>
+        <p className="font-mono text-[0.9375rem] font-bold md:text-[1rem]">{step.kicker}</p>
         {step.place && <LocalTime place={step.place} />}
       </div>
-      <h2 id={`${step.id}-title`} className="font-display mt-3 text-[clamp(2.3rem,4.2vw,4rem)] leading-[0.96] tracking-[-0.015em]">
+      <h2 id={hid} className="font-display mt-3 text-[clamp(2.3rem,4.2vw,4rem)] leading-[0.96] tracking-[-0.015em]">
         {step.title}
       </h2>
-      {step.subtitle && <p className="mt-2 text-[1.125rem] leading-snug font-semibold md:text-[1.375rem]">{step.subtitle}</p>}
+      {step.subtitle && <p className="mt-2 text-[1.1875rem] leading-snug font-extrabold md:text-[1.5rem]">{step.subtitle}</p>}
 
       {step.facts && (
         <dl className="mt-4 flex flex-wrap gap-2.5">
@@ -189,7 +196,7 @@ function StepBody({ world, step, go, items }: { world: World; step: WorldStep; g
       )}
 
       {step.lede && (
-        <p className="mt-4 text-[1.0625rem] leading-snug text-ink/90 md:text-[1.1875rem]">
+        <p className="mt-4 text-[1.125rem] leading-snug font-semibold md:text-[1.3125rem]">
           <Rich text={step.lede} />
         </p>
       )}
@@ -254,7 +261,7 @@ function Rail({ world, active, go }: { world: World; active: number; go: (i: num
                 <button type="button" onClick={() => go(i)} aria-current={on ? "step" : undefined} aria-label={label} className="group flex items-center gap-2 py-0.5">
                   <span
                     className={cn(
-                      "rounded-full border-[3px] border-ink px-2.5 py-0.5 font-mono text-[0.8125rem] whitespace-nowrap shadow-[2px_2px_0_var(--ink)] transition-all",
+                      "rounded-full border-[3px] border-ink px-2.5 py-0.5 font-mono text-[0.8125rem] font-bold whitespace-nowrap shadow-[2px_2px_0_var(--ink)] transition-all",
                       on ? "bg-ink text-[#fff8ec]" : "bg-[#fff8ec] text-ink opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
                     )}
                   >
@@ -390,64 +397,51 @@ export function WorldPage({ id }: { id: WorldId }) {
   const nItem = items.findIndex((x) => x.i === active) + 1;
   const nextLink = step.kind === "next" ? step.links?.find((l) => l.primary) : undefined;
 
+  // what the big button says and does, at every step
+  const cta =
+    step.kind === "intro"
+      ? { kicker: "Start the path", label: shortOf(steps[1]), onClick: () => go(1) }
+      : step.kind === "next" && nextLink
+        ? { kicker: nextLink.href === "/#contact" ? "Last stop" : "Next world", label: nextLink.href === "/#contact" ? "Get in touch" : nextLink.label.replace(/^Continue to /, "").replace(/ →$/, ""), href: nextLink.href }
+        : { kicker: nextStep?.kind === "next" ? "Done here" : `Next · ${nItem + 1} of ${total}`, label: nextStep?.kind === "next" ? `Finish ${world.label}` : shortOf(nextStep), onClick: () => go(active + 1) };
+  const back = active === 0 ? { label: "Island", href: "/" } : { label: "Back", onClick: () => go(active - 1) };
+
   return (
     <>
-      <main id="main" className="pointer-events-none fixed inset-0 z-10 flex items-end px-[var(--gutter)] pt-24 pb-3 md:items-center md:pb-0">
-        <div className="pointer-events-auto w-full md:w-[min(47vw,44rem)]">
-          {steps.map((s, i) => (
-            <section key={s.id} id={s.id} hidden={i !== active} aria-labelledby={s.kind === "intro" ? undefined : `${s.id}-title`}>
-              {i === active ? (
-                <motion.div
-                  key={s.id}
-                  // the first card is there at once (it is the LCP); later ones spring in
-                  initial={reduced || !moved ? false : { opacity: 0, y: 40, rotate: i % 2 ? 1.5 : -1.5, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 20 }}
-                >
-                  <CardShell className="flex max-h-[min(62svh,40rem)] flex-col md:max-h-[calc(100svh-8.5rem)]">
-                    <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-6 pb-4 md:p-9 md:pb-5">
-                      <Hud margam={world.margam} right={s.kind === "item" ? `${nItem} / ${total}` : undefined}>
-                        {s.kind === "intro" || s.kind === "next" ? s.kicker : world.label}
-                      </Hud>
-                      <StepBody world={world} step={s} go={go} items={items} />
-                    </div>
-                    {/* the way forward, always in the same place */}
-                    <div className="flex items-center gap-3 border-t-[3px] border-dashed border-ink/40 px-5 py-4 md:px-9 md:py-5">
-                      {active === 0 || step.kind === "next" ? (
-                        <PopButton href="/" tone="secondary" size="md" back iconLeft="←">
-                          Island
-                        </PopButton>
-                      ) : (
-                        <PopButton onClick={() => go(active - 1)} tone="secondary" size="md" back iconLeft="←" label="Back">
-                          <span className="hidden sm:inline">Back</span>
-                        </PopButton>
-                      )}
-                      <div className="ml-auto flex items-center gap-3">
-                        {nudge && <span className="hidden font-mono text-[0.8125rem] sm:inline">Use Next →</span>}
-                        {step.kind === "next" && nextLink ? (
-                          <PopButton href={nextLink.href} size="xl" icon="→" wiggle={nudge}>
-                            {nextLink.label.replace(/ →$/, "")}
-                          </PopButton>
-                        ) : (
-                          <PopButton onClick={() => go(active + 1)} size="xl" icon="→" wiggle={nudge}>
-                            {step.kind === "intro" ? "Start" : nextStep?.kind === "next" ? `Finish ${world.label}` : `Next: ${shortOf(nextStep)}`}
-                          </PopButton>
-                        )}
-                      </div>
-                    </div>
-                  </CardShell>
-                </motion.div>
-              ) : (
-                <CardShell>
-                  <div className="p-6">
-                    <StepBody world={world} step={s} go={go} items={items} />
-                  </div>
-                </CardShell>
-              )}
-            </section>
-          ))}
+      <main id="main" className="pointer-events-none fixed inset-0 z-10 flex items-end px-[var(--gutter)] pt-24 pb-[8.5rem] md:items-center md:pb-0">
+        <div className="pointer-events-auto w-full md:w-[min(46vw,44rem)]">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.section
+              key={step.id}
+              id={step.id}
+              aria-labelledby={step.kind === "intro" ? undefined : `${step.id}-title`}
+              initial={reduced || !moved ? false : { opacity: 0, y: 60, rotate: active % 2 ? 2.5 : -2.5, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, x: -90, rotate: -5, scale: 0.88, transition: { duration: 0.2, ease: "easeIn" } }}
+              transition={{ type: "spring", stiffness: 260, damping: 17 }}
+              onAnimationComplete={(def) => {
+                if (moved && typeof def === "object" && "opacity" in def && (def as { opacity: number }).opacity === 1) arrive();
+              }}
+            >
+              <CardShell className="flex max-h-[min(52svh,40rem)] flex-col md:max-h-[calc(100svh-15rem)]">
+                <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-6 md:p-9">
+                  <Hud margam={world.margam} right={step.kind === "item" ? `${nItem} / ${total}` : undefined}>
+                    {step.kind === "intro" || step.kind === "next" ? step.kicker : world.label}
+                  </Hud>
+                  <StepBody world={world} step={step} go={go} items={items} />
+                </div>
+              </CardShell>
+            </motion.section>
+          </AnimatePresence>
+          {/* every step in the HTML, for search engines and the text-only crowd */}
+          <div hidden>
+            {steps.map((s) => (
+              <StepBody key={s.id} world={world} step={s} go={go} items={items} copy />
+            ))}
+          </div>
         </div>
       </main>
+      <BigCTA {...cta} back={back} idleKey={step.id} nudge={nudge} />
       <Rail world={world} active={active} go={go} />
       {stamped && <StampMoment id={world.id} onDone={() => setStamped(false)} />}
     </>

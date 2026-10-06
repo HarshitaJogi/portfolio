@@ -7,6 +7,7 @@ import { worlds, worldOrder, type WorldId } from "@/content/profile";
 import type { SceneId } from "@/world/World";
 import { worldNav } from "@/world/nav";
 import { useReducedMotion } from "@/lib/device";
+import { ui } from "@/lib/audio";
 import { cn } from "@/lib/utils";
 import { wipe, useWipe } from "./transition";
 
@@ -81,6 +82,7 @@ export function Shell() {
       }
       coverFrom.current = window.location.pathname;
       wipe.set({ phase: "cover", to: labelFor(target) });
+      ui.whoosh();
       window.setTimeout(() => router.push(href), 650);
     });
   }, [router, reduced]);
@@ -98,6 +100,7 @@ export function Shell() {
     const reveal = () => {
       coverFrom.current = null;
       wipe.set({ phase: "reveal" });
+      ui.whoosh();
       window.setTimeout(() => wipe.set({ phase: "idle" }), 900);
     };
     if (!mount || readyScene === scene) {
