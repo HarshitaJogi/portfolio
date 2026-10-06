@@ -36,6 +36,8 @@ type Props = {
   disabled?: boolean;
   label?: string;
   wiggle?: boolean;
+  /** Save the file instead of opening it. */
+  download?: string | boolean;
 };
 
 /**
@@ -44,7 +46,7 @@ type Props = {
  * through the clouds; external links open in a new tab.
  */
 export const PopButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, Props>(function PopButton(
-  { children, tone = "primary", size = "md", href, onClick, back, icon, iconLeft, className, disabled, label, wiggle },
+  { children, tone = "primary", size = "md", href, onClick, back, icon, iconLeft, className, disabled, label, wiggle, download },
   ref,
 ) {
   const external = href?.startsWith("http") || href?.startsWith("mailto:") || href?.endsWith(".pdf");
@@ -78,7 +80,7 @@ export const PopButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, Props
         aria-label={label}
         className={cls}
         onMouseEnter={hover}
-        {...(external && !href.startsWith("mailto:") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        {...(download ? { download: typeof download === "string" ? download : true } : external && !href.startsWith("mailto:") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         onClick={(e) => {
           fire(e);
           onClick?.();

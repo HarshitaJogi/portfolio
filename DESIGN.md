@@ -1,6 +1,24 @@
 # Harshita Jogi: Portfolio Design Doc
 
-## v7 "Bold and loud" (Oct 2026), current
+## v9 "Arrive, then explore" (Oct 2026), current
+
+- **First visit: one welcome screen, which is the traveler pick.** It is a full screen of its own, not an overlay on the island:
+  - "Welcome to my island" and "Hi, I'm Harshita.", then "Who's coming with you?";
+  - "Skip for now" and "Skip to the text version", for anyone in a hurry;
+  - picking a traveler plays the door ("Entering The island"), and the traveler greets you on the other side.
+
+  It is deliberately not two screens: every extra screen before the content costs a recruiter's patience.
+- **Unhurried pace.** Each step's flight takes 2.2 to 4 s. The hub run is about 40% slower, with slower hops.
+- **Navigation never sticks.**
+  - **Handler stack:** handlers are a stack. The root registers a plain router push, and the island shell registers the door transition only while it is mounted.
+  - **Stale state:** a shell that mounts mid-transition resets, and a watchdog never lets the cover stay up past 6 s. Repeat presses during a cover are ignored.
+  - **Test suite:** 19 navigation paths are covered: the text page, back and forward, browser back mid-transition, double clicks, deep links, the command menu, the passport, and the ends of worlds. They pass on desktop and phone.
+- **The name card flips to the resume.** The back has a live PDF preview inside the card, a big Download PDF, Open full size, and the links. The sticker reads "Tap for my resume".
+- **Bigger top bar.** It is taller, with 18px extra-bold links and 48px controls. The links show from 1280px wide, with Menu below that. Phones get a compact bar: an arrow for Island, and a passport pill with just its dots and count.
+
+## v8 (Oct 2026), superseded
+
+## v7 "Bold and loud" (Oct 2026), superseded
 
 **Why:** v6 had every piece, but a stranger still could not see what to press next. Sounds were too quiet to notice, the type looked timid, and the traveler picker hid inside a card.
 

@@ -1,18 +1,26 @@
 "use client";
 
 /**
- * Lets the 3D scene navigate like a link: click a portal and the page flies there.
- * The shell registers the real handler (router push behind the cloud wipe).
+ * One way to navigate for every button, portal and nav link. Handlers stack: the root
+ * registers a plain router push, and the island shell, while it is on screen, registers
+ * the version with the door transition. When the shell unmounts (say, on /skim), its
+ * handler comes off the stack, so nothing ever waits on a transition that isn't there.
  */
-let handler: (href: string) => void = (href) => {
+type Handler = (href: string) => void;
+const stack: Handler[] = [];
+const fallback: Handler = (href) => {
   window.location.href = href;
 };
 
 export const worldNav = {
-  register(fn: (href: string) => void) {
-    handler = fn;
+  register(fn: Handler) {
+    stack.push(fn);
+    return () => {
+      const i = stack.lastIndexOf(fn);
+      if (i >= 0) stack.splice(i, 1);
+    };
   },
   go(href: string) {
-    handler(href);
+    (stack[stack.length - 1] ?? fallback)(href);
   },
 };

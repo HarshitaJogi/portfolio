@@ -10,7 +10,7 @@ import { useReducedMotion } from "@/lib/device";
 import { ui } from "@/lib/audio";
 import { music, type Theme } from "@/lib/music";
 import { cn } from "@/lib/utils";
-import { lastPress, wipe, useWipe } from "./transition";
+import { door, lastPress, wipe, useWipe } from "./transition";
 import { StampArt } from "./Passport";
 
 const World = dynamic(() => import("@/world/World"), { ssr: false });
@@ -48,7 +48,7 @@ function IslandMark() {
  * new scene is built underneath, the circle closes away into the middle of the screen.
  */
 function Iris() {
-  const { phase, to, target, x, y } = useWipe();
+  const { phase, to, target, x, y, verb } = useWipe();
   const el = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const d = el.current;
@@ -71,7 +71,7 @@ function Iris() {
     <div
       ref={el}
       aria-hidden="true"
-      className={cn("fixed inset-0 z-[70] grid place-items-center", phase === "cover" ? "pointer-events-auto" : "pointer-events-none")}
+      className={cn("fixed inset-0 z-[90] grid place-items-center", phase === "cover" ? "pointer-events-auto" : "pointer-events-none")}
       style={{
         clipPath: "circle(0px at 50% 50%)",
         background: `radial-gradient(circle at 50% 45%, rgba(255,255,255,.18), transparent 60%), radial-gradient(#2b1e1a22 2px, transparent 2.5px) 0 0 / 26px 26px, ${color}`,
@@ -81,7 +81,7 @@ function Iris() {
         <div className="rounded-full shadow-[10px_10px_0_#2b1e1a] motion-safe:animate-[pop-in_0.5s_cubic-bezier(.2,.9,.3,1.4)_0.35s_both]">
           {home ? <IslandMark /> : <StampArt id={target as WorldId} size={220} />}
         </div>
-        <p className="mt-7 font-mono text-[1.125rem] font-bold tracking-[0.18em] text-[#fff8ec] uppercase [text-shadow:2px_2px_0_#2b1e1a]">{home ? "Back to" : "Entering"}</p>
+        <p className="mt-7 font-mono text-[1.125rem] font-bold tracking-[0.18em] text-[#fff8ec] uppercase [text-shadow:2px_2px_0_#2b1e1a]">{verb ?? (home ? "Back to" : "Entering")}</p>
         <p className="font-display mt-1 text-[clamp(3rem,8vw,6.5rem)] leading-none text-[#fff8ec] [text-shadow:5px_5px_0_#2b1e1a,-2px_-2px_0_#2b1e1a,2px_-2px_0_#2b1e1a,-2px_2px_0_#2b1e1a]">{to}</p>
       </div>
     </div>
@@ -125,9 +125,26 @@ export function Shell() {
     };
   }, []);
 
+  // A shell that mounts mid-transition (coming back from /skim, say) starts clean.
+  useEffect(() => {
+    if (wipe.get().phase !== "idle" && !door.local) wipe.set({ phase: "idle" });
+  }, []);
+
+  // A watchdog: whatever happens, the cover never stays up.
+  useEffect(() => {
+    if (phase !== "cover") return;
+    const t = window.setTimeout(() => {
+      if (wipe.get().phase !== "cover") return;
+      coverFrom.current = null;
+      wipe.set({ phase: "reveal" });
+      window.setTimeout(() => wipe.set({ phase: "idle" }), 760);
+    }, 6000);
+    return () => window.clearTimeout(t);
+  }, [phase]);
+
   // Portals, the big buttons and the nav all go through here: cover, change route, reveal.
   useEffect(() => {
-    worldNav.register((href) => {
+    return worldNav.register((href) => {
       const url = new URL(href, window.location.href);
       if (url.origin !== window.location.origin) {
         window.location.href = href;
@@ -138,6 +155,7 @@ export function Shell() {
         if (el) el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
         return;
       }
+      if (wipe.get().phase === "cover") return;
       const target = sceneFor(url.pathname);
       if (reduced || !target) {
         router.push(href);
@@ -147,7 +165,7 @@ export function Shell() {
       coveredAt.current = performance.now();
       const x = lastPress.x >= 0 ? lastPress.x : window.innerWidth / 2;
       const y = lastPress.y >= 0 ? lastPress.y : window.innerHeight / 2;
-      wipe.set({ phase: "cover", to: labelFor(target), target, x, y });
+      wipe.set({ phase: "cover", to: labelFor(target), target, x, y, verb: undefined });
       ui.door();
       music.crossfade(target === "hub" ? "island" : (target as Theme), 0.5);
       window.setTimeout(() => router.push(href), 640);

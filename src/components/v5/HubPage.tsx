@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { chooserCopy, hero, hubStops, margamParts, media, person, type HubStop } from "@/content/profile";
+import { chooserCopy, hubStops, margamParts, media, person, type HubStop } from "@/content/profile";
 import { island, useIsland } from "@/world/state";
 import { chime } from "@/world/bits";
 import { findEgg } from "@/world/eggs";
@@ -85,30 +85,32 @@ function WelcomeCard({ stop }: { stop: HubStop }) {
   );
 }
 
-/** The back of the name card: a photo, who she is in one line, and every way to reach her. */
-function WelcomeBack() {
+/** The back of the name card: the resume itself, right there, and a big way to keep it. */
+function WelcomeBack({ shown }: { shown: boolean }) {
   return (
-    <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-6 md:p-9">
-      <div className="flex items-center gap-5">
+    <div className="flex min-h-0 flex-1 flex-col p-5 md:p-7">
+      <div className="flex items-center gap-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={media.headshot.src} alt={media.headshot.alt} width={120} height={180} className="h-28 w-28 shrink-0 rounded-full border-[4px] border-ink object-cover object-top shadow-[5px_5px_0_var(--ink)] md:h-36 md:w-36" />
-        <div>
-          <p className="font-mono text-[0.9375rem] font-bold tracking-[0.08em] uppercase">Hello, I&apos;m</p>
-          <p className="font-display text-[clamp(2.2rem,4vw,3.4rem)] leading-[0.95]">{person.name}</p>
+        <img src={media.headshot.src} alt={media.headshot.alt} width={80} height={120} className="h-16 w-16 shrink-0 rounded-full border-[3px] border-ink object-cover object-top shadow-[3px_3px_0_var(--ink)] md:h-20 md:w-20" />
+        <div className="min-w-0">
+          <p className="font-mono text-[0.9375rem] font-bold tracking-[0.08em] uppercase">My resume</p>
+          <p className="font-display truncate text-[1.75rem] leading-[1] md:text-[2.25rem]">{person.name}</p>
         </div>
       </div>
-      <p className="mt-5 text-[1.1875rem] leading-snug font-bold md:text-[1.4375rem]">{hero.subline}</p>
-      <dl className="mt-5 grid gap-2.5 sm:grid-cols-3">
-        {hero.meta.map((m) => (
-          <div key={m.label} className="rounded-2xl border-[3px] border-ink bg-[#ffc93c] px-3.5 py-2 shadow-[3px_3px_0_var(--ink)]">
-            <dt className="font-mono text-[0.875rem] font-bold tracking-[0.06em] uppercase">{m.label}</dt>
-            <dd className="font-display text-[1.0625rem] leading-tight">{m.text}</dd>
-          </div>
-        ))}
-      </dl>
-      <div className="mt-6 flex flex-wrap gap-2.5">
+      {/* the PDF, live in the card; only loaded once the card is turned over */}
+      <div className="mt-4 min-h-[16rem] flex-1 overflow-hidden rounded-[18px] border-[3px] border-ink bg-white shadow-[4px_4px_0_var(--ink)] md:min-h-[20rem]">
+        {shown ? (
+          <iframe src={`${media.resumePdf}#view=FitH&toolbar=0&navpanes=0`} title={`${person.name}, resume (PDF)`} className="h-full min-h-[16rem] w-full md:min-h-[20rem]" />
+        ) : (
+          <div className="grid h-full place-items-center font-mono text-[1rem] font-bold">Resume</div>
+        )}
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2.5">
+        <PopButton href={media.resumePdf} download="Harshita_Jogi_Resume.pdf" size="lg" tone="primary" icon="↓">
+          Download PDF
+        </PopButton>
         <PopButton href={media.resumePdf} size="md" tone="sun">
-          Resume ↓
+          Open full size ↗
         </PopButton>
         <PopButton href={person.links.linkedin} size="md" tone="secondary">
           LinkedIn ↗
@@ -147,14 +149,14 @@ function FlipWelcome({ stop }: { stop: HubStop }) {
         <div
           role="button"
           tabIndex={back ? -1 : 0}
-          aria-label="Flip the card for a photo and links"
+          aria-label="Flip the card to see the resume"
           onClick={flip}
           onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), flip(e))}
           className={cn(face, "cursor-pointer", back && "pointer-events-none")}
         >
           <CardShell className="flex max-h-[min(54svh,46rem)] flex-col transition-transform hover:-translate-y-1 md:max-h-[calc(100svh-15rem)]">
-            <span data-flip aria-hidden="true" className="absolute -top-4 -right-4 z-10 flex rotate-6 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#ff4f8b] px-3.5 py-1.5 font-display text-[1rem] text-ink shadow-[3px_3px_0_var(--ink)] motion-safe:animate-[cta-nudge_3s_ease-in-out_2s_infinite]">
-              ↻ Tap to flip
+            <span data-flip aria-hidden="true" className="absolute -top-4 right-3 z-10 flex rotate-6 md:-right-4 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#ff4f8b] px-3.5 py-1.5 font-display text-[1rem] text-ink shadow-[3px_3px_0_var(--ink)] motion-safe:animate-[cta-nudge_3s_ease-in-out_2s_infinite]">
+              ↻ Tap for my resume
             </span>
             <WelcomeCard stop={stop} />
           </CardShell>
@@ -168,10 +170,10 @@ function FlipWelcome({ stop }: { stop: HubStop }) {
           className={cn(face, "cursor-pointer [transform:rotateY(180deg)]", !back && "pointer-events-none")}
         >
           <CardShell className="flex max-h-[min(54svh,46rem)] flex-col md:max-h-[calc(100svh-15rem)]">
-            <span data-flip aria-hidden="true" className="absolute -top-4 -right-4 z-10 flex -rotate-6 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#3bb273] px-3.5 py-1.5 font-display text-[1rem] text-ink shadow-[3px_3px_0_var(--ink)]">
+            <span data-flip aria-hidden="true" className="absolute -top-4 right-3 z-10 flex -rotate-6 md:-right-4 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#3bb273] px-3.5 py-1.5 font-display text-[1rem] text-ink shadow-[3px_3px_0_var(--ink)]">
               ↻ Flip back
             </span>
-            <WelcomeBack />
+            <WelcomeBack shown={back} />
           </CardShell>
         </div>
       </motion.div>
@@ -311,7 +313,7 @@ export function HubPage() {
 
   return (
     <>
-      <main id="main" className="pointer-events-none fixed inset-0 z-10 flex items-end px-[var(--gutter)] pt-28 pb-[8.5rem] md:items-center md:pt-24 md:pb-0">
+      <main id="main" className="pointer-events-none fixed inset-0 z-10 flex items-end px-[var(--gutter)] pt-32 pb-[8.5rem] md:items-center md:pt-28 md:pb-0">
         <div className={cn("pointer-events-auto w-full", focus === -1 ? "md:w-[min(44vw,42rem)]" : "md:w-[min(46vw,43rem)]")}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -340,7 +342,7 @@ export function HubPage() {
           )}
         </div>
         {/* every resume section, in reach on phones */}
-        <nav aria-label="Island districts" className="pointer-events-auto fixed inset-x-0 top-[4.4rem] z-30 flex gap-2 overflow-x-auto px-[var(--gutter)] pb-1 md:hidden">
+        <nav aria-label="Island districts" className="pointer-events-auto fixed inset-x-0 top-[5rem] z-30 flex gap-2 overflow-x-auto px-[var(--gutter)] pb-1 md:hidden">
           {DISTRICTS.map((d) => {
             const i = indexOf(d.id);
             return (

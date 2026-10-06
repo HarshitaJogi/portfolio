@@ -307,7 +307,7 @@ function Rail({ world, active, go }: { world: World; active: number; go: (i: num
         </ol>
       </nav>
       {/* phones: a segmented strip under the nav, each segment a stop */}
-      <div className="fixed inset-x-[var(--gutter)] top-[4.25rem] z-40 flex gap-1 lg:hidden">
+      <div className="fixed inset-x-[var(--gutter)] top-[5rem] z-40 flex gap-1 lg:hidden">
         {world.steps.map((s, i) => (
           <button
             key={s.id}
@@ -461,7 +461,7 @@ export function WorldPage({ id }: { id: WorldId }) {
 
   return (
     <>
-      <main id="main" className="pointer-events-none fixed inset-0 z-10 flex items-end px-[var(--gutter)] pt-24 pb-[8.5rem] md:items-center md:pb-0">
+      <main id="main" className="pointer-events-none fixed inset-0 z-10 flex items-end px-[var(--gutter)] pt-32 pb-[8.5rem] md:items-center md:pt-28 md:pb-0">
         <div className="pointer-events-auto w-full md:w-[min(46vw,44rem)]">
           <AnimatePresence mode="wait" initial={false}>
             <motion.section

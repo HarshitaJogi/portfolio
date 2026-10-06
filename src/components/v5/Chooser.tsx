@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { chooserCopy } from "@/content/profile";
@@ -10,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { AvatarIcon } from "./avatarIcons";
 import { BigCTA } from "./BigCTA";
 import { burst, centerOf, confettiRain } from "./juice";
+import { door } from "./transition";
 
 /**
  * The first thing a new visitor sees: pick a traveler. Cards fly in, each one speaks when
@@ -26,7 +28,9 @@ export function Chooser() {
   const lastVoice = useRef<Record<string, number>>({});
   const first = useRef<HTMLButtonElement>(null);
 
-  const show = open || (pathname === "/" && !picked && !skipped);
+  // first visit: a full screen of its own, then a door into the island
+  const firstVisit = !open && pathname === "/" && !picked && !skipped;
+  const show = open || firstVisit;
   const current = sel ?? (open ? kind : null);
   const meta = AVATARS.find((a) => a.id === current);
 
@@ -55,14 +59,35 @@ export function Chooser() {
   };
 
   function close(go: boolean) {
-    if (go && current) {
+    const kindNow = go && current ? current : null;
+    const name = AVATARS.find((a) => a.id === (kindNow ?? "robot"))?.name ?? "Bolt";
+    if (firstVisit) {
+      // the door: cover from the button, swap the welcome for the island underneath, open
+      if (kindNow) ui.fanfare();
+      ui.door();
+      door.play({
+        to: "The island",
+        target: "hub",
+        verb: "Entering",
+        hold: 700,
+        during: () => {
+          if (kindNow) pickTraveler(kindNow);
+          else setSkipped(true);
+          chooser.close();
+        },
+      });
+      setTimeout(() => {
+        ui.arrive();
+        if (kindNow) confettiRain(70);
+        travelerSay(chooserCopy.hello(name), 7000);
+      }, 640 + 700 + 300);
+      return;
+    }
+    if (kindNow) {
       ui.fanfare();
       confettiRain(80);
-      pickTraveler(current);
-      const name = AVATARS.find((a) => a.id === current)?.name ?? "Bolt";
+      pickTraveler(kindNow);
       setTimeout(() => travelerSay(chooserCopy.hello(name), 7000), 700);
-    } else if (!picked) {
-      setSkipped(true);
     }
     setLeaving(true);
     setTimeout(() => {
@@ -78,17 +103,19 @@ export function Chooser() {
       aria-modal="true"
       aria-labelledby="chooser-title"
       className={cn(
-        "fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto bg-[#155e6c]/75 px-4 py-6 backdrop-blur-[6px] transition-opacity duration-300 motion-safe:animate-[overlay-in_0.35s_ease-out_0.25s_both]",
+        "fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto px-4 py-6 transition-opacity duration-300 motion-safe:animate-[overlay-in_0.2s_ease-out_0.06s_both]",
+        firstVisit ? "bg-[#1f7a8c] [background-image:radial-gradient(circle_at_50%_30%,rgba(255,255,255,.16),transparent_60%),radial-gradient(#2b1e1a22_2px,transparent_2.5px)] [background-size:auto,26px_26px]" : "bg-[#155e6c]/75 backdrop-blur-[6px]",
         leaving && "opacity-0",
       )}
     >
       <div className={cn("w-full max-w-[64rem] transition-transform duration-300", leaving && "scale-105")}>
-        <div className="text-center motion-safe:animate-[pop-in_0.55s_cubic-bezier(.2,.9,.3,1.3)_0.3s_both]">
-          <p className="inline-block rounded-full border-[3px] border-ink bg-[#ffc93c] px-4 py-1 font-mono text-[0.9375rem] font-bold tracking-[0.12em] text-ink uppercase shadow-[3px_3px_0_var(--ink)]">{chooserCopy.kicker}</p>
-          <h2 id="chooser-title" className="font-display mt-3 text-[clamp(2.1rem,6vw,5rem)] md:mt-4 leading-[0.95] text-[#fff8ec] [text-shadow:4px_4px_0_#2b1e1a,-2px_-2px_0_#2b1e1a,2px_-2px_0_#2b1e1a,-2px_2px_0_#2b1e1a]">
-            {chooserCopy.title}
+        <div className="text-center motion-safe:animate-[pop-in_0.45s_cubic-bezier(.2,.9,.3,1.3)_0.08s_both]">
+          <p className="inline-block rounded-full border-[3px] border-ink bg-[#ffc93c] px-4 py-1 font-mono text-[0.9375rem] font-bold tracking-[0.12em] text-ink uppercase shadow-[3px_3px_0_var(--ink)]">{firstVisit ? chooserCopy.welcome : chooserCopy.kicker}</p>
+          <h2 id="chooser-title" className="font-display mt-3 text-[clamp(2.3rem,6.5vw,5.5rem)] leading-[0.95] text-[#fff8ec] [text-shadow:4px_4px_0_#2b1e1a,-2px_-2px_0_#2b1e1a,2px_-2px_0_#2b1e1a,-2px_2px_0_#2b1e1a] md:mt-4">
+            {firstVisit ? chooserCopy.hi : chooserCopy.title}
           </h2>
-          <p className="mx-auto mt-2 max-w-[36rem] text-[0.9375rem] leading-snug font-semibold text-[#fff8ec] sm:text-[1.0625rem] md:mt-3 md:text-[1.25rem]">{chooserCopy.sub}</p>
+          {firstVisit && <p className="font-display mt-2 text-[clamp(1.4rem,3vw,2.4rem)] leading-tight text-[#ffc93c] [text-shadow:3px_3px_0_#2b1e1a]">{chooserCopy.title}</p>}
+          <p className="mx-auto mt-2 max-w-[36rem] text-[1rem] leading-snug font-bold text-[#fff8ec] sm:text-[1.125rem] md:mt-3 md:text-[1.25rem]">{firstVisit ? chooserCopy.firstSub : chooserCopy.sub}</p>
         </div>
 
         <div role="radiogroup" aria-label="Travelers" className="mt-5 grid grid-cols-3 gap-2.5 sm:gap-3 md:mt-9 md:grid-cols-5 md:gap-4">
@@ -115,7 +142,7 @@ export function Chooser() {
                   on ? "-translate-y-2 bg-[#ffc93c] shadow-[8px_8px_0_var(--ink)]" : "bg-[#fff8ec] shadow-[5px_5px_0_var(--ink)]",
 
                 )}
-                style={{ animationDelay: `${450 + i * 90}ms` }}
+                style={{ animationDelay: `${200 + i * 80}ms` }}
               >
                 {on && (
                   <span aria-hidden="true" className="absolute -top-3 -right-3 grid h-10 w-10 place-items-center rounded-full border-[3px] border-ink bg-[#3bb273] text-[1.25rem] font-black motion-safe:animate-[pop-in_0.35s_cubic-bezier(.2,.9,.3,1.4)_both]">
@@ -141,9 +168,16 @@ export function Chooser() {
           ) : (
             <p className="rounded-full border-[3px] border-ink bg-[#fff8ec] px-5 py-2 font-display text-[1.0625rem] text-ink shadow-[4px_4px_0_var(--ink)]">Tap one to pick</p>
           )}
-          <button type="button" onClick={() => close(false)} className="font-mono text-[1rem] font-bold text-[#fff8ec] underline decoration-2 underline-offset-4">
-            {chooserCopy.skip}
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <button type="button" onClick={() => close(false)} className="font-mono text-[1rem] font-bold text-[#fff8ec] underline decoration-2 underline-offset-4">
+              {chooserCopy.skip}
+            </button>
+            {firstVisit && (
+              <Link href="/skim" className="font-mono text-[1rem] font-bold text-[#fff8ec] underline decoration-2 underline-offset-4">
+                {chooserCopy.textVersion}
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

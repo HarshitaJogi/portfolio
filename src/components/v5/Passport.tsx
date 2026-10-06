@@ -200,17 +200,18 @@ export function PassportPill() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex h-10 items-center gap-2 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3 font-display text-[1rem] text-ink shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+        aria-label={`Passport, ${stamps.length} of ${worldOrder.length} stamps`}
+        className="inline-flex h-12 items-center gap-2 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3 font-display sm:px-4 text-[1.125rem] text-ink shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
         aria-haspopup="dialog"
       >
-        <span className="flex -space-x-1.5" aria-hidden="true">
+        <span className="flex -space-x-1.5 max-sm:-space-x-2.5" aria-hidden="true">
           {worldOrder.map((w) => {
             const got = stamps.some((s) => s.id === w);
-            return <span key={w} className={cn("h-3.5 w-3.5 rounded-full border-2 border-ink", !got && "bg-[#fff8ec]")} style={got ? { background: colorOf(worlds[w].margam) } : undefined} />;
+            return <span key={w} className={cn("h-4 w-4 rounded-full border-2 border-ink", !got && "bg-[#fff8ec]")} style={got ? { background: colorOf(worlds[w].margam) } : undefined} />;
           })}
         </span>
         <span className="hidden sm:inline">Passport</span>
-        <span className="font-mono text-[0.875rem]">
+        <span className="font-mono text-[1rem] font-bold">
           {stamps.length}/{worldOrder.length}
         </span>
       </button>

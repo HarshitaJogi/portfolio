@@ -232,14 +232,14 @@ export function HubTraveler() {
     const target = (f >= 0 && f !== ABOVE ? stopAngle(f) : stopAngle(0)) - 0.2;
     const s = st.current;
     const d = Math.atan2(Math.sin(target - s.angle), Math.cos(target - s.angle));
-    const speed = Math.min(Math.max(Math.abs(d) * 1.8, 0.5), 2.4);
+    const speed = Math.min(Math.max(Math.abs(d) * 1.1, 0.32), 1.4);
     const step = Math.sign(d) * Math.min(Math.abs(d), speed * dt);
     s.angle += step;
     const moving = Math.abs(d) > 0.002;
     const x = Math.cos(s.angle) * SHORE;
     const z = Math.sin(s.angle) * SHORE;
-    const hop = moving ? Math.abs(Math.sin(state.clock.elapsedTime * 9)) * 0.25 : 0;
-    const n = Math.floor((state.clock.elapsedTime * 9) / Math.PI);
+    const hop = moving ? Math.abs(Math.sin(state.clock.elapsedTime * 6.5)) * 0.25 : 0;
+    const n = Math.floor((state.clock.elapsedTime * 6.5) / Math.PI);
     if (moving && n !== s.lastStep) {
       s.lastStep = n;
       ui.step();

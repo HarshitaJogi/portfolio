@@ -1185,6 +1185,10 @@ export const eggCopy = {
 
 /** The traveler chooser that opens the first visit, and the traveler's first words. */
 export const chooserCopy = {
+  welcome: "Welcome to my island",
+  hi: "Hi, I'm Harshita.",
+  firstSub: "Pick a travel buddy. They'll walk you through my work, one world at a time.",
+  textVersion: "Skip to the text version",
   kicker: "Before we start",
   title: "Who's coming with you?",
   sub: "Pick a travel buddy. They walk the whole island with you, and cheer when you find things.",

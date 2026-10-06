@@ -31,23 +31,23 @@ export function Nav() {
   const inWorld = pathname !== "/";
   return (
     <header className="fixed inset-x-0 top-0 z-50">
-      <div className="px-gutter mx-auto flex h-16 max-w-[100rem] items-center justify-between gap-3 md:h-[4.5rem]">
+      <div className="px-gutter mx-auto flex h-[4.5rem] max-w-[110rem] items-center justify-between gap-3 md:h-[5.5rem]">
         <div className="flex items-center gap-2">
-          <Link href="/" onClick={fly("/")} className="flex items-center rounded-full text-ink no-underline" aria-label={`${person.name}, the island`}>
-            <Monogram size={38} />
+          <Link href="/" onClick={fly("/")} className={cn("flex items-center rounded-full text-ink no-underline", inWorld && "max-sm:hidden")} aria-label={`${person.name}, the island`}>
+            <Monogram size={48} />
           </Link>
           {inWorld && (
             <Link
               href="/"
               onClick={fly("/")}
-              className="inline-flex h-10 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3.5 font-display text-[1rem] text-ink no-underline shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5"
+              className="inline-flex h-12 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#fff8ec] px-4 font-display text-[1.125rem] text-ink no-underline shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
             >
-              <span aria-hidden="true">←</span> Island
+              <span aria-hidden="true">←</span> <span className="max-sm:sr-only">Island</span>
             </Link>
           )}
         </div>
         <nav aria-label="Primary" className="flex items-center gap-1.5 sm:gap-2">
-          <ul className="mr-1 hidden h-10 items-center gap-0.5 rounded-full border-[3px] border-ink bg-[#fff8ec] px-1.5 shadow-[3px_3px_0_var(--ink)] lg:flex">
+          <ul className="mr-1 hidden h-[3.25rem] items-center gap-0.5 rounded-full border-[3px] border-ink bg-[#fff8ec] px-1.5 shadow-[4px_4px_0_var(--ink)] xl:flex">
             {links.map((l) => {
               const on = pathname === l.href;
               return (
@@ -56,7 +56,7 @@ export function Nav() {
                     href={l.href}
                     onClick={fly(l.href)}
                     aria-current={on ? "page" : undefined}
-                    className={cn("rounded-full px-3 py-1 text-[0.9375rem] font-extrabold no-underline transition-colors", on ? "bg-ink text-[#fff8ec]" : "text-ink hover:bg-ink/10")}
+                    className={cn("rounded-full px-3.5 py-1.5 text-[1.125rem] font-extrabold no-underline transition-colors", on ? "bg-ink text-[#fff8ec]" : "text-ink hover:bg-ink/10")}
                   >
                     {l.label}
                   </Link>
@@ -64,7 +64,7 @@ export function Nav() {
               );
             })}
             <li>
-              <Link href="/skim" className="rounded-full px-3 py-1 text-[0.9375rem] font-extrabold text-ink no-underline transition-colors hover:bg-ink/10">
+              <Link href="/skim" className="rounded-full px-3.5 py-1.5 text-[1.125rem] font-extrabold text-ink no-underline transition-colors hover:bg-ink/10">
                 Text version
               </Link>
             </li>
@@ -72,7 +72,7 @@ export function Nav() {
           <SoundToggle />
           <PassportPill />
           <CommandTrigger />
-          <a href={media.resumePdf} target="_blank" rel="noopener" className="pill h-10 border-[3px] border-ink bg-[#ff6b4a] font-display max-sm:hidden! text-ink no-underline shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5">
+          <a href={media.resumePdf} target="_blank" rel="noopener" className="pill h-12 border-[3px] border-ink bg-[#ff6b4a] px-5 font-display text-[1.125rem] max-sm:hidden! text-ink no-underline shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5">
             Resume <span aria-hidden="true">↓</span>
             <span className="sr-only">, PDF, opens in a new tab</span>
           </a>

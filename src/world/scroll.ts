@@ -15,7 +15,8 @@ export function setJourney(p: number) {
   journey.from = journey.progress;
   journey.target = p;
   journey.t = 0;
-  journey.dur = Math.min(2.8, 1.25 + 0.55 * Math.abs(p - journey.progress));
+  // unhurried: a walk you can watch, a little longer for longer trips
+  journey.dur = Math.min(4, Math.max(1.4, 2.2 + 0.7 * (Math.abs(p - journey.progress) - 1)));
   notify();
 }
 

@@ -5,6 +5,7 @@ import "./globals.css";
 import { education, person, SITE_URL, seo, work } from "@/content/profile";
 import { Providers } from "@/components/ui/Providers";
 import { ConsoleNote } from "@/components/ui/ConsoleNote";
+import { NavBridge } from "@/components/ui/NavBridge";
 
 // Dela Gothic One, cut down to Latin (11KB). Google serves it as 120+ CJK slices otherwise.
 // The same subset, as TTF, sets the type on the island.
@@ -93,7 +94,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
-        <Providers>{children}</Providers>
+        <Providers>
+          <NavBridge />
+          {children}
+        </Providers>
         <ConsoleNote />
       </body>
     </html>
