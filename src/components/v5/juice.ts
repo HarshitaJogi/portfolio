@@ -104,3 +104,39 @@ export function centerOf(el: Element) {
   const r = el.getBoundingClientRect();
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 }
+
+/**
+ * The press: the element sinks (by `dx`, `dy`, squashing a little) then springs back with
+ * an overshoot. Runs on top of any Tailwind translate, so it composes with hover lifts.
+ */
+export function pressBounce(el: HTMLElement, { dx = 2, dy = 2, squash = 0.96, dur = 420 }: { dx?: number; dy?: number; squash?: number; dur?: number } = {}) {
+  if (calm()) return;
+  el.animate(
+    [
+      { transform: "translate(0,0) scale(1)" },
+      { transform: `translate(${dx}px,${dy}px) scale(${squash + 0.02},${squash})`, offset: 0.22 },
+      { transform: `translate(0,${-dy * 0.35}px) scale(1.03,1.04)`, offset: 0.6 },
+      { transform: "translate(0,0) scale(0.995)", offset: 0.82 },
+      { transform: "translate(0,0) scale(1)" },
+    ],
+    { duration: dur, easing: "ease-out" },
+  );
+}
+
+/** Hold the pressed-down pose while the pointer is down. Returns a release function. */
+export function pressHold(el: HTMLElement, { dx = 2, dy = 2, squash = 0.96 } = {}) {
+  if (calm()) return () => {};
+  const a = el.animate([{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx}px,${dy}px) scale(${squash + 0.02},${squash})` }], { duration: 70, easing: "ease-out", fill: "forwards" });
+  return () => {
+    a.cancel();
+    el.animate(
+      [
+        { transform: `translate(${dx}px,${dy}px) scale(${squash + 0.02},${squash})` },
+        { transform: `translate(0,${-dy * 0.35}px) scale(1.03,1.04)`, offset: 0.5 },
+        { transform: "translate(0,0) scale(0.995)", offset: 0.78 },
+        { transform: "translate(0,0) scale(1)" },
+      ],
+      { duration: 340, easing: "ease-out" },
+    );
+  };
+}

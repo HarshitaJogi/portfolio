@@ -48,7 +48,7 @@ function DistrictLabel({ i, id, margam }: { i: number; id: string; margam: strin
         type="button"
         tabIndex={hidden ? -1 : 0}
         onClick={() => (ui.pop(), hubView.focus(i))}
-        className={`hidden items-center gap-2 rounded-full md:flex border-[3px] border-ink bg-[#fff8ec] px-4 py-2 font-display text-[1.0625rem] whitespace-nowrap text-ink shadow-[4px_4px_0_var(--ink)] border-[4px] transition-all duration-300 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none md:text-[1.25rem] ${hidden ? "scale-75 opacity-0" : "opacity-100"}`}
+        className={`hidden items-center gap-2 rounded-full md:flex border-[3px] border-ink bg-[#fff8ec] px-4 py-2 font-display text-[1.0625rem] whitespace-nowrap text-ink shadow-[4px_4px_0_var(--ink)] border-[4px] transition-all duration-300 hover:-translate-y-0.5 active:shadow-none md:text-[1.25rem] ${hidden ? "scale-75 opacity-0" : "opacity-100"}`}
       >
         <span className="h-3 w-3 rounded-full border-2 border-ink" style={{ background: color.get(margam as never) }} aria-hidden="true" />
         {NAMES[id]}

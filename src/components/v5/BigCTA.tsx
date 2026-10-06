@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { worldNav } from "@/world/nav";
 import { ui } from "@/lib/audio";
 import { cn } from "@/lib/utils";
-import { burst, centerOf } from "./juice";
+import { burst, centerOf, pressBounce, pressHold } from "./juice";
 
 type Action = { href?: string; onClick?: () => void };
 
@@ -46,12 +46,27 @@ function useIdle(ms: number, key: string) {
 export function BigCTA({ kicker, label, back, tone = "#ff6b4a", idleKey = "", inline, nudge, ...a }: Action & { kicker: string; label: string; back?: Action & { label: string }; tone?: string; idleKey?: string; inline?: boolean; nudge?: boolean }) {
   const idle = useIdle(4500, idleKey + label) || Boolean(nudge);
   const btn = useRef<HTMLAnchorElement & HTMLButtonElement>(null);
+  const face = useRef<HTMLSpanElement>(null);
+  const release = useRef<(() => void) | null>(null);
+  const down = () => {
+    if (face.current) release.current = pressHold(face.current, { dx: 0, dy: 9, squash: 0.97 });
+  };
+  const up = () => {
+    release.current?.();
+    release.current = null;
+  };
   const fire = (e: React.MouseEvent) => {
+    // a keyboard press never went down: give it the full press now
+    if (!release.current && face.current) pressBounce(face.current, { dx: 0, dy: 9, squash: 0.97, dur: 460 });
+    up();
     ui.pop();
     ui.next();
     const c = btn.current ? centerOf(btn.current) : { x: e.clientX, y: e.clientY };
     burst(c.x, c.y, 1.7);
-    act(a, e);
+    const external = a.href && (a.href.startsWith("http") || a.href.startsWith("mailto:") || a.href.endsWith(".pdf"));
+    if (a.href && !external && !e.metaKey && !e.ctrlKey) e.preventDefault();
+    if (external || e.metaKey || e.ctrlKey) return act(a, e);
+    window.setTimeout(() => act(a, { preventDefault() {}, metaKey: false, ctrlKey: false } as unknown as React.MouseEvent), 140);
   };
   const Tag = a.href ? "a" : "button";
   return (
@@ -66,11 +81,17 @@ export function BigCTA({ kicker, label, back, tone = "#ff6b4a", idleKey = "", in
           ref={btn}
           {...(a.href ? { href: a.href } : { type: "button" as const })}
           onClick={fire}
+          onPointerDown={down}
+          onPointerUp={up}
+          onPointerLeave={up}
+          onPointerCancel={up}
           onMouseEnter={() => ui.tick()}
+          data-press="custom"
           className="group relative block w-full rounded-[30px] bg-ink pb-[9px] text-left text-ink no-underline select-none focus-visible:outline-offset-8"
         >
           <span
-            className="relative flex -translate-y-[9px] items-center gap-4 rounded-[30px] border-[4px] border-ink px-6 py-3.5 transition-[translate] duration-100 group-hover:-translate-y-[12px] group-active:translate-y-0 md:gap-5 md:px-8 md:py-4"
+            ref={face}
+            className="relative flex -translate-y-[9px] items-center gap-4 rounded-[30px] border-[4px] border-ink px-6 py-3.5 transition-[translate] duration-100 group-hover:-translate-y-[12px] md:gap-5 md:px-8 md:py-4"
             style={{ background: tone }}
           >
             {/* gloss */}
@@ -94,19 +115,35 @@ export function BigCTA({ kicker, label, back, tone = "#ff6b4a", idleKey = "", in
 /** The way back: the same build as the big button, smaller and quieter. */
 function BackButton({ label, ...a }: Action & { label: string }) {
   const Tag = a.href ? "a" : "button";
+  const face = useRef<HTMLSpanElement>(null);
+  const release = useRef<(() => void) | null>(null);
+  const up = () => {
+    release.current?.();
+    release.current = null;
+  };
   return (
     <Tag
+      data-press="custom"
+      onPointerDown={() => {
+        if (face.current) release.current = pressHold(face.current, { dx: 0, dy: 7, squash: 0.96 });
+      }}
+      onPointerUp={up}
+      onPointerLeave={up}
+      onPointerCancel={up}
       {...(a.href ? { href: a.href } : { type: "button" as const })}
       aria-label={label}
       onClick={(e: React.MouseEvent) => {
+        if (!release.current && face.current) pressBounce(face.current, { dx: 0, dy: 7, squash: 0.96 });
+        up();
         ui.back();
         const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
         burst(r.left + r.width / 2, r.top + r.height / 2, 0.7);
-        act(a, e);
+        if (a.href) e.preventDefault();
+        window.setTimeout(() => act(a, { preventDefault() {}, metaKey: false, ctrlKey: false } as unknown as React.MouseEvent), 130);
       }}
       className="group pointer-events-auto relative block shrink-0 rounded-[24px] bg-ink pb-[7px] text-ink no-underline select-none"
     >
-      <span className="relative flex h-[4.75rem] min-w-[4.75rem] -translate-y-[7px] flex-col items-center justify-center rounded-[24px] border-[4px] border-ink bg-[#fff8ec] px-3 transition-[translate] duration-100 group-hover:-translate-y-[9px] group-active:translate-y-0 md:h-[5.5rem] md:min-w-[5.5rem]">
+      <span ref={face} className="relative flex h-[4.75rem] min-w-[4.75rem] -translate-y-[7px] flex-col items-center justify-center rounded-[24px] border-[4px] border-ink bg-[#fff8ec] px-3 transition-[translate] duration-100 group-hover:-translate-y-[9px] md:h-[5.5rem] md:min-w-[5.5rem]">
         <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
           <path d="M20 12H6M12 5l-7 7 7 7" fill="none" stroke="#2b1e1a" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

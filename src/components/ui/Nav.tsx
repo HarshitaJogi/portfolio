@@ -40,7 +40,7 @@ export function Nav() {
             <Link
               href="/"
               onClick={fly("/")}
-              className="inline-flex h-12 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#fff8ec] px-4 font-display text-[1.125rem] text-ink no-underline shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+              className="inline-flex h-12 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#fff8ec] px-4 font-display text-[1.125rem] text-ink no-underline shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:shadow-none"
             >
               <span aria-hidden="true">←</span> <span className="max-sm:sr-only">Island</span>
             </Link>

@@ -134,7 +134,7 @@ export function PassportStrip({ compact }: { compact?: boolean }) {
         ui.pop();
         passportUI.open();
       }}
-      className="group mt-5 flex w-full items-center gap-4 rounded-[22px] border-[3px] border-ink bg-[#fff3d6] p-3 pr-4 text-left shadow-[5px_5px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+      className="group mt-5 flex w-full items-center gap-4 rounded-[22px] border-[3px] border-ink bg-[#fff3d6] p-3 pr-4 text-left shadow-[5px_5px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:shadow-none"
     >
       <span className="flex shrink-0 -space-x-3">
         {worldOrder.map((w, i) => {
@@ -201,7 +201,7 @@ export function PassportPill() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Passport, ${stamps.length} of ${worldOrder.length} stamps`}
-        className="inline-flex h-12 items-center gap-2 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3 font-display sm:px-4 text-[1.125rem] text-ink shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+        className="inline-flex h-12 items-center gap-2 rounded-full border-[3px] border-ink bg-[#fff8ec] px-3 font-display sm:px-4 text-[1.125rem] text-ink shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:shadow-none"
         aria-haspopup="dialog"
       >
         <span className="flex -space-x-1.5 max-sm:-space-x-2.5" aria-hidden="true">

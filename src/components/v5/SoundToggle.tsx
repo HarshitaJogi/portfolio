@@ -20,7 +20,7 @@ export function SoundToggle() {
       }}
       aria-pressed={!muted}
       aria-label={muted ? "Turn sound and music on" : "Turn sound and music off"}
-      className="grid h-11 w-11 place-items-center sm:h-12 sm:w-12 rounded-full border-[3px] border-ink bg-[#fff8ec] text-ink shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+      className="grid h-11 w-11 place-items-center sm:h-12 sm:w-12 rounded-full border-[3px] border-ink bg-[#fff8ec] text-ink shadow-[3px_3px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:shadow-none"
     >
       <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
         <path d="M4 9h4l5-4v14l-5-4H4z" fill="#ffc93c" stroke="#2b1e1a" strokeWidth="2.2" strokeLinejoin="round" />

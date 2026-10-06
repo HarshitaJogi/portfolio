@@ -53,7 +53,7 @@ function Details({ items, label }: { items: string[]; label: string }) {
           ui.pop();
         }}
         aria-expanded={open}
-        className="group inline-flex items-center gap-2.5 rounded-full border-[3px] border-dashed border-ink bg-white px-4 py-2 text-[1rem] font-extrabold shadow-[3px_3px_0_var(--ink)] transition-colors hover:border-solid hover:bg-[#ffc93c] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+        className="group inline-flex items-center gap-2.5 rounded-full border-[3px] border-dashed border-ink bg-white px-4 py-2 text-[1rem] font-extrabold shadow-[3px_3px_0_var(--ink)] transition-colors hover:border-solid hover:bg-[#ffc93c] active:shadow-none"
       >
         <span className={cn("grid h-6 w-6 place-items-center rounded-full border-2 border-ink bg-[#fff8ec] text-[1rem] leading-none transition-transform", open && "rotate-45")} aria-hidden="true">
           +
@@ -258,7 +258,7 @@ function StampSlot({ world }: { world: World }) {
         passportUI.open();
       }}
       className={cn(
-        "mt-5 flex w-full items-center gap-4 rounded-[22px] border-[3px] border-ink p-3 text-left shadow-[5px_5px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none",
+        "mt-5 flex w-full items-center gap-4 rounded-[22px] border-[3px] border-ink p-3 text-left shadow-[5px_5px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:shadow-none",
         got ? "bg-[#3bb273]" : "border-dashed bg-[#fff3d6]",
       )}
     >

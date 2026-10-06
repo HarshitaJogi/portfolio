@@ -47,7 +47,7 @@ function TravelerChip() {
         ui.pop();
         chooser.open();
       }}
-      className="group mt-5 inline-flex items-center gap-3 rounded-full border-[3px] border-ink bg-white py-1 pr-4 pl-1 text-left shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+      className="group mt-5 inline-flex items-center gap-3 rounded-full border-[3px] border-ink bg-white py-1 pr-4 pl-1 text-left shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:shadow-none"
     >
       <span className="grid h-12 w-12 place-items-center rounded-full border-[3px] border-ink" style={{ background: me.color }}>
         <AvatarIcon kind={kind} className="h-10 w-10" />

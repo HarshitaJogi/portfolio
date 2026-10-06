@@ -1,10 +1,10 @@
 "use client";
 
-import { forwardRef, type ReactNode } from "react";
+import { forwardRef, useRef, type ReactNode } from "react";
 import { worldNav } from "@/world/nav";
 import { cn } from "@/lib/utils";
 import { ui } from "@/lib/audio";
-import { burst } from "./juice";
+import { burst, pressBounce, pressHold } from "./juice";
 
 type Tone = "primary" | "secondary" | "sun" | "green" | "ink";
 type Size = "xl" | "lg" | "md" | "sm";
@@ -17,10 +17,10 @@ const tones: Record<Tone, string> = {
   ink: "bg-ink text-[#fff8ec]",
 };
 const sizes: Record<Size, string> = {
-  xl: "min-h-16 px-8 text-[1.25rem] md:min-h-[4.25rem] md:px-9 md:text-[1.375rem] shadow-[6px_6px_0_var(--ink)] active:shadow-[1px_1px_0_var(--ink)] active:translate-x-[5px] active:translate-y-[5px]",
-  lg: "min-h-14 px-7 text-[1.125rem] md:text-[1.1875rem] shadow-[5px_5px_0_var(--ink)] active:shadow-[1px_1px_0_var(--ink)] active:translate-x-[4px] active:translate-y-[4px]",
-  md: "min-h-12 px-5 text-[1rem] shadow-[4px_4px_0_var(--ink)] active:shadow-[1px_1px_0_var(--ink)] active:translate-x-[3px] active:translate-y-[3px]",
-  sm: "min-h-10 px-4 text-[0.9375rem] shadow-[3px_3px_0_var(--ink)] active:shadow-none active:translate-x-[3px] active:translate-y-[3px]",
+  xl: "min-h-16 px-8 text-[1.25rem] md:min-h-[4.25rem] md:px-9 md:text-[1.375rem] shadow-[6px_6px_0_var(--ink)] active:shadow-[1px_1px_0_var(--ink)]",
+  lg: "min-h-14 px-7 text-[1.125rem] md:text-[1.1875rem] shadow-[5px_5px_0_var(--ink)] active:shadow-[1px_1px_0_var(--ink)]",
+  md: "min-h-12 px-5 text-[1rem] shadow-[4px_4px_0_var(--ink)] active:shadow-[1px_1px_0_var(--ink)]",
+  sm: "min-h-10 px-4 text-[0.9375rem] shadow-[3px_3px_0_var(--ink)] active:shadow-none",
 };
 
 type Props = {
@@ -65,7 +65,19 @@ export const PopButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, Props
       {href?.startsWith("http") && <span className="sr-only">, opens in a new tab</span>}
     </>
   );
+  const depth = size === "xl" ? 5 : size === "lg" ? 4 : 3;
+  const release = useRef<(() => void) | null>(null);
+  const down = (e: React.PointerEvent) => {
+    release.current = pressHold(e.currentTarget as HTMLElement, { dx: depth, dy: depth, squash: 0.96 });
+  };
+  const up = () => {
+    release.current?.();
+    release.current = null;
+  };
+  const press = { onPointerDown: down, onPointerUp: up, onPointerLeave: up, onPointerCancel: up, "data-press": "custom" };
   const fire = (e: React.MouseEvent) => {
+    if (!release.current) pressBounce(e.currentTarget as HTMLElement, { dx: depth, dy: depth, squash: 0.96 });
+    up();
     if (back) ui.back();
     else ui.pop();
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -81,12 +93,19 @@ export const PopButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, Props
         className={cls}
         onMouseEnter={hover}
         {...(download ? { download: typeof download === "string" ? download : true } : external && !href.startsWith("mailto:") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        {...press}
         onClick={(e) => {
           fire(e);
-          onClick?.();
-          if (external || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+          if (external || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) {
+            onClick?.();
+            return;
+          }
           e.preventDefault();
-          worldNav.go(href);
+          // let the press be seen before the page moves on
+          window.setTimeout(() => {
+            onClick?.();
+            worldNav.go(href);
+          }, 120);
         }}
       >
         {inner}
@@ -101,9 +120,10 @@ export const PopButton = forwardRef<HTMLButtonElement | HTMLAnchorElement, Props
       disabled={disabled}
       className={cls}
       onMouseEnter={hover}
+      {...press}
       onClick={(e) => {
         fire(e);
-        onClick?.();
+        window.setTimeout(() => onClick?.(), 110);
       }}
     >
       {inner}
