@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+
+const noop = () => () => {};
 import { chooserCopy } from "@/content/profile";
 import { AVATARS } from "@/world/avatars/meta";
 import { chooser, pickTraveler, travelerSay, useChooser, useTraveler, type TravelerKind } from "@/world/traveler";
@@ -28,8 +30,15 @@ export function Chooser() {
   const lastVoice = useRef<Record<string, number>>({});
   const first = useRef<HTMLButtonElement>(null);
 
-  // first visit: a full screen of its own, then a door into the island
-  const firstVisit = !open && pathname === "/" && !picked && !skipped;
+  // first visit: a full screen of its own, then a door into the island.
+  // /?welcome shows it again to anyone, for previews and demos.
+  const preview = useSyncExternalStore(
+    noop,
+    () => new URLSearchParams(window.location.search).has("welcome"),
+    () => false,
+  );
+  const [previewDone, setPreviewDone] = useState(false);
+  const firstVisit = !open && pathname === "/" && ((!picked && !skipped) || (preview && !previewDone));
   const show = open || firstVisit;
   const current = sel ?? (open ? kind : null);
   const meta = AVATARS.find((a) => a.id === current);
@@ -73,6 +82,9 @@ export function Chooser() {
         during: () => {
           if (kindNow) pickTraveler(kindNow);
           else setSkipped(true);
+          setPreviewDone(true);
+          // drop ?welcome from the address, so a reload does not show it again
+          if (preview) history.replaceState(null, "", window.location.pathname + window.location.hash);
           chooser.close();
         },
       });

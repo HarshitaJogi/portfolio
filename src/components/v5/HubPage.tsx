@@ -283,7 +283,7 @@ export function HubPage() {
     // skip a stale render: the store may already be ahead of this commit
     if (!synced.current || hubView.get().focus !== focus) return;
     const id = focus === -1 ? "" : focus === ABOVE ? "above" : hubStops[focus]?.id;
-    history.replaceState(null, "", id ? `#${id}` : window.location.pathname);
+    history.replaceState(null, "", window.location.pathname + window.location.search + (id ? `#${id}` : ""));
   }, [focus]);
 
   // arrows walk the districts, Escape goes back to the map

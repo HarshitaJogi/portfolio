@@ -349,7 +349,7 @@ export function WorldPage({ id }: { id: WorldId }) {
       setMoved(true);
       setJourney(n);
       const s = steps[n];
-      history.replaceState(null, "", n === 0 ? window.location.pathname : `#${s.id}`);
+      history.replaceState(null, "", window.location.pathname + window.location.search + (n === 0 ? "" : `#${s.id}`));
       if (s.kind === "next" && stamp(world.id)) {
         setStamped(true);
         travelerCheer();
