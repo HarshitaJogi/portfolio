@@ -9,6 +9,7 @@ import { Toon, ToonInstances, type Instance } from "../toon";
 import { journey, stepJourney } from "../scroll";
 import { blendSky } from "../atmosphere";
 import { partyRoll } from "../party";
+import { cardUI } from "../cardUI";
 import { Lights } from "../Lights";
 import { Progressive } from "../progressive";
 import { Islet, Portal, Sign } from "../props/basics";
@@ -59,22 +60,29 @@ function Rig({ world, focus }: { world: World; focus: React.RefObject<THREE.Vect
   const reduced = useReducedMotion();
   const pos = useRef(new THREE.Vector3());
 
+  // a wider lens on portrait phones, so an islet fits across the narrow frame
   useEffect(() => {
     const cam = get().camera as THREE.PerspectiveCamera;
-    // portrait phones get a wider lens, so an islet fits across the narrow frame
     cam.fov = size.width / size.height < 0.8 ? 46 : 34;
     cam.updateProjectionMatrix();
-    if (wide) cam.setViewOffset(size.width, size.height, -size.width * 0.21, 0, size.width, size.height);
-    else cam.setViewOffset(size.width, size.height, 0, size.height * 0.2, size.width, size.height);
     return () => {
       cam.clearViewOffset();
       cam.fov = 34;
       cam.updateProjectionMatrix();
     };
-  }, [get, size, wide]);
+  }, [get, size]);
+  // the picture slides aside when the step card opens, and recentres when it collapses
+  const shiftNow = useRef(0);
 
   useFrame((state, dt) => {
     stepJourney(dt, reduced);
+    const want = cardUI.open ? 1 : 0;
+    shiftNow.current += (want - shiftNow.current) * (reduced ? 1 : 1 - Math.exp(-dt * 5));
+    const cam = state.camera as THREE.PerspectiveCamera;
+    const k = shiftNow.current;
+    // open: picture shifted right of the card (desktop) or up above it (phones); collapsed: a touch up for the title card
+    if (wide) cam.setViewOffset(size.width, size.height, -size.width * 0.21 * k, -size.height * 0.04 * (1 - k), size.width, size.height);
+    else cam.setViewOffset(size.width, size.height, 0, size.height * (0.1 + 0.12 * k), size.width, size.height);
     const p = Math.min(Math.max(journey.progress, 0), list.length - 1);
     const i = Math.min(Math.floor(p), list.length - 2);
     const f = smooth(p - i);

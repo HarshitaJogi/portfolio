@@ -74,7 +74,7 @@ export function BigCTA({ kicker, label, back, tone = "#ff6b4a", idleKey = "", in
       {back && (
         <BackButton {...back} />
       )}
-      <div className={cn("pointer-events-auto relative flex-1 md:flex-none", idle && "motion-safe:animate-[cta-nudge_1.6s_ease-in-out_infinite]")}>
+      <div className={cn("pointer-events-auto relative min-w-0 flex-1 md:flex-none", idle && "motion-safe:animate-[cta-nudge_1.6s_ease-in-out_infinite]")}>
         {/* the ping ring that keeps saying "here" */}
         <span aria-hidden="true" className="absolute inset-0 rounded-[30px] border-[5px] max-md:hidden motion-safe:animate-[cta-ping_1.9s_ease-out_infinite]" style={{ borderColor: tone }} />
         <Tag

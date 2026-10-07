@@ -17,7 +17,6 @@ import { PopButton } from "./PopButton";
 import { BigCTA } from "./BigCTA";
 import { AvatarIcon } from "./avatarIcons";
 import { arrive } from "./sfx";
-import { PassportStrip } from "./Passport";
 
 const DISTRICTS = hubStops.slice(1, 7); // education .. contact, indexes 1..6 on the ring
 const indexOf = (id: string) => hubStops.findIndex((s) => s.id === id);
@@ -27,7 +26,7 @@ function Lines({ lines }: { lines: string[] }) {
   return (
     <ul className="mt-5 space-y-2.5">
       {lines.map((l) => (
-        <li key={l} className="flex gap-3 text-[1.125rem] leading-snug font-bold md:text-[1.3125rem]">
+        <li key={l} className="flex gap-2.5 text-[1rem] leading-snug font-bold md:text-[1.0625rem]">
           <span className="mt-[0.45em] h-3 w-3 shrink-0 rotate-45 border-[3px] border-ink bg-[#ffc93c]" aria-hidden="true" />
           <span>{l}</span>
         </li>
@@ -47,7 +46,7 @@ function TravelerChip() {
         ui.pop();
         chooser.open();
       }}
-      className="group mt-5 inline-flex items-center gap-3 rounded-full border-[3px] border-ink bg-white py-1 pr-4 pl-1 text-left shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:shadow-none"
+      className="group mt-3 inline-flex items-center gap-3 rounded-full border-[3px] border-ink bg-white py-1 pr-4 pl-1 text-left shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-y-0.5 active:shadow-none"
     >
       <span className="grid h-12 w-12 place-items-center rounded-full border-[3px] border-ink" style={{ background: me.color }}>
         <AvatarIcon kind={kind} className="h-10 w-10" />
@@ -63,24 +62,23 @@ function TravelerChip() {
 /** The map: who this is, and the way in. */
 function WelcomeCard({ stop }: { stop: HubStop }) {
   return (
-    <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-6 md:p-9">
+    <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-5 md:p-7">
       <Hud margam={stop.margam}>{stop.hud}</Hud>
-      <h1 className="font-display mt-3 text-[clamp(3.2rem,7.2vw,7.5rem)] leading-[0.9] tracking-[-0.02em]">
+      <h1 className="font-display mt-3 text-[clamp(2.25rem,4.6vw,4.75rem)] leading-[0.9] tracking-[-0.02em]">
         Harshita
         <br />
         Jogi
       </h1>
-      <p className="mt-3 text-[1.25rem] leading-snug font-extrabold md:text-[1.75rem]">{stop.stat}</p>
-      <p className="mt-2 font-mono text-[0.9375rem] font-bold md:text-[1rem]">{stop.lines?.[0]}</p>
+      <p className="mt-2 text-[1rem] leading-snug font-extrabold md:text-[1.3125rem]">{stop.stat}</p>
+      <p className="mt-1.5 font-mono text-[0.8125rem] font-bold md:text-[0.9375rem]">{stop.lines?.[0]}</p>
       <div className="flex flex-wrap items-end gap-x-4">
-        <p className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border-[3px] border-ink bg-[#3bb273] px-4 py-1.5 text-[0.9375rem] leading-tight font-extrabold md:text-[1rem]">
+        <p className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-full border-[3px] border-ink bg-[#3bb273] px-3.5 py-1 text-[0.875rem] leading-tight font-extrabold md:text-[1rem]">
           <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-ink" aria-hidden="true" />
           {person.availability}
         </p>
         <TravelerChip />
       </div>
-      <PassportStrip />
-      <p className="mt-4 hidden font-mono text-[1rem] font-bold md:block">Drag to turn the island. Tap any place to visit it.</p>
+      <p className="mt-3 hidden font-mono text-[0.875rem] font-bold md:block">Drag to turn the island. Tap any place to visit it.</p>
     </div>
   );
 }
@@ -181,7 +179,7 @@ function FlipWelcome({ stop }: { stop: HubStop }) {
           style={{ transform: "rotateY(0deg)" }}
           className={cn(face, "cursor-pointer", back && "pointer-events-none")}
         >
-          <CardShell className="flex max-h-[min(54svh,46rem)] flex-col transition-transform hover:-translate-y-1 md:max-h-[calc(100svh-15rem)]">
+          <CardShell className="flex max-h-[min(44svh,40rem)] flex-col transition-transform hover:-translate-y-1 md:max-h-[calc(100svh-15rem)]">
             <span data-flip aria-hidden="true" className="absolute -top-4 right-3 z-10 flex rotate-6 md:-right-4 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#ff4f8b] px-3.5 py-1.5 font-display text-[1rem] text-ink shadow-[3px_3px_0_var(--ink)] motion-safe:animate-[cta-nudge_3s_ease-in-out_2s_infinite]">
               ↻ Tap for my resume
             </span>
@@ -198,7 +196,7 @@ function FlipWelcome({ stop }: { stop: HubStop }) {
           style={{ visibility: "hidden" }}
           className={cn(face, "cursor-pointer [transform:rotateY(180deg)]", !back && "pointer-events-none")}
         >
-          <CardShell className="flex max-h-[min(54svh,46rem)] flex-col md:max-h-[calc(100svh-15rem)]">
+          <CardShell className="flex max-h-[min(44svh,40rem)] flex-col md:max-h-[calc(100svh-15rem)]">
             <span data-flip aria-hidden="true" className="absolute -top-4 right-3 z-10 flex -rotate-6 md:-right-4 items-center gap-1.5 rounded-full border-[3px] border-ink bg-[#3bb273] px-3.5 py-1.5 font-display text-[1rem] text-ink shadow-[3px_3px_0_var(--ink)]">
               ↻ Flip back
             </span>
@@ -218,19 +216,19 @@ function DistrictCard({ stop }: { stop: HubStop }) {
   const next = DISTRICTS[(pos + 1) % DISTRICTS.length];
   const others = stop.links?.filter((l) => !l.primary) ?? [];
   return (
-    <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-6 md:p-9">
+    <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-5 md:p-7">
       <Hud margam={stop.margam} right={`${pos + 1} / ${DISTRICTS.length}`}>
         {stop.hud}
       </Hud>
-      <h2 id={`${stop.id}-title`} className="font-display mt-3 text-[clamp(2.6rem,4.8vw,4.8rem)] leading-[0.95] tracking-[-0.015em]">
+      <h2 id={`${stop.id}-title`} className="font-display mt-3 text-[clamp(2rem,3.4vw,3.4rem)] leading-[0.95] tracking-[-0.015em]">
         {stop.headline}
       </h2>
-      {stop.stat && <p className="mt-3 text-[1.1875rem] leading-snug font-bold md:text-[1.5rem]">{stop.stat}</p>}
+      {stop.stat && <p className="mt-2.5 text-[1.0625rem] leading-snug font-bold md:text-[1.1875rem]">{stop.stat}</p>}
       {stop.lines && <Lines lines={stop.lines} />}
       {others.length > 0 && (
-        <div className="mt-5 flex flex-wrap gap-2.5">
+        <div className="mt-4 flex flex-wrap gap-2.5">
           {others.map((l) => (
-            <PopButton key={l.href} href={l.href} size="md" tone="secondary">
+            <PopButton key={l.href} href={l.href} size="sm" tone="secondary">
               {l.label}
             </PopButton>
           ))}
@@ -252,7 +250,7 @@ function DistrictCard({ stop }: { stop: HubStop }) {
           </PopButton>
         </div>
       )}
-      <div className="mt-6 flex flex-wrap items-center gap-2.5 border-t-[3px] border-dashed border-ink/40 pt-4">
+      <div className="mt-5 flex flex-wrap items-center gap-2 border-t-[3px] border-dashed border-ink/40 pt-4">
         <span className="font-mono text-[0.9375rem] font-bold uppercase">Other places</span>
         <PopButton onClick={() => hubView.focus(indexOf(prev.id))} size="sm" tone="secondary" back iconLeft="‹">
           {SHORT[prev.id]}
@@ -268,13 +266,13 @@ function DistrictCard({ stop }: { stop: HubStop }) {
 /** The view from above: the path wears all seven colours of the recital. */
 function AboveCard({ stop }: { stop: HubStop }) {
   return (
-    <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-6 md:p-9">
+    <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-5 md:p-7">
       <Hud margam={stop.margam}>{stop.hud}</Hud>
-      <h2 className="font-display mt-3 text-[clamp(2.6rem,4.8vw,4.8rem)] leading-[0.95] tracking-[-0.015em]">{stop.headline}</h2>
-      <p className="mt-3 text-[1.1875rem] leading-snug font-bold md:text-[1.5rem]">{stop.stat}</p>
+      <h2 className="font-display mt-3 text-[clamp(2rem,3.4vw,3.4rem)] leading-[0.95] tracking-[-0.015em]">{stop.headline}</h2>
+      <p className="mt-2.5 text-[1.0625rem] leading-snug font-bold md:text-[1.1875rem]">{stop.stat}</p>
       <ol className="mt-5 grid grid-cols-2 gap-x-6 gap-y-2.5" aria-label="The seven parts of a margam">
         {margamParts.map((m, n) => (
-          <li key={m.id} className="flex items-center gap-2.5 text-[1.0625rem] font-semibold md:text-[1.125rem]">
+          <li key={m.id} className="flex items-center gap-2.5 text-[1rem] font-semibold md:text-[1.0625rem]">
             <span className="h-5 w-5 shrink-0 rounded-full border-[3px] border-ink" style={{ background: m.color }} aria-hidden="true" />
             <span>
               <span className="font-extrabold">
@@ -343,7 +341,7 @@ export function HubPage() {
   return (
     <>
       <main id="main" className="pointer-events-none fixed inset-0 z-10 flex items-end px-[var(--gutter)] pt-32 pb-[8.5rem] md:items-center md:pt-28 md:pb-0">
-        <div className={cn("pointer-events-auto w-full", focus === -1 ? "md:w-[min(44vw,42rem)]" : "md:w-[min(46vw,43rem)]")}>
+        <div className={cn("pointer-events-auto w-full", focus === -1 ? "md:w-[min(36vw,32rem)]" : "md:w-[min(40vw,36rem)]")}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={key}
@@ -358,7 +356,7 @@ export function HubPage() {
               {focus === -1 ? (
                 <FlipWelcome stop={stop} />
               ) : (
-                <CardShell className="flex max-h-[min(54svh,44rem)] flex-col md:max-h-[calc(100svh-15rem)]">{focus === ABOVE ? <AboveCard stop={stop} /> : <DistrictCard stop={stop} />}</CardShell>
+                <CardShell className="flex max-h-[min(44svh,38rem)] flex-col md:max-h-[calc(100svh-15rem)]">{focus === ABOVE ? <AboveCard stop={stop} /> : <DistrictCard stop={stop} />}</CardShell>
               )}
             </motion.div>
           </AnimatePresence>

@@ -9,6 +9,7 @@ import { findEgg } from "@/world/eggs";
 import { resetJourney, setJourney } from "@/world/scroll";
 import { ui } from "@/lib/audio";
 import { travelerCheer } from "@/world/traveler";
+import { cardUI } from "@/world/cardUI";
 import { useReducedMotion } from "@/lib/device";
 import { cn } from "@/lib/utils";
 import { CardShell, Chips, colorOf, Hud, LocalTime, Rich } from "./cards";
@@ -26,8 +27,8 @@ function Highlights({ items, color }: { items: string[]; color: string }) {
   return (
     <ul className="space-y-1.5">
       {items.map((h) => (
-        <li key={h} className="flex items-center gap-3 text-[1.125rem] leading-snug font-bold md:text-[1.3125rem]">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-[3px] border-ink" style={{ background: color }} aria-hidden="true">
+        <li key={h} className="flex items-center gap-2.5 text-[1rem] leading-snug font-bold md:text-[1.0625rem]">
+          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border-[2.5px] border-ink" style={{ background: color }} aria-hidden="true">
             <svg viewBox="0 0 12 12" className="h-3 w-3">
               <path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="#2b1e1a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -139,8 +140,8 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
   if (step.kind === "intro")
     return (
       <>
-        <h1 className="font-display mt-4 text-[clamp(3rem,6.4vw,6.25rem)] leading-[0.95] tracking-[-0.02em]">{step.title}</h1>
-        {step.lede && <p className="mt-4 text-[1.25rem] leading-snug font-bold md:text-[1.625rem]">{step.lede}</p>}
+        <h1 className="font-display mt-3 text-[clamp(2.4rem,4.4vw,4.2rem)] leading-[0.95] tracking-[-0.02em]">{step.title}</h1>
+        {step.lede && <p className="mt-3 text-[1.0625rem] leading-snug font-bold md:text-[1.25rem]">{step.lede}</p>}
         <StampSlot world={world} />
         <ol className="mt-6 grid gap-1.5">
           {items.map(({ s, i }, n) => (
@@ -150,7 +151,7 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
                   {n + 1}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[1.125rem] font-extrabold md:text-[1.3125rem]">{s.title}</span>
+                  <span className="block truncate text-[1rem] font-extrabold md:text-[1.0625rem]">{s.title}</span>
                   {s.subtitle && world.id !== "skills" && <span className="block truncate text-[0.9375rem] font-semibold">{s.subtitle}</span>}
                 </span>
                 {yearOf(s) && <span className="shrink-0 font-mono text-[1rem]">{yearOf(s)}</span>}
@@ -167,10 +168,10 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
   if (step.kind === "next")
     return (
       <>
-        <h2 id={hid} className="font-display mt-4 text-[clamp(2.6rem,5vw,4.75rem)] leading-[0.96] tracking-[-0.02em]">
+        <h2 id={hid} className="font-display mt-3 text-[clamp(2.2rem,3.8vw,3.6rem)] leading-[0.96] tracking-[-0.02em]">
           {step.title}
         </h2>
-        {step.lede && <p className="mt-4 text-[1.1875rem] leading-snug font-semibold md:text-[1.5rem]">{step.lede}</p>}
+        {step.lede && <p className="mt-3 text-[1.0625rem] leading-snug font-semibold md:text-[1.25rem]">{step.lede}</p>}
       </>
     );
 
@@ -180,30 +181,30 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
         {step.kicker !== world.label && <p className="font-mono text-[1rem] font-bold md:text-[1.0625rem]">{step.kicker}</p>}
         {step.place && <LocalTime place={step.place} />}
       </div>
-      <h2 id={hid} className="font-display mt-3 text-[clamp(2.3rem,4.2vw,4rem)] leading-[0.96] tracking-[-0.015em]">
+      <h2 id={hid} className="font-display mt-2 text-[clamp(1.9rem,3vw,3rem)] leading-[0.98] tracking-[-0.015em]">
         {step.title}
       </h2>
-      {step.subtitle && <p className="mt-2 text-[1.1875rem] leading-snug font-extrabold md:text-[1.5rem]">{step.subtitle}</p>}
+      {step.subtitle && <p className="mt-1.5 text-[1.0625rem] leading-snug font-extrabold md:text-[1.1875rem]">{step.subtitle}</p>}
 
       {step.facts && (
-        <dl className="mt-4 flex flex-wrap gap-2.5">
+        <dl className="mt-3 flex flex-wrap gap-2">
           {step.facts.map((f) => (
-            <div key={f.label} className="rounded-2xl border-[3px] border-ink bg-[#ffc93c] px-4 py-1.5 shadow-[3px_3px_0_var(--ink)]">
+            <div key={f.label} className="rounded-xl border-[3px] border-ink bg-[#ffc93c] px-3 py-1 shadow-[3px_3px_0_var(--ink)]">
               <dt className="font-mono text-[0.875rem] tracking-[0.06em] uppercase">{f.label}</dt>
-              <dd className="font-display text-[1.375rem] leading-tight md:text-[1.625rem]">{f.value}</dd>
+              <dd className="font-display text-[1.125rem] leading-tight md:text-[1.25rem]">{f.value}</dd>
             </div>
           ))}
         </dl>
       )}
 
       {step.lede && (
-        <p className="mt-4 text-[1.125rem] leading-snug font-semibold md:text-[1.3125rem]">
+        <p className="mt-3 text-[1rem] leading-snug font-semibold md:text-[1.0625rem]">
           <Rich text={step.lede} />
         </p>
       )}
 
       {step.highlights && (
-        <div className="mt-4">
+        <div className="mt-3">
           <Highlights items={step.highlights} color={color} />
         </div>
       )}
@@ -227,15 +228,15 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
         </div>
       )}
 
-      {step.chips && <Chips items={step.chips} className="mt-4" />}
+      {step.chips && <Chips items={step.chips} className="mt-3" />}
 
       {step.bullets && <Details items={step.bullets} label={step.highlights ? "Read the full details" : "Show the details"} />}
       {step.used && <Details items={step.used.map((u) => `${u.where}: ${u.what}`)} label="How I used each one" />}
 
       {step.links && (
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-wrap gap-2.5">
           {step.links.map((l) => (
-            <PopButton key={l.href} href={l.href} size="md" tone={l.primary ? "sun" : "secondary"}>
+            <PopButton key={l.href} href={l.href} size="sm" tone={l.primary ? "sun" : "secondary"}>
               {l.label}
             </PopButton>
           ))}
@@ -243,6 +244,35 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
       )}
       <Extra step={step} />
     </>
+  );
+}
+
+/**
+ * A step, collapsed: just where and what, as a small card in the middle with an obvious
+ * way to open it. Opening it sends the card to the side with everything in it.
+ */
+function Collapsed({ world, step, n, total, onOpen }: { world: World; step: WorldStep; n: number; total: number; onOpen: () => void }) {
+  return (
+    <div className="group relative flex w-full items-center gap-4 rounded-[24px] border-[4px] border-ink bg-[#fff8ec] p-4 text-ink shadow-[7px_7px_0_var(--ink)] transition-transform hover:-translate-y-1 md:p-5">
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-2 font-mono text-[0.875rem] font-bold tracking-[0.06em] uppercase">
+          <span className="h-3.5 w-3.5 shrink-0 rounded-full border-[2.5px] border-ink" style={{ background: colorOf(world.margam) }} aria-hidden="true" />
+          {world.label} · {n} of {total}
+        </p>
+        <p className="mt-1 truncate font-mono text-[0.875rem] font-bold md:text-[0.9375rem]">{step.kicker !== world.label ? step.kicker : step.subtitle}</p>
+        <h2 id={`${step.id}-title`} className="font-display mt-1 text-[clamp(1.6rem,2.6vw,2.4rem)] leading-[1]">
+          {step.title}
+        </h2>
+        {step.subtitle && step.kicker !== world.label && <p className="mt-1 line-clamp-2 text-[0.9375rem] leading-snug font-extrabold md:text-[1rem]">{step.subtitle}</p>}
+      </div>
+      {/* the whole card is the button; it sits over everything so a tap anywhere opens it */}
+      <button type="button" onClick={onOpen} aria-expanded={false} aria-label={`Open the details for ${step.title}`} className="flex shrink-0 flex-col items-center gap-1 rounded-[20px] after:absolute after:inset-0 after:rounded-[20px]">
+        <span aria-hidden="true" className="grid h-12 w-12 place-items-center rounded-full border-[3px] border-ink bg-[#ffc93c] font-display text-[1.6rem] leading-none shadow-[3px_3px_0_var(--ink)] transition-transform group-hover:rotate-90 md:h-14 md:w-14">
+          +
+        </span>
+        <span aria-hidden="true" className="font-mono text-[0.8125rem] font-bold uppercase">Details</span>
+      </button>
+    </div>
   );
 }
 
@@ -334,6 +364,7 @@ export function WorldPage({ id }: { id: WorldId }) {
   const [nudge, setNudge] = useState(false);
   const [stamped, setStamped] = useState(false);
   const [moved, setMoved] = useState(false);
+  const [open, setOpen] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const reduced = useReducedMotion();
   const activeRef = useRef(0);
@@ -458,32 +489,73 @@ export function WorldPage({ id }: { id: WorldId }) {
           ? { kicker: `Stop ${nItem} of ${total}`, label: "Finish", onClick: () => go(active + 1) }
           : { kicker: `Stop ${nItem} of ${total}`, label: "Next", onClick: () => go(active + 1) };
   const back = active === 0 ? { label: "Island", href: "/" } : { label: "Back", onClick: () => go(active - 1) };
+  // intro and finish cards are always open; a stop opens on request and stays open for the rest of the walk
+  const side = step.kind !== "item" || open;
+  useEffect(() => {
+    cardUI.open = side;
+  }, [side]);
+  useEffect(
+    () => () => {
+      cardUI.open = false;
+    },
+    [],
+  );
+  const toggle = (o: boolean) => {
+    ui.pop();
+    if (o) ui.whoosh();
+    setMoved(true);
+    setOpen(o);
+  };
 
   return (
     <>
-      <main id="main" className="pointer-events-none fixed inset-0 z-10 flex items-end px-[var(--gutter)] pt-32 pb-[8.5rem] md:items-center md:pt-28 md:pb-0">
-        <div className="pointer-events-auto w-full md:w-[min(46vw,44rem)]">
+      <main
+        id="main"
+        className={cn(
+          "pointer-events-none fixed inset-0 z-10 flex px-[var(--gutter)] pt-32 pb-[8.5rem] md:pb-0",
+          side ? "items-end md:items-center md:pt-28" : "items-end justify-center md:items-start md:pt-[7.5rem]",
+        )}
+      >
+        <motion.div layout transition={{ type: "spring", stiffness: 210, damping: 24 }} className={cn("pointer-events-auto w-full", side ? "md:w-[min(40vw,36rem)]" : "md:w-[min(44vw,34rem)]")}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.section
-              key={step.id}
+              key={step.id + (side ? ":open" : ":closed")}
               id={step.id}
               aria-labelledby={step.kind === "intro" ? undefined : `${step.id}-title`}
-              initial={reduced || !moved ? false : { opacity: 0, y: 60, rotate: active % 2 ? 2.5 : -2.5, scale: 0.9 }}
+              initial={reduced || !moved ? false : { opacity: 0, y: 40, rotate: active % 2 ? 2 : -2, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
-              exit={reduced ? { opacity: 0 } : { opacity: 0, x: -90, rotate: -5, scale: 0.88, transition: { duration: 0.2, ease: "easeIn" } }}
-              transition={{ type: "spring", stiffness: 260, damping: 17 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.9, transition: { duration: 0.16, ease: "easeIn" } }}
+              transition={{ type: "spring", stiffness: 280, damping: 20 }}
               onAnimationComplete={(def) => {
                 if (moved && typeof def === "object" && "opacity" in def && (def as { opacity: number }).opacity === 1) arrive();
               }}
             >
-              <CardShell className="flex max-h-[min(52svh,40rem)] flex-col md:max-h-[calc(100svh-15rem)]">
-                <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-6 md:p-9">
-                  <Hud margam={world.margam} right={step.kind === "item" ? `${nItem} / ${total}` : undefined}>
-                    {step.kind === "intro" || step.kind === "next" ? step.kicker : world.label}
-                  </Hud>
-                  <StepBody world={world} step={step} go={go} items={items} />
-                </div>
-              </CardShell>
+              {side ? (
+                <CardShell className="flex max-h-[min(50svh,36rem)] flex-col md:max-h-[calc(100svh-16rem)]">
+                  <div className="card-scroll min-h-0 flex-1 overflow-y-auto p-5 md:p-7">
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <Hud margam={world.margam} right={step.kind === "item" ? `${nItem} / ${total}` : undefined}>
+                          {step.kind === "intro" || step.kind === "next" ? step.kicker : world.label}
+                        </Hud>
+                      </div>
+                      {step.kind === "item" && (
+                        <button
+                          type="button"
+                          onClick={() => toggle(false)}
+                          aria-label="Collapse the details"
+                          className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-[3px] border-ink bg-[#fff8ec] font-display text-[1.4rem] leading-none shadow-[3px_3px_0_var(--ink)]"
+                        >
+                          −
+                        </button>
+                      )}
+                    </div>
+                    <StepBody world={world} step={step} go={go} items={items} />
+                  </div>
+                </CardShell>
+              ) : (
+                <Collapsed world={world} step={step} n={nItem} total={total} onOpen={() => toggle(true)} />
+              )}
             </motion.section>
           </AnimatePresence>
           {/* every step in the HTML, for search engines and the text-only crowd */}
@@ -492,7 +564,7 @@ export function WorldPage({ id }: { id: WorldId }) {
               <StepBody key={s.id} world={world} step={s} go={go} items={items} copy />
             ))}
           </div>
-        </div>
+        </motion.div>
       </main>
       <BigCTA {...cta} back={back} idleKey={step.id} nudge={nudge} />
       <Rail world={world} active={active} go={go} />
