@@ -14,14 +14,16 @@ function pose(el: HTMLElement) {
 
 /**
  * Every button and link on the site presses down and springs back, so a click always feels
- * like a click. Components with their own deeper press opt out with data-press="custom".
+ * like a click. Components with their own deeper press opt out with data-press="custom"; an
+ * element that must keep its own transform opts out alone with data-press="none".
  */
 export function GlobalPress() {
   useEffect(() => {
     let release: (() => void) | null = null;
     const target = (e: Event) => {
       const el = (e.target as HTMLElement | null)?.closest?.(PRESSABLE) as HTMLElement | null;
-      if (!el || el.closest('[data-press="custom"]') || el.closest("canvas")) return null;
+      // data-press="none" opts out just that element (a flip card face, whose transform is its rotation)
+      if (!el || el.dataset.press === "none" || el.closest('[data-press="custom"]') || el.closest("canvas")) return null;
       return el;
     };
     const down = (e: PointerEvent) => {

@@ -458,7 +458,8 @@ function Trolley() {
     if (body.current) body.current.position.y = age < 0.5 ? Math.sin((age / 0.5) * Math.PI) * 0.12 : 0;
   });
   return (
-    <Shuttle from={-3.6} to={3.0} speed={1.1} y={G + 0.14} z={TRACK_Z}>
+    // runs the right half of the street only: the traveler stands on the left end of it (STAND), so it pulls up short of them
+    <Shuttle from={0.8} to={4.2} speed={0.8} y={G + 0.14} z={TRACK_Z}>
       <Tappable
         onTap={() => {
           jolt.current.pending = true;

@@ -173,6 +173,7 @@ function FlipWelcome({ stop }: { stop: HubStop }) {
           role="button"
           tabIndex={back ? -1 : 0}
           aria-label="Flip the card to see the resume"
+          data-press="none"
           onClick={flip}
           onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), flip(e))}
           ref={frontRef}
@@ -190,6 +191,7 @@ function FlipWelcome({ stop }: { stop: HubStop }) {
           role="button"
           tabIndex={back ? 0 : -1}
           aria-label="Flip the card back"
+          data-press="none"
           onClick={flip}
           onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), flip(e))}
           ref={backRef}

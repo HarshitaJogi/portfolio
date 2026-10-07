@@ -80,9 +80,9 @@ function Rig({ world, focus }: { world: World; focus: React.RefObject<THREE.Vect
     shiftNow.current += (want - shiftNow.current) * (reduced ? 1 : 1 - Math.exp(-dt * 5));
     const cam = state.camera as THREE.PerspectiveCamera;
     const k = shiftNow.current;
-    // open: picture shifted right of the card (desktop) or up above it (phones); collapsed: a touch up for the title card
-    if (wide) cam.setViewOffset(size.width, size.height, -size.width * 0.21 * k, -size.height * 0.04 * (1 - k), size.width, size.height);
-    else cam.setViewOffset(size.width, size.height, 0, size.height * (0.1 + 0.12 * k), size.width, size.height);
+    // open: picture shifted right of the card (desktop) or up above it (phones); collapsed, the small card sits bottom left, so nudge the picture up and right of it
+    if (wide) cam.setViewOffset(size.width, size.height, -size.width * (0.05 + 0.16 * k), size.height * 0.05 * (1 - k), size.width, size.height);
+    else cam.setViewOffset(size.width, size.height, 0, size.height * (0.13 + 0.09 * k), size.width, size.height);
     const p = Math.min(Math.max(journey.progress, 0), list.length - 1);
     const i = Math.min(Math.floor(p), list.length - 2);
     const f = smooth(p - i);

@@ -248,26 +248,27 @@ function StepBody({ world, step, go, items, copy }: { world: World; step: WorldS
 }
 
 /**
- * A step, collapsed: just where and what, as a small card in the middle with an obvious
- * way to open it. Opening it sends the card to the side with everything in it.
+ * A step, collapsed: just where and what, as a small card in the corner with an obvious
+ * way to open it, so the island stays the picture. Opening it brings out everything.
  */
 function Collapsed({ world, step, n, total, onOpen }: { world: World; step: WorldStep; n: number; total: number; onOpen: () => void }) {
   return (
-    <div className="group relative flex w-full items-center gap-4 rounded-[24px] border-[4px] border-ink bg-[#fff8ec] p-4 text-ink shadow-[7px_7px_0_var(--ink)] transition-transform hover:-translate-y-1 md:p-5">
+    <div className="group relative flex w-full items-center gap-3 rounded-[22px] border-[4px] border-ink bg-[#fff8ec] px-4 py-3 text-ink shadow-[6px_6px_0_var(--ink)] transition-transform hover:-translate-y-1 md:gap-4 md:p-5">
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-2 font-mono text-[0.875rem] font-bold tracking-[0.06em] uppercase">
           <span className="h-3.5 w-3.5 shrink-0 rounded-full border-[2.5px] border-ink" style={{ background: colorOf(world.margam) }} aria-hidden="true" />
           {world.label} · {n} of {total}
         </p>
-        <p className="mt-1 truncate font-mono text-[0.875rem] font-bold md:text-[0.9375rem]">{step.kicker !== world.label ? step.kicker : step.subtitle}</p>
-        <h2 id={`${step.id}-title`} className="font-display mt-1 text-[clamp(1.6rem,2.6vw,2.4rem)] leading-[1]">
+        <p className="mt-1 hidden font-mono text-[0.8125rem] leading-snug font-bold md:block md:text-[0.875rem]">{step.kicker !== world.label ? step.kicker : step.subtitle}</p>
+        <h2 id={`${step.id}-title`} className="font-display mt-1 text-[clamp(1.375rem,2vw,2rem)] leading-[1]">
           {step.title}
         </h2>
-        {step.subtitle && step.kicker !== world.label && <p className="mt-1 line-clamp-2 text-[0.9375rem] leading-snug font-extrabold md:text-[1rem]">{step.subtitle}</p>}
+        {/* on phones the card stays one slim strip, so the island keeps the screen */}
+        {step.subtitle && step.kicker !== world.label && <p className="mt-1 line-clamp-1 text-[0.875rem] leading-snug font-extrabold md:line-clamp-2 md:text-[1rem]">{step.subtitle}</p>}
       </div>
       {/* the whole card is the button; it sits over everything so a tap anywhere opens it */}
       <button type="button" onClick={onOpen} aria-expanded={false} aria-label={`Open the details for ${step.title}`} className="flex shrink-0 flex-col items-center gap-1 rounded-[20px] after:absolute after:inset-0 after:rounded-[20px]">
-        <span aria-hidden="true" className="grid h-12 w-12 place-items-center rounded-full border-[3px] border-ink bg-[#ffc93c] font-display text-[1.6rem] leading-none shadow-[3px_3px_0_var(--ink)] transition-transform group-hover:rotate-90 md:h-14 md:w-14">
+        <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-full border-[3px] border-ink bg-[#ffc93c] font-display text-[1.5rem] leading-none shadow-[3px_3px_0_var(--ink)] transition-transform group-hover:rotate-90 md:h-14 md:w-14 md:text-[1.6rem]">
           +
         </span>
         <span aria-hidden="true" className="font-mono text-[0.8125rem] font-bold uppercase">Details</span>
@@ -513,10 +514,10 @@ export function WorldPage({ id }: { id: WorldId }) {
         id="main"
         className={cn(
           "pointer-events-none fixed inset-0 z-10 flex px-[var(--gutter)] pt-32 pb-[8.5rem] md:pb-0",
-          side ? "items-end md:items-center md:pt-28" : "items-end justify-center md:items-start md:pt-[7.5rem]",
+          side ? "items-end md:items-center md:pt-28" : "items-end md:pb-9",
         )}
       >
-        <motion.div layout transition={{ type: "spring", stiffness: 210, damping: 24 }} className={cn("pointer-events-auto w-full", side ? "md:w-[min(40vw,36rem)]" : "md:w-[min(44vw,34rem)]")}>
+        <motion.div layout transition={{ type: "spring", stiffness: 210, damping: 24 }} className={cn("pointer-events-auto w-full", side ? "md:w-[min(40vw,36rem)]" : "md:w-[min(30vw,26rem)]")}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.section
               key={step.id + (side ? ":open" : ":closed")}
